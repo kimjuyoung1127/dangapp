@@ -1,0 +1,25 @@
+{
+    "name": "댕게팅 - DangGeting",
+    "short_name": "댕게팅",
+    "description": "신뢰 기반 반려견 보호자 매칭 & 커뮤니티",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#F5F7FA",
+    "theme_color": "#FF6B35",
+    "orientation": "portrait",
+    "scope": "/",
+    "icons": [
+        {
+            "src": "/icons/icon-192x192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "any maskable"
+        },
+        {
+            "src": "/icons/icon-512x512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any maskable"
+        }
+    ]
+}
