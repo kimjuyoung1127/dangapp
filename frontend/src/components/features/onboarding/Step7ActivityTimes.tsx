@@ -1,73 +1,125 @@
+// Step7ActivityTimes.tsx — 활동 시간 + 최종 제출 (전체 선택, Supabase 영속화) (DANG-ONB-001)
+
 "use client";
 
-import { useOnboardingStore } from '@/stores/useOnboardingStore';
-import { Button } from '@/components/ui/Button';
+import { useRouter } from "next/navigation";
+import { useOnboardingStore } from "@/stores/useOnboardingStore";
+import { useCompleteOnboarding } from "@/lib/hooks/useOnboarding";
+import { Button } from "@/components/ui/Button";
+import { ToggleChip } from "@/components/ui/ToggleChip";
 
-const TIME_SLOTS = [
+const TIME_SLOTS: Array<{ id: "morning" | "afternoon" | "evening"; label: string }> = [
     { id: "morning", label: "아침 (06:00~09:00)" },
     { id: "afternoon", label: "낮 (12:00~15:00)" },
     { id: "evening", label: "저녁 (18:00~21:00)" },
-    { id: "night", label: "밤 (21:00~00:00)" },
-    { id: "weekend", label: "주말 위주" },
 ];
 
 export function Step7ActivityTimes() {
-    const { data, setData } = useOnboardingStore();
-    const selectedTimes = data.activity_times || [];
+    const router = useRouter();
+    const { data, setData, completionScore, isSubmitting, submitError, setSubmitting, setSubmitError, photoFile } =
+        useOnboardingStore();
+    const completeMutation = useCompleteOnboarding();
 
-    const toggleTime = (id: string) => {
-        if (selectedTimes.includes(id)) {
-            setData({ activity_times: selectedTimes.filter(t => t !== id) });
-        } else {
-            setData({ activity_times: [...selectedTimes, id] });
-        }
+    const weekdayTimes = data.weekday_activity_times || [];
+    const weekendTimes = data.weekend_activity_times || [];
+
+    const toggleWeekday = (id: "morning" | "afternoon" | "evening") => {
+        const next = weekdayTimes.includes(id)
+            ? weekdayTimes.filter((t) => t !== id)
+            : [...weekdayTimes, id];
+        setData({ weekday_activity_times: next });
+    };
+
+    const toggleWeekend = (id: "morning" | "afternoon" | "evening") => {
+        const next = weekendTimes.includes(id)
+            ? weekendTimes.filter((t) => t !== id)
+            : [...weekendTimes, id];
+        setData({ weekend_activity_times: next });
     };
 
     const handleComplete = async () => {
-        // Trigger API call to save all user profile
-        console.log("FINAL DATA TO SAVE:", data);
-        // Redirect will be handled on page level or router push but for now mock it:
-        window.location.href = "/home";
+        setSubmitting(true);
+        setSubmitError(null);
+
+        try {
+            await completeMutation.mutateAsync({ data, photoFile });
+            router.push("/home");
+        } catch (err) {
+            const message = err instanceof Error ? err.message : "저장에 실패했습니다. 다시 시도해주세요.";
+            setSubmitError(message);
+        } finally {
+            setSubmitting(false);
+        }
     };
 
     return (
-        <div className="flex flex-col h-full animate-in fade-in slide-in-from-right-4 duration-500">
+        <div className="flex flex-col h-full">
             <div className="flex-1 space-y-6">
                 <div className="space-y-4">
                     <label className="text-sm font-medium text-foreground">
-                        주로 언제 산책하시나요? (다중 선택 가능)
+                        활동 시간 선택 <span className="text-foreground-muted text-xs">(선택)</span>
                     </label>
-                    <div className="flex flex-col gap-3">
-                        {TIME_SLOTS.map((slot) => {
-                            const isSelected = selectedTimes.includes(slot.id);
-                            return (
-                                <button
-                                    key={slot.id}
-                                    onClick={() => toggleTime(slot.id)}
-                                    className={`w-full text-left px-5 h-14 rounded-xl border text-base font-medium transition-all flex items-center justify-between ${isSelected
-                                            ? 'border-primary bg-primary-light/10 text-primary'
-                                            : 'border-border bg-card text-foreground hover:border-primary/50'
-                                        }`}
-                                >
-                                    {slot.label}
-                                    {isSelected && (
-                                        <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center text-white text-xs">✓</div>
-                                    )}
-                                </button>
-                            );
-                        })}
+
+                    <div className="rounded-2xl border border-border p-4 space-y-3">
+                        <p className="text-sm font-medium text-foreground">평일</p>
+                        {TIME_SLOTS.map((slot) => (
+                            <ToggleChip
+                                key={`weekday-${slot.id}`}
+                                size="lg"
+                                fullWidth
+                                selected={weekdayTimes.includes(slot.id)}
+                                onClick={() => toggleWeekday(slot.id)}
+                                className="justify-between text-left"
+                            >
+                                <span>{slot.label}</span>
+                                {weekdayTimes.includes(slot.id) && (
+                                    <span className="w-5 h-5 rounded-full bg-primary flex items-center justify-center text-white text-xs">
+                                        ✓
+                                    </span>
+                                )}
+                            </ToggleChip>
+                        ))}
+                    </div>
+
+                    <div className="rounded-2xl border border-border p-4 space-y-3">
+                        <p className="text-sm font-medium text-foreground">주말</p>
+                        {TIME_SLOTS.map((slot) => (
+                            <ToggleChip
+                                key={`weekend-${slot.id}`}
+                                size="lg"
+                                fullWidth
+                                selected={weekendTimes.includes(slot.id)}
+                                onClick={() => toggleWeekend(slot.id)}
+                                className="justify-between text-left"
+                            >
+                                <span>{slot.label}</span>
+                                {weekendTimes.includes(slot.id) && (
+                                    <span className="w-5 h-5 rounded-full bg-primary flex items-center justify-center text-white text-xs">
+                                        ✓
+                                    </span>
+                                )}
+                            </ToggleChip>
+                        ))}
                     </div>
                 </div>
             </div>
 
             <div className="pt-8">
+                <p className="text-xs text-foreground-muted mb-3 text-center">
+                    온보딩 완성도: {completionScore()}%
+                </p>
+
+                {submitError && (
+                    <p className="text-sm text-red-500 text-center mb-3">{submitError}</p>
+                )}
+
                 <Button
                     size="lg"
                     className="w-full"
                     onClick={handleComplete}
-                    disabled={selectedTimes.length === 0}
+                    disabled={isSubmitting}
                 >
-                    가입 완료하고 시작하기!
+                    {isSubmitting ? "저장 중..." : "가입 완료하고 시작하기!"}
                 </Button>
             </div>
         </div>

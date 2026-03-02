@@ -51,11 +51,17 @@ export interface Database {
                     id: string
                     user_id: string
                     nickname: string
+                    full_name: string | null
+                    birth_date: string | null
+                    gender: string | null
                     avatar_url: string | null
                     bio: string | null
                     address_name: string | null
                     location: any | null // PostGIS Point
                     verified_region: boolean
+                    usage_purpose: ('friend' | 'care' | 'family')[] | null
+                    onboarding_progress: number
+                    region_verified_at: string | null
                     activity_times: Json
                     preferred_radius_km: number
                     created_at: string
@@ -65,11 +71,17 @@ export interface Database {
                     id?: string
                     user_id: string
                     nickname: string
+                    full_name?: string | null
+                    birth_date?: string | null
+                    gender?: string | null
                     avatar_url?: string | null
                     bio?: string | null
                     address_name?: string | null
                     location?: any | null
                     verified_region?: boolean
+                    usage_purpose?: ('friend' | 'care' | 'family')[] | null
+                    onboarding_progress?: number
+                    region_verified_at?: string | null
                     activity_times?: Json
                     preferred_radius_km?: number
                     created_at?: string
@@ -79,11 +91,17 @@ export interface Database {
                     id?: string
                     user_id?: string
                     nickname?: string
+                    full_name?: string | null
+                    birth_date?: string | null
+                    gender?: string | null
                     avatar_url?: string | null
                     bio?: string | null
                     address_name?: string | null
                     location?: any | null
                     verified_region?: boolean
+                    usage_purpose?: ('friend' | 'care' | 'family')[] | null
+                    onboarding_progress?: number
+                    region_verified_at?: string | null
                     activity_times?: Json
                     preferred_radius_km?: number
                     created_at?: string
@@ -97,12 +115,17 @@ export interface Database {
                     name: string
                     breed: string
                     age: number | null
+                    birth_date: string | null
                     weight_kg: number | null
                     temperament: Json
+                    temperament_profile: Json
+                    weekday_walk_slots: ('morning' | 'afternoon' | 'evening')[] | null
+                    weekend_walk_slots: ('morning' | 'afternoon' | 'evening')[] | null
                     gender: 'male' | 'female' | null
                     neutered: boolean | null
                     photo_urls: string[] | null
                     vaccination_docs: string[] | null
+                    documents: Json | null
                     created_at: string
                     updated_at: string
                 }
@@ -112,12 +135,17 @@ export interface Database {
                     name: string
                     breed: string
                     age?: number | null
+                    birth_date?: string | null
                     weight_kg?: number | null
                     temperament?: Json
+                    temperament_profile?: Json
+                    weekday_walk_slots?: ('morning' | 'afternoon' | 'evening')[] | null
+                    weekend_walk_slots?: ('morning' | 'afternoon' | 'evening')[] | null
                     gender?: 'male' | 'female' | null
                     neutered?: boolean | null
                     photo_urls?: string[] | null
                     vaccination_docs?: string[] | null
+                    documents?: Json | null
                     created_at?: string
                     updated_at?: string
                 }
@@ -127,12 +155,17 @@ export interface Database {
                     name?: string
                     breed?: string
                     age?: number | null
+                    birth_date?: string | null
                     weight_kg?: number | null
                     temperament?: Json
+                    temperament_profile?: Json
+                    weekday_walk_slots?: ('morning' | 'afternoon' | 'evening')[] | null
+                    weekend_walk_slots?: ('morning' | 'afternoon' | 'evening')[] | null
                     gender?: 'male' | 'female' | null
                     neutered?: boolean | null
                     photo_urls?: string[] | null
                     vaccination_docs?: string[] | null
+                    documents?: Json | null
                     created_at?: string
                     updated_at?: string
                 }
@@ -143,8 +176,11 @@ export interface Database {
                     from_guardian_id: string
                     to_guardian_id: string
                     status: 'pending' | 'accepted' | 'rejected'
+                    relation_purpose: 'friend' | 'care' | 'family' | null
                     liked_section: string | null
                     comment: string | null
+                    intro_message: string | null
+                    quick_message_code: string | null
                     compatibility_score: number | null
                     created_at: string
                     updated_at: string
@@ -154,8 +190,11 @@ export interface Database {
                     from_guardian_id: string
                     to_guardian_id: string
                     status?: 'pending' | 'accepted' | 'rejected'
+                    relation_purpose?: 'friend' | 'care' | 'family' | null
                     liked_section?: string | null
                     comment?: string | null
+                    intro_message?: string | null
+                    quick_message_code?: string | null
                     compatibility_score?: number | null
                     created_at?: string
                     updated_at?: string
@@ -165,8 +204,11 @@ export interface Database {
                     from_guardian_id?: string
                     to_guardian_id?: string
                     status?: 'pending' | 'accepted' | 'rejected'
+                    relation_purpose?: 'friend' | 'care' | 'family' | null
                     liked_section?: string | null
                     comment?: string | null
+                    intro_message?: string | null
+                    quick_message_code?: string | null
                     compatibility_score?: number | null
                     created_at?: string
                     updated_at?: string
@@ -272,8 +314,11 @@ export interface Database {
                     title: string
                     location_name: string | null
                     location_geog: any | null
+                    place_detail: string | null
                     datetime: string
                     status: 'proposed' | 'confirmed' | 'completed' | 'cancelled'
+                    proposal_status: 'proposed' | 'accepted' | 'rejected' | 'expired' | null
+                    confirmed_at: string | null
                     participant_ids: string[]
                     created_at: string
                     updated_at: string
@@ -285,8 +330,11 @@ export interface Database {
                     title: string
                     location_name?: string | null
                     location_geog?: any | null
+                    place_detail?: string | null
                     datetime: string
                     status?: 'proposed' | 'confirmed' | 'completed' | 'cancelled'
+                    proposal_status?: 'proposed' | 'accepted' | 'rejected' | 'expired' | null
+                    confirmed_at?: string | null
                     participant_ids: string[]
                     created_at?: string
                     updated_at?: string
@@ -298,8 +346,11 @@ export interface Database {
                     title?: string
                     location_name?: string | null
                     location_geog?: any | null
+                    place_detail?: string | null
                     datetime?: string
                     status?: 'proposed' | 'confirmed' | 'completed' | 'cancelled'
+                    proposal_status?: 'proposed' | 'accepted' | 'rejected' | 'expired' | null
+                    confirmed_at?: string | null
                     participant_ids?: string[]
                     created_at?: string
                     updated_at?: string
@@ -473,6 +524,195 @@ export interface Database {
                     created_at?: string
                 }
             }
+            walk_records: {
+                Row: {
+                    id: string
+                    schedule_id: string | null
+                    author_id: string
+                    partner_guardian_id: string | null
+                    walk_date: string
+                    walk_time: string | null
+                    place_name: string | null
+                    memo: string | null
+                    photo_urls: string[] | null
+                    visibility: 'public' | 'neighbor' | 'private'
+                    created_at: string
+                    updated_at: string
+                }
+                Insert: {
+                    id?: string
+                    schedule_id?: string | null
+                    author_id: string
+                    partner_guardian_id?: string | null
+                    walk_date?: string
+                    walk_time?: string | null
+                    place_name?: string | null
+                    memo?: string | null
+                    photo_urls?: string[] | null
+                    visibility?: 'public' | 'neighbor' | 'private'
+                    created_at?: string
+                    updated_at?: string
+                }
+                Update: {
+                    id?: string
+                    schedule_id?: string | null
+                    author_id?: string
+                    partner_guardian_id?: string | null
+                    walk_date?: string
+                    walk_time?: string | null
+                    place_name?: string | null
+                    memo?: string | null
+                    photo_urls?: string[] | null
+                    visibility?: 'public' | 'neighbor' | 'private'
+                    created_at?: string
+                    updated_at?: string
+                }
+            }
+            walk_reviews: {
+                Row: {
+                    id: string
+                    walk_record_id: string | null
+                    schedule_id: string | null
+                    author_id: string
+                    target_id: string
+                    rating: number
+                    comment: string | null
+                    visibility: 'public' | 'neighbor' | 'private'
+                    created_at: string
+                }
+                Insert: {
+                    id?: string
+                    walk_record_id?: string | null
+                    schedule_id?: string | null
+                    author_id: string
+                    target_id: string
+                    rating: number
+                    comment?: string | null
+                    visibility?: 'public' | 'neighbor' | 'private'
+                    created_at?: string
+                }
+                Update: {
+                    id?: string
+                    walk_record_id?: string | null
+                    schedule_id?: string | null
+                    author_id?: string
+                    target_id?: string
+                    rating?: number
+                    comment?: string | null
+                    visibility?: 'public' | 'neighbor' | 'private'
+                    created_at?: string
+                }
+            }
+            danglog_collaborators: {
+                Row: {
+                    danglog_id: string
+                    guardian_id: string
+                    role: 'owner' | 'editor' | 'viewer'
+                    invited_by: string | null
+                    joined_at: string
+                }
+                Insert: {
+                    danglog_id: string
+                    guardian_id: string
+                    role?: 'owner' | 'editor' | 'viewer'
+                    invited_by?: string | null
+                    joined_at?: string
+                }
+                Update: {
+                    danglog_id?: string
+                    guardian_id?: string
+                    role?: 'owner' | 'editor' | 'viewer'
+                    invited_by?: string | null
+                    joined_at?: string
+                }
+            }
+            danglog_invites: {
+                Row: {
+                    id: string
+                    danglog_id: string
+                    invited_by: string
+                    invite_token: string
+                    status: 'pending' | 'accepted' | 'expired' | 'revoked'
+                    expires_at: string | null
+                    created_at: string
+                }
+                Insert: {
+                    id?: string
+                    danglog_id: string
+                    invited_by: string
+                    invite_token: string
+                    status?: 'pending' | 'accepted' | 'expired' | 'revoked'
+                    expires_at?: string | null
+                    created_at?: string
+                }
+                Update: {
+                    id?: string
+                    danglog_id?: string
+                    invited_by?: string
+                    invite_token?: string
+                    status?: 'pending' | 'accepted' | 'expired' | 'revoked'
+                    expires_at?: string | null
+                    created_at?: string
+                }
+            }
+            notification_settings: {
+                Row: {
+                    user_id: string
+                    marketing_opt_in: boolean
+                    chat_opt_in: boolean
+                    schedule_opt_in: boolean
+                    danglog_opt_in: boolean
+                    push_opt_in: boolean
+                    updated_at: string
+                }
+                Insert: {
+                    user_id: string
+                    marketing_opt_in?: boolean
+                    chat_opt_in?: boolean
+                    schedule_opt_in?: boolean
+                    danglog_opt_in?: boolean
+                    push_opt_in?: boolean
+                    updated_at?: string
+                }
+                Update: {
+                    user_id?: string
+                    marketing_opt_in?: boolean
+                    chat_opt_in?: boolean
+                    schedule_opt_in?: boolean
+                    danglog_opt_in?: boolean
+                    push_opt_in?: boolean
+                    updated_at?: string
+                }
+            }
+            consent_logs: {
+                Row: {
+                    id: string
+                    user_id: string
+                    consent_type: 'privacy' | 'marketing' | 'location' | 'terms'
+                    consented: boolean
+                    policy_version: string
+                    metadata: Json
+                    created_at: string
+                }
+                Insert: {
+                    id?: string
+                    user_id: string
+                    consent_type: 'privacy' | 'marketing' | 'location' | 'terms'
+                    consented: boolean
+                    policy_version: string
+                    metadata?: Json
+                    created_at?: string
+                }
+                Update: {
+                    id?: string
+                    user_id?: string
+                    consent_type?: 'privacy' | 'marketing' | 'location' | 'terms'
+                    consented?: boolean
+                    policy_version?: string
+                    metadata?: Json
+                    created_at?: string
+                }
+            }
             care_requests: {
                 Row: {
                     id: string
@@ -599,6 +839,10 @@ export interface Database {
             dog_gender: 'male' | 'female'
             badge_type: 'verified' | 'active_walker' | 'top_reviewer' | 'care_angel'
             mode_type: 'basic' | 'care' | 'family'
+            relation_purpose: 'friend' | 'care' | 'family'
+            visibility_scope: 'public' | 'neighbor' | 'private'
+            time_slot: 'morning' | 'afternoon' | 'evening'
+            dog_trait_scale: 'low' | 'mid' | 'high'
             care_type: 'walk' | 'sitting' | 'grooming' | 'hospital' | 'other'
             care_status: 'pending' | 'accepted' | 'completed' | 'cancelled'
             family_role: 'owner' | 'admin' | 'member'

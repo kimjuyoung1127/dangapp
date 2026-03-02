@@ -1,46 +1,155 @@
+// Step1Guardian.tsx — 보호자 정보 입력 (nickname 필수, 나머지 선택) (DANG-ONB-001)
+
 "use client";
 
-import { useOnboardingStore } from '@/stores/useOnboardingStore';
-import { Button } from '@/components/ui/Button';
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useOnboardingStore } from "@/stores/useOnboardingStore";
+import { Button } from "@/components/ui/Button";
+import { ToggleChip } from "@/components/ui/ToggleChip";
+import { step1Schema, type Step1Data } from "@/lib/schemas/onboarding";
+import { cn } from "@/lib/utils";
+
+const PURPOSES: Array<{ id: "friend" | "care" | "family"; label: string }> = [
+    { id: "friend", label: "친구" },
+    { id: "care", label: "돌봄" },
+    { id: "family", label: "가족" },
+];
 
 export function Step1Guardian() {
     const { data, setData, nextStep } = useOnboardingStore();
 
+    const {
+        register,
+        handleSubmit,
+        watch,
+        setValue,
+        formState: { errors },
+    } = useForm<Step1Data>({
+        resolver: zodResolver(step1Schema),
+        defaultValues: {
+            nickname: data.nickname || "",
+            full_name: data.full_name || "",
+            birth_date: data.birth_date || "",
+            gender: data.gender,
+            usage_purpose: data.usage_purpose || [],
+            bio: data.bio || "",
+        },
+    });
+
+    const selectedPurposes = watch("usage_purpose") || [];
+
+    const togglePurpose = (purpose: "friend" | "care" | "family") => {
+        const current = selectedPurposes;
+        const next = current.includes(purpose)
+            ? current.filter((p) => p !== purpose)
+            : [...current, purpose];
+        setValue("usage_purpose", next);
+    };
+
+    const onSubmit = (values: Step1Data) => {
+        setData(values);
+        nextStep();
+    };
+
     return (
-        <div className="flex flex-col h-full animate-in fade-in slide-in-from-right-4 duration-500">
+        <form
+            onSubmit={handleSubmit(onSubmit)}
+            className="flex flex-col h-full"
+        >
             <div className="flex-1 space-y-6">
                 <div className="space-y-2">
-                    <label className="text-sm font-medium text-foreground">닉네임</label>
+                    <label className="text-sm font-medium text-foreground">
+                        닉네임 <span className="text-red-500">*</span>
+                    </label>
                     <input
                         type="text"
-                        value={data.nickname || ''}
-                        onChange={(e) => setData({ nickname: e.target.value })}
+                        {...register("nickname")}
                         placeholder="호두 아빠"
+                        className={cn(
+                            "w-full px-4 h-14 rounded-xl border bg-card focus:outline-none focus:ring-2 focus:ring-primary transition-all text-lg",
+                            errors.nickname ? "border-red-500" : "border-border"
+                        )}
+                    />
+                    {errors.nickname && (
+                        <p className="text-sm text-red-500">{errors.nickname.message}</p>
+                    )}
+                </div>
+
+                <div className="space-y-2">
+                    <label className="text-sm font-medium text-foreground">
+                        이름 <span className="text-foreground-muted text-xs">(선택)</span>
+                    </label>
+                    <input
+                        type="text"
+                        {...register("full_name")}
+                        placeholder="홍길동"
                         className="w-full px-4 h-14 rounded-xl border border-border bg-card focus:outline-none focus:ring-2 focus:ring-primary transition-all text-lg"
                     />
                 </div>
 
+                <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium text-foreground">
+                            생년월일 <span className="text-foreground-muted text-xs">(선택)</span>
+                        </label>
+                        <input
+                            type="date"
+                            {...register("birth_date")}
+                            className="w-full px-4 h-14 rounded-xl border border-border bg-card focus:outline-none focus:ring-2 focus:ring-primary transition-all"
+                        />
+                    </div>
+
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium text-foreground">
+                            성별 <span className="text-foreground-muted text-xs">(선택)</span>
+                        </label>
+                        <select
+                            {...register("gender")}
+                            className="w-full px-4 h-14 rounded-xl border border-border bg-card focus:outline-none focus:ring-2 focus:ring-primary transition-all"
+                        >
+                            <option value="">선택</option>
+                            <option value="female">여성</option>
+                            <option value="male">남성</option>
+                            <option value="other">기타</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div className="space-y-3">
+                    <label className="text-sm font-medium text-foreground">
+                        이용 목적 <span className="text-foreground-muted text-xs">(선택)</span>
+                    </label>
+                    <div className="flex gap-2">
+                        {PURPOSES.map((purpose) => (
+                            <ToggleChip
+                                key={purpose.id}
+                                selected={selectedPurposes.includes(purpose.id)}
+                                onClick={() => togglePurpose(purpose.id)}
+                            >
+                                {purpose.label}
+                            </ToggleChip>
+                        ))}
+                    </div>
+                </div>
+
                 <div className="space-y-2">
-                    <label className="text-sm font-medium text-foreground">한 줄 소개</label>
+                    <label className="text-sm font-medium text-foreground">
+                        한 줄 소개 <span className="text-foreground-muted text-xs">(선택)</span>
+                    </label>
                     <textarea
-                        value={data.bio || ''}
-                        onChange={(e) => setData({ bio: e.target.value })}
+                        {...register("bio")}
                         placeholder="주말 오전에 한강공원 산책하는 걸 좋아해요."
-                        className="w-full p-4 h-32 rounded-xl border border-border bg-card focus:outline-none focus:ring-2 focus:ring-primary transition-all resize-none"
+                        className="w-full p-4 h-28 rounded-xl border border-border bg-card focus:outline-none focus:ring-2 focus:ring-primary transition-all resize-none"
                     />
                 </div>
             </div>
 
             <div className="pt-8">
-                <Button
-                    size="lg"
-                    className="w-full"
-                    onClick={nextStep}
-                    disabled={!data.nickname}
-                >
+                <Button type="submit" size="lg" className="w-full">
                     다음으로
                 </Button>
             </div>
-        </div>
+        </form>
     );
 }

@@ -45,6 +45,18 @@ export const ScrollReveal = ({ children, className, style }: { children: React.R
     </motion.div>
 );
 
+export const PageSlide = ({ children, className }: { children: React.ReactNode; className?: string }) => (
+    <motion.div
+        initial={{ opacity: 0, x: 20 }}
+        animate={{ opacity: 1, x: 0 }}
+        exit={{ opacity: 0, x: -20 }}
+        transition={{ duration: 0.4, type: "spring", bounce: 0 }}
+        className={className}
+    >
+        {children}
+    </motion.div>
+);
+
 interface BottomSheetProps {
     children: React.ReactNode;
     isOpen: boolean;

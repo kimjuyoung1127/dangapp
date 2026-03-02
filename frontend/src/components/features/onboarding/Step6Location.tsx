@@ -1,37 +1,101 @@
+// Step6Location.tsx — 동네 설정 (address_name 필수, 나머지 선택) (DANG-ONB-001)
+
 "use client";
 
-import { useOnboardingStore } from '@/stores/useOnboardingStore';
-import { Button } from '@/components/ui/Button';
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useOnboardingStore } from "@/stores/useOnboardingStore";
+import { Button } from "@/components/ui/Button";
+import { ToggleChip } from "@/components/ui/ToggleChip";
+import { step6Schema, type Step6Data } from "@/lib/schemas/onboarding";
+import { cn } from "@/lib/utils";
 
 export function Step6Location() {
     const { data, setData, nextStep } = useOnboardingStore();
 
+    const {
+        register,
+        handleSubmit,
+        watch,
+        setValue,
+        formState: { errors },
+    } = useForm<Step6Data>({
+        resolver: zodResolver(step6Schema),
+        defaultValues: {
+            address_name: data.address_name || "",
+            verified_region: data.verified_region,
+            preferred_radius_km: data.preferred_radius_km ?? 3,
+        },
+    });
+
+    const radiusValue = watch("preferred_radius_km") ?? 3;
+    const verifiedRegion = watch("verified_region");
+
+    const onSubmit = (values: Step6Data) => {
+        setData(values);
+        nextStep();
+    };
+
     return (
-        <div className="flex flex-col h-full animate-in fade-in slide-in-from-right-4 duration-500">
+        <form
+            onSubmit={handleSubmit(onSubmit)}
+            className="flex flex-col h-full"
+        >
             <div className="flex-1 space-y-6">
                 <div className="space-y-2">
-                    <label className="text-sm font-medium text-foreground">주로 산책하는 지역</label>
+                    <label className="text-sm font-medium text-foreground">
+                        주로 산책하는 지역 <span className="text-red-500">*</span>
+                    </label>
                     <input
                         type="text"
-                        value={data.address_name || ''}
-                        onChange={(e) => setData({ address_name: e.target.value })}
+                        {...register("address_name")}
                         placeholder="동/구 이름 검색 (예: 서초구 반포동)"
-                        className="w-full px-4 h-14 rounded-xl border border-border bg-card focus:outline-none focus:ring-2 focus:ring-primary transition-all text-lg"
+                        className={cn(
+                            "w-full px-4 h-14 rounded-xl border bg-card focus:outline-none focus:ring-2 focus:ring-primary transition-all text-lg",
+                            errors.address_name ? "border-red-500" : "border-border"
+                        )}
                     />
-                    <p className="text-xs text-foreground-muted mt-2">정확한 주소가 아닌 동네 정보만 사용됩니다.</p>
+                    {errors.address_name ? (
+                        <p className="text-sm text-red-500">{errors.address_name.message}</p>
+                    ) : (
+                        <p className="text-xs text-foreground-muted mt-2">
+                            정확한 주소가 아닌 동네 정보만 사용됩니다.
+                        </p>
+                    )}
+                </div>
+
+                <div className="space-y-2">
+                    <label className="text-sm font-medium text-foreground">
+                        지역 인증 <span className="text-foreground-muted text-xs">(선택)</span>
+                    </label>
+                    <div className="flex items-center gap-2">
+                        <ToggleChip
+                            selected={verifiedRegion === true}
+                            onClick={() => setValue("verified_region", true)}
+                        >
+                            현재 위치 인증
+                        </ToggleChip>
+                        <ToggleChip
+                            selected={verifiedRegion === false}
+                            onClick={() => setValue("verified_region", false)}
+                        >
+                            위치 재측정
+                        </ToggleChip>
+                    </div>
                 </div>
 
                 <div className="space-y-4 pt-4">
                     <div className="flex justify-between items-center">
-                        <label className="text-sm font-medium text-foreground">매칭 희망 반경</label>
-                        <span className="text-primary font-semibold">{data.preferred_radius_km || 3}km</span>
+                        <label className="text-sm font-medium text-foreground">
+                            매칭 희망 반경 <span className="text-foreground-muted text-xs">(선택)</span>
+                        </label>
+                        <span className="text-primary font-semibold">{radiusValue}km</span>
                     </div>
                     <input
                         type="range"
                         min="1"
                         max="10"
-                        value={data.preferred_radius_km || 3}
-                        onChange={(e) => setData({ preferred_radius_km: parseInt(e.target.value) })}
+                        {...register("preferred_radius_km", { valueAsNumber: true })}
                         className="w-full accent-primary h-2 bg-border-default rounded-lg appearance-none cursor-pointer"
                     />
                     <div className="flex justify-between text-xs text-foreground-muted">
@@ -42,15 +106,10 @@ export function Step6Location() {
             </div>
 
             <div className="pt-8">
-                <Button
-                    size="lg"
-                    className="w-full"
-                    onClick={nextStep}
-                    disabled={!data.address_name}
-                >
+                <Button type="submit" size="lg" className="w-full">
                     다음으로
                 </Button>
             </div>
-        </div>
+        </form>
     );
 }
