@@ -1,38 +1,139 @@
+// page.tsx — /home 매칭 추천 페이지 (DANG-MAT-001)
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState, useCallback } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { AppShell } from "@/components/shared/AppShell";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { TapScale } from "@/components/ui/MotionWrappers";
 import MatchCard from "@/components/features/match/MatchCard";
+import MatchEmptyState from "@/components/features/match/MatchEmptyState";
+import IncompleteProfileBanner from "@/components/features/match/IncompleteProfileBanner";
+import MutualMatchModal from "@/components/features/match/MutualMatchModal";
+import { useCurrentGuardian } from "@/lib/hooks/useCurrentGuardian";
+import { useMatchingGuardians, useCreateMatchAction } from "@/lib/hooks/useMatch";
+import { useGetOrCreateChatRoom } from "@/lib/hooks/useChat";
+import { useModeStore } from "@/stores/useModeStore";
 import { Layers } from "lucide-react";
 
-export default function HomePage() {
-    const [isLoading, setIsLoading] = useState(true);
+const MODE_LABELS: Record<string, string> = {
+    basic: "추천 친구",
+    care: "돌봄 도우미",
+    family: "가족 찾기",
+};
 
-    useEffect(() => {
-        // 임시 로딩 시뮬레이션
-        const timer = setTimeout(() => setIsLoading(false), 1500);
-        return () => clearTimeout(timer);
+export default function HomePage() {
+    const router = useRouter();
+    const { activeMode } = useModeStore();
+    const [currentIndex, setCurrentIndex] = useState(0);
+    const [mutualMatch, setMutualMatch] = useState<{
+        partnerName: string;
+        dogName: string;
+        chatId: string;
+    } | null>(null);
+
+    // 1. 현재 guardian 로드
+    const { data: guardian, isLoading: guardianLoading } = useCurrentGuardian();
+    const guardianId = guardian?.id ?? "";
+
+    // 2. 매칭 추천 로드
+    const {
+        data: profiles = [],
+        isLoading: profilesLoading,
+    } = useMatchingGuardians({
+        guardianId,
+        mode: activeMode,
+        enabled: !!guardianId,
+    });
+
+    // 3. Like/Pass 뮤테이션 + 채팅방 생성
+    const matchAction = useCreateMatchAction();
+    const getOrCreateRoom = useGetOrCreateChatRoom();
+
+    const isLoading = guardianLoading || (!!guardianId && profilesLoading);
+    const currentProfile = profiles[currentIndex];
+    const hasProfiles = profiles.length > 0 && currentIndex < profiles.length;
+
+    const advanceCard = useCallback(() => {
+        setCurrentIndex((prev) => prev + 1);
     }, []);
 
-    const handleLikeSection = (sectionId: string) => {
-        console.log("Liked section:", sectionId);
-        // TODO: DB에 Like 기록 (matches 테이블)
-    };
+    const handleLike = useCallback(
+        (section: string) => {
+            if (!currentProfile || !guardianId) return;
 
-    const handlePass = () => {
-        console.log("Passed guardian");
-        // TODO: 다음 사람으로 넘어가기 로직
-    };
+            matchAction.mutate(
+                {
+                    from_guardian_id: guardianId,
+                    to_guardian_id: currentProfile.id,
+                    action_type: "like",
+                    liked_section: section,
+                },
+                {
+                    onSuccess: (result) => {
+                        if (result.isMutual) {
+                            const dog = currentProfile.dogs[0];
+                            setMutualMatch({
+                                partnerName: currentProfile.nickname,
+                                dogName: dog?.name ?? "강아지",
+                                chatId: currentProfile.id,
+                            });
+                        } else {
+                            advanceCard();
+                        }
+                    },
+                }
+            );
+        },
+        [currentProfile, guardianId, matchAction, advanceCard]
+    );
+
+    const handlePass = useCallback(() => {
+        if (!currentProfile || !guardianId) return;
+
+        matchAction.mutate(
+            {
+                from_guardian_id: guardianId,
+                to_guardian_id: currentProfile.id,
+                action_type: "pass",
+            },
+            {
+                onSuccess: () => advanceCard(),
+            }
+        );
+    }, [currentProfile, guardianId, matchAction, advanceCard]);
+
+    const handleChat = useCallback(() => {
+        if (!mutualMatch || !guardianId) return;
+
+        getOrCreateRoom.mutate(
+            {
+                myGuardianId: guardianId,
+                partnerGuardianId: mutualMatch.chatId,
+            },
+            {
+                onSuccess: (roomId) => {
+                    setMutualMatch(null);
+                    router.push(`/chat/${roomId}`);
+                },
+            }
+        );
+    }, [mutualMatch, guardianId, getOrCreateRoom, router]);
+
+    const handleCloseModal = useCallback(() => {
+        setMutualMatch(null);
+        advanceCard();
+    }, [advanceCard]);
 
     return (
         <AppShell>
             <div className="w-full max-w-md mx-auto px-4">
-                {/* 모드 선택 진입점 */}
+                {/* 모드 선택 헤더 */}
                 <div className="flex items-center justify-between mb-6">
-                    <h2 className="text-2xl font-display font-semibold">추천 친구</h2>
+                    <h2 className="text-2xl font-display font-semibold">
+                        {MODE_LABELS[activeMode] ?? "추천 친구"}
+                    </h2>
                     <TapScale>
                         <Link
                             href="/modes"
@@ -44,32 +145,40 @@ export default function HomePage() {
                     </TapScale>
                 </div>
 
+                {/* 프로필 완성 유도 배너 */}
+                {guardian && (
+                    <IncompleteProfileBanner
+                        progress={guardian.onboarding_progress ?? 0}
+                    />
+                )}
+
+                {/* 메인 컨텐츠 */}
                 {isLoading ? (
                     <div className="space-y-6">
                         <MatchCardSkeleton />
                     </div>
+                ) : !hasProfiles ? (
+                    <MatchEmptyState />
                 ) : (
                     <div className="space-y-6">
                         <MatchCard
-                            guardian={null}
-                            dog={null}
-                            onLikeSection={handleLikeSection}
+                            key={currentProfile.id}
+                            profile={currentProfile}
+                            onLike={handleLike}
                             onPass={handlePass}
                         />
-
-                        {/* 예시: 데이터가 없을 때의 빈 상태 (조건부 렌더링 가정) */}
-                        {/* 
-                        <div className="flex flex-col items-center justify-center py-20 text-center">
-                            <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mb-4">
-                                <Layers className="w-8 h-8 text-foreground-muted" />
-                            </div>
-                            <h3 className="text-lg font-semibold text-foreground mb-1">추천 항목이 없어요</h3>
-                            <p className="text-sm text-foreground-muted">다른 모드를 선택하거나 잠시 후 다시 시도해보세요.</p>
-                        </div> 
-                        */}
                     </div>
                 )}
             </div>
+
+            {/* 상호 매칭 모달 */}
+            <MutualMatchModal
+                isOpen={!!mutualMatch}
+                partnerName={mutualMatch?.partnerName ?? ""}
+                dogName={mutualMatch?.dogName ?? ""}
+                onChat={handleChat}
+                onClose={handleCloseModal}
+            />
         </AppShell>
     );
 }
@@ -78,22 +187,15 @@ export default function HomePage() {
 function MatchCardSkeleton() {
     return (
         <div className="flex flex-col gap-4 p-4 border border-border rounded-3xl bg-card">
-            {/* 둥근 헤더 (이름 + 뱃지) */}
             <div className="flex items-center gap-3">
                 <Skeleton className="w-10 h-10 rounded-full" />
                 <Skeleton className="w-24 h-5 rounded-xl" />
             </div>
-
-            {/* 대형 사진 영역 */}
             <Skeleton className="w-full aspect-[4/5] rounded-3xl" />
-
-            {/* 텍스트 줄 */}
             <div className="space-y-2">
                 <Skeleton className="w-3/4 h-4 rounded-xl" />
                 <Skeleton className="w-1/2 h-4 rounded-xl" />
             </div>
-
-            {/* 특성 칩 */}
             <div className="flex gap-2">
                 <Skeleton className="w-16 h-8 rounded-full" />
                 <Skeleton className="w-20 h-8 rounded-full" />

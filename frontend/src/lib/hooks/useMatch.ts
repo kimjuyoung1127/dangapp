@@ -1,112 +1,164 @@
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { createClient } from "@/lib/supabase/client";
+// useMatch.ts — 매칭 추천 + Like/Pass 액션 훅 (DANG-MAT-001)
 
-export function useMatchingGuardians() {
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { createClient } from "@/lib/supabase/client";
+import type { MatchGuardianProfile } from "@/components/features/match/types";
+
+interface UseMatchingGuardiansOptions {
+    guardianId: string;
+    mode?: "basic" | "care" | "family";
+    enabled?: boolean;
+}
+
+const MODE_TO_PURPOSE: Record<string, string> = {
+    basic: "friend",
+    care: "care",
+    family: "family",
+};
+
+export function useMatchingGuardians({
+    guardianId,
+    mode,
+    enabled = true,
+}: UseMatchingGuardiansOptions) {
     const supabase = createClient();
 
-    return useQuery({
-        queryKey: ['matching-guardians'],
+    return useQuery<MatchGuardianProfile[]>({
+        queryKey: ["matching-guardians", guardianId, mode],
         queryFn: async () => {
-            // 1. 현재 로그인한 내 정보 가져오기
-            const { data: { user } } = await supabase.auth.getUser();
-            if (!user) throw new Error("User not authenticated");
-
-            const { data: myGuardian } = await supabase
-                .from('guardians')
-                .select('id')
-                .eq('user_id', user.id)
-                .single();
-
-            if (!myGuardian) throw new Error("Guardian profile not found");
-
-            // 2. RPC 호출: 추천 보호자 리스트 가져오기 (10명)
-            const { data: matchedIds, error: rpcError } = await supabase
-                .rpc('match_guardians', {
-                    p_guardian_id: myGuardian.id,
-                    p_limit: 10,
-                    p_offset: 0
-                });
+            // 1. RPC 호출: 추천 보호자 리스트 (30명)
+            const { data: matchedIds, error: rpcError } = await supabase.rpc(
+                "match_guardians",
+                {
+                    p_guardian_id: guardianId,
+                    p_limit: 30,
+                    p_offset: 0,
+                }
+            );
 
             if (rpcError) throw rpcError;
-
             if (!matchedIds || matchedIds.length === 0) return [];
 
-            // 3. 매칭된 각 보호자의 상세 정보(guardians + dogs) Fetch
-            // (현실적인 앱에선 RPC에서 join 쿼리를 통해 한 번에 가져오도록 최적화합니다. 여기선 간결성을 위해 분리)
-            const guardianIds = matchedIds.map((m: { guardian_id: string }) => m.guardian_id);
+            // 2. 매칭된 보호자 상세 정보 (guardians + users + dogs)
+            const guardianIds = matchedIds.map(
+                (m: { guardian_id: string }) => m.guardian_id
+            );
 
             const { data: fullProfiles, error: fetchError } = await supabase
-                .from('guardians')
-                .select(`
-          *,
-          users ( trust_score, trust_level ),
-          dogs ( * )
-        `)
-                .in('id', guardianIds);
+                .from("guardians")
+                .select(
+                    `
+                    *,
+                    users ( trust_score, trust_level ),
+                    dogs ( * )
+                `
+                )
+                .in("id", guardianIds);
 
             if (fetchError) throw fetchError;
 
-            // RPC에서 계산된 거리(distance_meters)를 응답에 병합
-            return fullProfiles.map(profile => {
-                const matchInfo = matchedIds.find((m: { guardian_id: string; distance_meters: number; compatibility_score: number }) => m.guardian_id === profile.id);
+            // 3. RPC 거리/호환성 점수 병합
+            let profiles = (fullProfiles ?? []).map((profile) => {
+                const matchInfo = matchedIds.find(
+                    (m: {
+                        guardian_id: string;
+                        distance_meters: number;
+                        compatibility_score: number;
+                    }) => m.guardian_id === profile.id
+                );
                 return {
                     ...profile,
                     distance_meters: matchInfo?.distance_meters,
-                    compatibility_score: matchInfo?.compatibility_score
-                };
+                    compatibility_score: matchInfo?.compatibility_score,
+                } as MatchGuardianProfile;
             });
+
+            // 4. 모드 필터 (클라이언트 사이드 usage_purpose 필터)
+            if (mode && mode !== "basic") {
+                const purposeKey = MODE_TO_PURPOSE[mode];
+                profiles = profiles.filter(
+                    (p) =>
+                        p.usage_purpose && p.usage_purpose.includes(purposeKey as "friend" | "care" | "family")
+                );
+            }
+
+            return profiles;
         },
+        enabled: enabled && !!guardianId,
     });
 }
 
-// 스와이프 액션 (Like / Pass) Mutation 훅
+// 스와이프 액션 (Like / Pass) Mutation 훅 + 상호 매칭 감지
 export function useCreateMatchAction() {
     const supabase = createClient();
+    const queryClient = useQueryClient();
 
     return useMutation({
         mutationFn: async ({
             from_guardian_id,
             to_guardian_id,
-            action_type,    // 'like' | 'pass'
+            action_type,
             liked_section,
-            comment
+            comment,
         }: {
             from_guardian_id: string;
             to_guardian_id: string;
-            action_type: 'like' | 'pass';
+            action_type: "like" | "pass";
             liked_section?: string;
             comment?: string;
-        }) => {
-
-            if (action_type === 'pass') {
-                // 패스 처리: 나중에 추천에서 제외하기 위해 매치 테이블에 rejected 상태로 넣을지, blocks로 넣을지.
-                // 여기선 matches 테이블에 상태를 남깁니다.
-                const { error } = await supabase
-                    .from('matches')
-                    .insert({
-                        from_guardian_id,
-                        to_guardian_id,
-                        status: 'rejected'
-                    });
+        }): Promise<{ isMutual: boolean }> => {
+            if (action_type === "pass") {
+                const { error } = await supabase.from("matches").insert({
+                    from_guardian_id,
+                    to_guardian_id,
+                    status: "rejected",
+                });
                 if (error) throw error;
-            } else {
-                // 좋아요 처리
-                const { error } = await supabase
-                    .from('matches')
-                    .insert({
-                        from_guardian_id,
-                        to_guardian_id,
-                        status: 'pending',
-                        liked_section,
-                        comment
-                    });
-                if (error) throw error;
+                return { isMutual: false };
             }
-            return true;
+
+            // Like 처리
+            const { error } = await supabase.from("matches").insert({
+                from_guardian_id,
+                to_guardian_id,
+                status: "pending",
+                liked_section,
+                comment,
+            });
+            if (error) throw error;
+
+            // 상호 매칭 감지: 상대방 → 나 방향의 pending/accepted 매치 확인
+            const { data: reverseMatch } = await supabase
+                .from("matches")
+                .select("id, status")
+                .eq("from_guardian_id", to_guardian_id)
+                .eq("to_guardian_id", from_guardian_id)
+                .in("status", ["pending", "accepted"])
+                .single();
+
+            if (reverseMatch) {
+                // 양방향 존재 → 두 매치 모두 accepted로 업데이트
+                await supabase
+                    .from("matches")
+                    .update({ status: "accepted" })
+                    .eq("from_guardian_id", from_guardian_id)
+                    .eq("to_guardian_id", to_guardian_id)
+                    .eq("status", "pending");
+
+                await supabase
+                    .from("matches")
+                    .update({ status: "accepted" })
+                    .eq("id", reverseMatch.id);
+
+                return { isMutual: true };
+            }
+
+            return { isMutual: false };
         },
         onSuccess: () => {
-            // 액션 후 추천 카드 리스트 무효화해서 새로고침 (다음 카드 보여주기 위함)
-            // queryClient.invalidateQueries({ queryKey: ['matching-guardians'] });
+            queryClient.invalidateQueries({
+                queryKey: ["matching-guardians"],
+            });
         },
     });
 }
