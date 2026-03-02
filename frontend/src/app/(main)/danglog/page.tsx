@@ -1,71 +1,39 @@
+// danglog/page.tsx — 댕로그 피드 페이지 (실데이터 바인딩, DANG-DLG-001)
+
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { AppShell } from "@/components/shared/AppShell";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { StaggerList, StaggerItem, TapScale } from "@/components/ui/MotionWrappers";
 import { Button } from "@/components/ui/Button";
-import { useDangLogs, useToggleLike } from "@/lib/hooks/useDangLog";
+import { useCurrentGuardian } from "@/lib/hooks/useCurrentGuardian";
+import { useDangLogs, useToggleLike, useDangLogCounts, useDangLogLikes } from "@/lib/hooks/useDangLog";
 import DangLogCard from "@/components/features/danglog/DangLogCard";
 import DangLogEditor from "@/components/features/danglog/DangLogEditor";
+import DangLogEmptyState from "@/components/features/danglog/DangLogEmptyState";
 import { cn } from "@/lib/utils";
 import { BookOpen, Plus } from "lucide-react";
+import type { Database } from "@/types/database.types";
 
 type FeedTab = "mine" | "shared";
-
-// 임시 사용자 ID (추후 useAuth 훅으로 교체)
-const MOCK_GUARDIAN_ID = "mock-guardian-001";
+type DangLog = Database["public"]["Tables"]["danglogs"]["Row"];
 
 export default function DangLogFeedPage() {
     const [activeTab, setActiveTab] = useState<FeedTab>("mine");
     const [isEditorOpen, setIsEditorOpen] = useState(false);
-    const [isInitialLoading, setIsInitialLoading] = useState(true);
 
-    const { data: danglogs, isLoading } = useDangLogs(
-        activeTab === "mine" ? MOCK_GUARDIAN_ID : undefined
+    const { data: guardian, isLoading: guardianLoading } = useCurrentGuardian();
+    const guardianId = guardian?.id;
+    const dogName = guardian?.dogs?.[0]?.name;
+
+    const { data: danglogs, isLoading: danglogsLoading } = useDangLogs(
+        activeTab === "mine" ? guardianId : undefined
     );
 
     const toggleLike = useToggleLike();
 
-    // 초기 로딩 시뮬레이션
-    useEffect(() => {
-        const timer = setTimeout(() => setIsInitialLoading(false), 1200);
-        return () => clearTimeout(timer);
-    }, []);
-
-    const showLoading = isLoading || isInitialLoading;
-
-    // 더미 데이터 (Supabase 연동 전 시각적 확인용)
-    const mockDangLogs = danglogs && danglogs.length > 0
-        ? danglogs
-        : [
-            {
-                id: "dl-1",
-                author_id: MOCK_GUARDIAN_ID,
-                dog_id: "dog-1",
-                title: "한강 산책 일기",
-                content: "한강공원에서 1시간 동안 프리스비 놀이를 했어요. 초코가 정말 신나게 뛰어다녔답니다!",
-                image_urls: ["/photo/2025040803041_0.jpg"],
-                activity_type: "walk",
-                shared_with: null,
-                co_authors: null,
-                created_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-                updated_at: new Date().toISOString(),
-            },
-            {
-                id: "dl-2",
-                author_id: MOCK_GUARDIAN_ID,
-                dog_id: "dog-1",
-                title: null,
-                content: "오늘은 새로운 간식을 사줬는데 너무 좋아하더라구요. 꼬리를 미친듯이 흔들면서 두발로 섰어요!",
-                image_urls: null,
-                activity_type: "play",
-                shared_with: null,
-                co_authors: null,
-                created_at: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
-                updated_at: new Date().toISOString(),
-            },
-        ];
+    const isLoading = guardianLoading || danglogsLoading;
 
     const TABS: { value: FeedTab; label: string }[] = [
         { value: "mine", label: "내 기록" },
@@ -97,42 +65,29 @@ export default function DangLogFeedPage() {
                 </div>
 
                 {/* 피드 */}
-                {showLoading ? (
+                {isLoading ? (
                     <div className="space-y-6">
                         <DangLogCardSkeleton />
                         <DangLogCardSkeleton />
                     </div>
-                ) : mockDangLogs.length === 0 ? (
-                    <div className="text-center mt-20">
-                        <p className="font-medium text-lg text-foreground">
-                            아직 기록이 없어요.
-                        </p>
-                        <p className="mt-2 text-sm text-foreground-muted">
-                            첫 댕로그를 작성해보세요!
-                        </p>
-                        <Button
-                            className="mt-4"
-                            onClick={() => setIsEditorOpen(true)}
-                        >
-                            댕로그 작성하기
-                        </Button>
-                    </div>
+                ) : !danglogs || danglogs.length === 0 ? (
+                    <DangLogEmptyState onCreateClick={() => setIsEditorOpen(true)} />
                 ) : (
                     <StaggerList className="space-y-6">
-                        {mockDangLogs.map((log) => (
+                        {danglogs.map((log) => (
                             <StaggerItem key={log.id}>
-                                <DangLogCard
+                                <DangLogCardWithCounts
                                     danglog={log}
-                                    likeCount={3}
-                                    commentCount={2}
-                                    isLiked={false}
-                                    onToggleLike={() =>
-                                        toggleLike.mutate({
-                                            danglog_id: log.id,
-                                            guardian_id: MOCK_GUARDIAN_ID,
-                                        })
-                                    }
-                                    dogName="초코"
+                                    guardianId={guardianId ?? ""}
+                                    dogName={dogName}
+                                    onToggleLike={() => {
+                                        if (guardianId) {
+                                            toggleLike.mutate({
+                                                danglog_id: log.id,
+                                                guardian_id: guardianId,
+                                            });
+                                        }
+                                    }}
                                 />
                             </StaggerItem>
                         ))}
@@ -156,17 +111,46 @@ export default function DangLogFeedPage() {
             </TapScale>
 
             {/* 작성 에디터 */}
-            <DangLogEditor
-                isOpen={isEditorOpen}
-                onClose={() => setIsEditorOpen(false)}
-                authorId={MOCK_GUARDIAN_ID}
-                dogId="dog-1"
-            />
+            {guardianId && (
+                <DangLogEditor
+                    isOpen={isEditorOpen}
+                    onClose={() => setIsEditorOpen(false)}
+                    authorId={guardianId}
+                    dogId={guardian?.dogs?.[0]?.id}
+                />
+            )}
         </AppShell>
     );
 }
 
-// 스켈레톤 팩토리 (SKILL-06)
+/** 개별 카드 + 좋아요/댓글 카운트 쿼리 래퍼 */
+function DangLogCardWithCounts({
+    danglog,
+    guardianId,
+    dogName,
+    onToggleLike,
+}: {
+    danglog: DangLog;
+    guardianId: string;
+    dogName?: string;
+    onToggleLike: () => void;
+}) {
+    const { data: counts } = useDangLogCounts(danglog.id);
+    const { data: likes } = useDangLogLikes(danglog.id);
+    const isLiked = likes?.some((l) => l.guardian_id === guardianId) ?? false;
+
+    return (
+        <DangLogCard
+            danglog={danglog}
+            likeCount={counts?.likeCount ?? 0}
+            commentCount={counts?.commentCount ?? 0}
+            isLiked={isLiked}
+            onToggleLike={onToggleLike}
+            dogName={dogName}
+        />
+    );
+}
+
 function DangLogCardSkeleton() {
     return (
         <div className="bg-card rounded-3xl border border-border/50 overflow-hidden">

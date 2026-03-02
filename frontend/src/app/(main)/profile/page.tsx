@@ -1,54 +1,38 @@
-// profile/page.tsx — 내 프로필 페이지 (신뢰 점수 + 뱃지 + 받은 후기)
+// profile/page.tsx — 내 프로필 페이지 (실데이터 바인딩, DANG-PRF-001)
 
 "use client";
 
+import { useState } from "react";
 import { AppShell } from "@/components/shared/AppShell";
 import { Skeleton } from "@/components/ui/Skeleton";
+import { Button } from "@/components/ui/Button";
+import { useCurrentGuardian } from "@/lib/hooks/useCurrentGuardian";
+import { useGuardianProfile, useTrustBadges, useProfileStats } from "@/lib/hooks/useProfile";
 import ProfileHeader from "@/components/features/profile/ProfileHeader";
 import TrustScoreDisplay from "@/components/features/profile/TrustScoreDisplay";
 import TrustBadgeList from "@/components/features/profile/TrustBadgeList";
 import ProfileStats from "@/components/features/profile/ProfileStats";
 import ReviewList from "@/components/features/review/ReviewList";
-import type { Database } from "@/types/database.types";
-
-type TrustBadge = Database["public"]["Tables"]["trust_badges"]["Row"];
-
-// 더미 데이터 (Supabase 연동 전 시각적 확인용)
-const MOCK_GUARDIAN_ID = "mock-guardian-001";
-
-const MOCK_PROFILE = {
-    nickname: "초코언니",
-    dogName: "초코",
-    trustScore: 72,
-    trustLevel: 3,
-};
-
-const MOCK_BADGES: TrustBadge[] = [
-    {
-        id: "b1",
-        guardian_id: MOCK_GUARDIAN_ID,
-        badge_type: "verified" as const,
-        earned_at: "2026-01-15T00:00:00Z",
-    },
-    {
-        id: "b2",
-        guardian_id: MOCK_GUARDIAN_ID,
-        badge_type: "active_walker" as const,
-        earned_at: "2026-02-10T00:00:00Z",
-    },
-];
-
-const MOCK_STATS = {
-    reviewCount: 12,
-    avgRating: 4.2,
-    completedSchedules: 15,
-};
+import EditProfileSheet from "@/components/features/profile/EditProfileSheet";
+import NotificationSettings from "@/components/features/profile/NotificationSettings";
+import { Settings } from "lucide-react";
 
 export default function ProfilePage() {
-    // TODO: 실제 인증된 사용자 ID로 교체
-    // const { data: profile, isLoading } = useGuardianProfile(userId);
-    // const { data: badges } = useTrustBadges(userId);
-    const isLoading = false;
+    const [isEditOpen, setIsEditOpen] = useState(false);
+
+    const { data: guardian, isLoading: guardianLoading } = useCurrentGuardian();
+    const guardianId = guardian?.id;
+    const userId = guardian?.user_id;
+    const dog = guardian?.dogs?.[0] ?? null;
+
+    const { data: profile } = useGuardianProfile(userId ?? "");
+    const { data: badges } = useTrustBadges(guardianId ?? "");
+    const { data: stats } = useProfileStats(guardianId ?? "");
+
+    const trustScore = profile?.user?.trust_score ?? 0;
+    const trustLevel = profile?.user?.trust_level ?? 1;
+
+    const isLoading = guardianLoading || !guardian;
 
     if (isLoading) {
         return (
@@ -63,42 +47,64 @@ export default function ProfilePage() {
     return (
         <AppShell>
             <div className="px-4 py-6 space-y-6">
-                {/* 페이지 타이틀 */}
-                <h1 className="text-2xl font-display font-bold text-foreground">
-                    내 프로필
-                </h1>
+                {/* 페이지 타이틀 + 편집 버튼 */}
+                <div className="flex items-center justify-between">
+                    <h1 className="text-2xl font-display font-bold text-foreground">
+                        내 프로필
+                    </h1>
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setIsEditOpen(true)}
+                    >
+                        <Settings className="w-5 h-5 text-foreground-muted" />
+                    </Button>
+                </div>
 
                 {/* 프로필 헤더 */}
                 <ProfileHeader
-                    nickname={MOCK_PROFILE.nickname}
-                    dogName={MOCK_PROFILE.dogName}
-                    trustLevel={MOCK_PROFILE.trustLevel}
+                    nickname={guardian.nickname}
+                    dogName={dog?.name}
+                    trustLevel={trustLevel}
                 />
 
                 {/* 신뢰 점수 게이지 */}
                 <TrustScoreDisplay
-                    score={MOCK_PROFILE.trustScore}
-                    level={MOCK_PROFILE.trustLevel}
+                    score={trustScore}
+                    level={trustLevel}
                 />
 
                 {/* 뱃지 */}
-                <TrustBadgeList earnedBadges={MOCK_BADGES} />
+                <TrustBadgeList earnedBadges={badges ?? []} />
 
                 {/* 통계 */}
                 <ProfileStats
-                    reviewCount={MOCK_STATS.reviewCount}
-                    avgRating={MOCK_STATS.avgRating}
-                    completedSchedules={MOCK_STATS.completedSchedules}
+                    reviewCount={stats?.reviewCount ?? 0}
+                    avgRating={stats?.avgRating ?? 0}
+                    completedSchedules={stats?.completedSchedules ?? 0}
                 />
+
+                {/* 알림 설정 */}
+                {userId && <NotificationSettings userId={userId} />}
 
                 {/* 받은 후기 */}
                 <div>
                     <h2 className="text-lg font-display font-semibold text-foreground mb-4">
                         받은 후기
                     </h2>
-                    <ReviewList targetId={MOCK_GUARDIAN_ID} />
+                    <ReviewList targetId={guardianId ?? ""} />
                 </div>
             </div>
+
+            {/* 프로필 편집 BottomSheet */}
+            {guardian && (
+                <EditProfileSheet
+                    isOpen={isEditOpen}
+                    onClose={() => setIsEditOpen(false)}
+                    guardian={guardian}
+                    dog={dog}
+                />
+            )}
         </AppShell>
     );
 }

@@ -1,14 +1,18 @@
+// danglog/[id]/page.tsx — 댕로그 상세 페이지 (실데이터 바인딩, DANG-DLG-001)
+
 "use client";
 
 import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
-import { useDangLog, useDangLogLikes, useToggleLike } from "@/lib/hooks/useDangLog";
+import { useCurrentGuardian } from "@/lib/hooks/useCurrentGuardian";
+import { useDangLog, useDangLogLikes, useToggleLike, useDangLogCollaborators } from "@/lib/hooks/useDangLog";
 import CommentSection from "@/components/features/danglog/CommentSection";
+import ShareModal from "@/components/features/danglog/ShareModal";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { TapScale, ScrollReveal } from "@/components/ui/MotionWrappers";
 import { cn } from "@/lib/utils";
-import { ArrowLeft, Heart } from "lucide-react";
+import { ArrowLeft, Heart, Share2, Users } from "lucide-react";
 
 const ACTIVITY_LABELS: Record<string, string> = {
     walk: "산책",
@@ -19,50 +23,34 @@ const ACTIVITY_LABELS: Record<string, string> = {
     other: "기타",
 };
 
-// 임시 사용자 ID
-const MOCK_GUARDIAN_ID = "mock-guardian-001";
-
 export default function DangLogDetailPage() {
     const params = useParams();
     const router = useRouter();
     const danglogId = params.id as string;
 
+    const { data: guardian } = useCurrentGuardian();
+    const guardianId = guardian?.id ?? "";
+    const dogName = guardian?.dogs?.[0]?.name ?? "우리 강아지";
+
     const { data: danglog, isLoading } = useDangLog(danglogId);
     const { data: likes } = useDangLogLikes(danglogId);
+    const { data: collaborators } = useDangLogCollaborators(danglogId);
     const toggleLike = useToggleLike();
 
     const [activeImageIndex, setActiveImageIndex] = useState(0);
+    const [isShareOpen, setIsShareOpen] = useState(false);
 
-    const isLiked = likes?.some((l) => l.guardian_id === MOCK_GUARDIAN_ID) ?? false;
+    const isLiked = likes?.some((l) => l.guardian_id === guardianId) ?? false;
     const likeCount = likes?.length ?? 0;
 
-    // 더미 데이터 (Supabase 연동 전)
-    const mockDangLog = danglog || {
-        id: danglogId,
-        author_id: MOCK_GUARDIAN_ID,
-        dog_id: "dog-1",
-        title: "한강 산책 일기",
-        content:
-            "한강공원에서 1시간 동안 프리스비 놀이를 했어요. 초코가 정말 신나게 뛰어다녔답니다! 날씨도 좋고 바람도 시원해서 우리 둘 다 기분이 너무 좋았어요.",
-        image_urls: [
-            "/photo/2025040803041_0.jpg",
-            "/photo/jYcIZ1753511586.jpg",
-        ],
-        activity_type: "walk",
-        shared_with: null,
-        co_authors: null,
-        created_at: new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString(),
-        updated_at: new Date().toISOString(),
-    };
-
-    const images = mockDangLog.image_urls || [];
-    const activityLabel = mockDangLog.activity_type
-        ? ACTIVITY_LABELS[mockDangLog.activity_type] ?? mockDangLog.activity_type
-        : null;
-
-    if (isLoading) {
+    if (isLoading || !danglog) {
         return <DetailSkeleton onBack={() => router.back()} />;
     }
+
+    const images = danglog.image_urls || [];
+    const activityLabel = danglog.activity_type
+        ? ACTIVITY_LABELS[danglog.activity_type] ?? danglog.activity_type
+        : null;
 
     return (
         <div className="min-h-screen bg-background pb-24">
@@ -74,7 +62,11 @@ export default function DangLogDetailPage() {
                     </button>
                 </TapScale>
                 <h2 className="text-lg font-display font-semibold">댕로그</h2>
-                <div className="w-6" />
+                <TapScale>
+                    <button onClick={() => setIsShareOpen(true)}>
+                        <Share2 className="w-5 h-5 text-foreground-muted" />
+                    </button>
+                </TapScale>
             </header>
 
             <div className="pt-14 max-w-md mx-auto">
@@ -95,9 +87,6 @@ export default function DangLogDetailPage() {
                                             className="object-cover"
                                             sizes="100vw"
                                             priority={idx === 0}
-                                            onLoad={() => {
-                                                // 현재 보이는 이미지 인덱스 업데이트
-                                            }}
                                         />
                                     </div>
                                 </div>
@@ -129,7 +118,7 @@ export default function DangLogDetailPage() {
                     <div className="px-4 py-4">
                         <div className="flex items-center gap-2 mb-3">
                             <span className="text-sm font-semibold text-foreground">
-                                초코
+                                {dogName}
                             </span>
                             {activityLabel && (
                                 <span className="text-xs bg-primary-light/20 text-primary px-2 py-0.5 rounded-full">
@@ -137,23 +126,45 @@ export default function DangLogDetailPage() {
                                 </span>
                             )}
                             <span className="text-xs text-foreground-muted ml-auto">
-                                {getTimeAgo(mockDangLog.created_at)}
+                                {getTimeAgo(danglog.created_at)}
                             </span>
                         </div>
 
                         {/* 제목 */}
-                        {mockDangLog.title && (
+                        {danglog.title && (
                             <h1 className="text-xl font-display font-bold text-foreground mb-2">
-                                {mockDangLog.title}
+                                {danglog.title}
                             </h1>
                         )}
 
                         {/* 본문 */}
                         <p className="text-foreground leading-relaxed whitespace-pre-wrap">
-                            {mockDangLog.content}
+                            {danglog.content}
                         </p>
                     </div>
                 </ScrollReveal>
+
+                {/* 협업자 표시 */}
+                {collaborators && collaborators.length > 0 && (
+                    <div className="px-4 pb-3 flex items-center gap-2">
+                        <Users className="w-4 h-4 text-foreground-muted" />
+                        <div className="flex -space-x-2">
+                            {collaborators.slice(0, 5).map((c) => (
+                                <div
+                                    key={c.guardian_id}
+                                    className="w-6 h-6 rounded-full bg-primary-light/30 border-2 border-background flex items-center justify-center"
+                                >
+                                    <span className="text-[8px] font-bold text-primary">
+                                        {c.guardian_id.slice(0, 2).toUpperCase()}
+                                    </span>
+                                </div>
+                            ))}
+                        </div>
+                        <span className="text-xs text-foreground-muted">
+                            {collaborators.length}명 참여 중
+                        </span>
+                    </div>
+                )}
 
                 {/* 좋아요 */}
                 <div className="px-4 py-3 border-t border-b border-border">
@@ -162,7 +173,7 @@ export default function DangLogDetailPage() {
                             onClick={() =>
                                 toggleLike.mutate({
                                     danglog_id: danglogId,
-                                    guardian_id: MOCK_GUARDIAN_ID,
+                                    guardian_id: guardianId,
                                 })
                             }
                             className="flex items-center gap-2"
@@ -194,10 +205,18 @@ export default function DangLogDetailPage() {
                     </h3>
                     <CommentSection
                         danglogId={danglogId}
-                        currentGuardianId={MOCK_GUARDIAN_ID}
+                        currentGuardianId={guardianId}
                     />
                 </div>
             </div>
+
+            {/* 공유 모달 */}
+            <ShareModal
+                isOpen={isShareOpen}
+                onClose={() => setIsShareOpen(false)}
+                danglogId={danglogId}
+                authorId={guardianId}
+            />
         </div>
     );
 }

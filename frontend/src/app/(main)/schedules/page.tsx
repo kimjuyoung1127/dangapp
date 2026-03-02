@@ -1,57 +1,40 @@
+// schedules/page.tsx — 내 약속 페이지 (실데이터 바인딩, DANG-WLK-001)
+
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { AppShell } from "@/components/shared/AppShell";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { TapScale, StaggerList, StaggerItem } from "@/components/ui/MotionWrappers";
-import { Calendar, MapPin, Clock } from "lucide-react";
+import { Button } from "@/components/ui/Button";
+import { Calendar, MapPin, Clock, Footprints, MessageSquarePlus } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useCurrentGuardian } from "@/lib/hooks/useCurrentGuardian";
+import { useMySchedules } from "@/lib/hooks/useSchedule";
 import ReviewForm from "@/components/features/review/ReviewForm";
+import WalkRecordForm from "@/components/features/walk/WalkRecordForm";
+import type { ScheduleWithPartner } from "@/lib/hooks/useSchedule";
 
 type TabType = "upcoming" | "completed" | "cancelled";
 
-const dummySchedules = [
-    {
-        id: 1,
-        partnerName: "초코언니",
-        date: "2026-03-01",
-        time: "14:30",
-        location: "뚝섬유원지 한강공원",
-        status: "upcoming"
-    },
-    {
-        id: 2,
-        partnerName: "맥스아빠",
-        date: "2026-02-25",
-        time: "10:00",
-        location: "서울숲 반려동물 놀이터",
-        status: "completed"
-    },
-    {
-        id: 3,
-        partnerName: "보리엄마",
-        date: "2026-02-20",
-        time: "16:00",
-        location: "반포 한강공원",
-        status: "cancelled"
-    }
-];
+const TAB_MAP: Record<TabType, string[]> = {
+    upcoming: ["proposed", "confirmed"],
+    completed: ["completed"],
+    cancelled: ["cancelled"],
+};
 
 export default function SchedulesPage() {
     const [activeTab, setActiveTab] = useState<TabType>("upcoming");
-    const [reviewTarget, setReviewTarget] = useState<{
-        id: number;
-        partnerName: string;
-    } | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
+    const [reviewTarget, setReviewTarget] = useState<ScheduleWithPartner | null>(null);
+    const [walkRecordTarget, setWalkRecordTarget] = useState<ScheduleWithPartner | null>(null);
 
-    // 임시 로딩 시뮬레이션
-    useEffect(() => {
-        const timer = setTimeout(() => setIsLoading(false), 1000);
-        return () => clearTimeout(timer);
-    }, []);
+    const { data: guardian } = useCurrentGuardian();
+    const guardianId = guardian?.id;
+    const { data: schedules, isLoading } = useMySchedules(guardianId);
 
-    const filteredSchedules = dummySchedules.filter(s => s.status === activeTab);
+    const filteredSchedules = (schedules ?? []).filter((s) =>
+        TAB_MAP[activeTab].includes(s.status)
+    );
 
     return (
         <AppShell>
@@ -96,53 +79,11 @@ export default function SchedulesPage() {
                         <StaggerList className="space-y-4">
                             {filteredSchedules.map((schedule) => (
                                 <StaggerItem key={schedule.id}>
-                                    <div className="bg-card rounded-3xl p-5 border border-border shadow-sm">
-                                        <div className="flex justify-between items-start mb-4">
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-10 h-10 rounded-full bg-primary-light/30 flex items-center justify-center text-primary font-bold">
-                                                    {schedule.partnerName[0]}
-                                                </div>
-                                                <div>
-                                                    <h3 className="font-semibold text-foreground text-[15px]">{schedule.partnerName}</h3>
-                                                    <span className="text-[12px] text-foreground-muted">반려견 산책 메이트</span>
-                                                </div>
-                                            </div>
-
-                                            {schedule.status === "upcoming" && (
-                                                <span className="px-2.5 py-1 bg-primary-light/20 text-primary text-[11px] font-bold rounded-full">
-                                                    D-{Math.max(0, new Date(schedule.date).getDate() - new Date().getDate()) || 'Day'}
-                                                </span>
-                                            )}
-                                        </div>
-
-                                        <div className="space-y-2.5 bg-muted/50 rounded-xl p-3.5 border border-border">
-                                            <div className="flex items-center gap-2 text-sm text-foreground-muted">
-                                                <Calendar className="w-4 h-4 text-primary/70" />
-                                                <span>{schedule.date}</span>
-                                            </div>
-                                            <div className="flex items-center gap-2 text-sm text-foreground-muted">
-                                                <Clock className="w-4 h-4 text-primary/70" />
-                                                <span>{schedule.time}</span>
-                                            </div>
-                                            <div className="flex items-center gap-2 text-sm text-foreground-muted">
-                                                <MapPin className="w-4 h-4 text-primary/70" />
-                                                <span>{schedule.location}</span>
-                                            </div>
-                                        </div>
-
-                                        {schedule.status === "completed" && (
-                                            <div className="mt-4 pt-4 border-t border-border">
-                                                <TapScale>
-                                                    <button
-                                                        onClick={() => setReviewTarget({ id: schedule.id, partnerName: schedule.partnerName })}
-                                                        className="w-full py-2.5 bg-primary/10 text-primary font-medium text-sm rounded-xl"
-                                                    >
-                                                        후기 작성하기
-                                                    </button>
-                                                </TapScale>
-                                            </div>
-                                        )}
-                                    </div>
+                                    <ScheduleCard
+                                        schedule={schedule}
+                                        onReview={() => setReviewTarget(schedule)}
+                                        onWalkRecord={() => setWalkRecordTarget(schedule)}
+                                    />
                                 </StaggerItem>
                             ))}
                         </StaggerList>
@@ -150,16 +91,116 @@ export default function SchedulesPage() {
                 </main>
 
                 {/* 후기 작성 BottomSheet */}
-                <ReviewForm
-                    isOpen={!!reviewTarget}
-                    onClose={() => setReviewTarget(null)}
-                    authorId="mock-current-user"
-                    targetId={`mock-partner-${reviewTarget?.id ?? ""}`}
-                    targetName={reviewTarget?.partnerName ?? ""}
-                    scheduleId={`schedule-${reviewTarget?.id ?? ""}`}
-                />
+                {guardianId && (
+                    <ReviewForm
+                        isOpen={!!reviewTarget}
+                        onClose={() => setReviewTarget(null)}
+                        authorId={guardianId}
+                        targetId={reviewTarget?.partnerGuardianId ?? ""}
+                        targetName={reviewTarget?.partnerName ?? ""}
+                        scheduleId={reviewTarget?.id}
+                    />
+                )}
+
+                {/* 산책 기록 작성 BottomSheet */}
+                {guardianId && (
+                    <WalkRecordForm
+                        isOpen={!!walkRecordTarget}
+                        onClose={() => setWalkRecordTarget(null)}
+                        authorId={guardianId}
+                        scheduleId={walkRecordTarget?.id}
+                        partnerGuardianId={walkRecordTarget?.partnerGuardianId}
+                    />
+                )}
             </div>
         </AppShell>
+    );
+}
+
+function ScheduleCard({
+    schedule,
+    onReview,
+    onWalkRecord,
+}: {
+    schedule: ScheduleWithPartner;
+    onReview: () => void;
+    onWalkRecord: () => void;
+}) {
+    const dateObj = new Date(schedule.datetime);
+    const dateStr = dateObj.toLocaleDateString("ko-KR", { year: "numeric", month: "2-digit", day: "2-digit" });
+    const timeStr = dateObj.toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" });
+
+    const isUpcoming = schedule.status === "proposed" || schedule.status === "confirmed";
+    const daysUntil = isUpcoming
+        ? Math.max(0, Math.ceil((dateObj.getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
+        : 0;
+
+    return (
+        <div className="bg-card rounded-3xl p-5 border border-border shadow-sm">
+            <div className="flex justify-between items-start mb-4">
+                <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-primary-light/30 flex items-center justify-center text-primary font-bold">
+                        {schedule.partnerName[0]}
+                    </div>
+                    <div>
+                        <h3 className="font-semibold text-foreground text-[15px]">{schedule.partnerName}</h3>
+                        <span className="text-[12px] text-foreground-muted">
+                            {schedule.title}
+                        </span>
+                    </div>
+                </div>
+
+                {isUpcoming && (
+                    <span className="px-2.5 py-1 bg-primary-light/20 text-primary text-[11px] font-bold rounded-full">
+                        {daysUntil === 0 ? "D-Day" : `D-${daysUntil}`}
+                    </span>
+                )}
+            </div>
+
+            <div className="space-y-2.5 bg-muted/50 rounded-xl p-3.5 border border-border">
+                <div className="flex items-center gap-2 text-sm text-foreground-muted">
+                    <Calendar className="w-4 h-4 text-primary/70" />
+                    <span>{dateStr}</span>
+                </div>
+                <div className="flex items-center gap-2 text-sm text-foreground-muted">
+                    <Clock className="w-4 h-4 text-primary/70" />
+                    <span>{timeStr}</span>
+                </div>
+                {schedule.location_name && (
+                    <div className="flex items-center gap-2 text-sm text-foreground-muted">
+                        <MapPin className="w-4 h-4 text-primary/70" />
+                        <span>{schedule.location_name}</span>
+                    </div>
+                )}
+            </div>
+
+            {schedule.status === "completed" && (
+                <div className="mt-4 pt-4 border-t border-border flex gap-2">
+                    <TapScale className="flex-1">
+                        <Button
+                            variant="secondary"
+                            size="sm"
+                            className="w-full"
+                            onClick={onWalkRecord}
+                        >
+                            <Footprints className="w-4 h-4 mr-1.5" />
+                            산책 기록
+                        </Button>
+                    </TapScale>
+                    <TapScale className="flex-1">
+                        <Button
+                            variant="primary"
+                            size="sm"
+                            className="w-full"
+                            onClick={onReview}
+                        >
+                            <MessageSquarePlus className="w-4 h-4 mr-1.5" />
+                            후기 작성
+                        </Button>
+                    </TapScale>
+                </div>
+            )}
+        </div>
     );
 }
 
