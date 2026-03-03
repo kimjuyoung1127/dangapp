@@ -2,25 +2,28 @@
 
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
 
 export default function LoginPage() {
     const router = useRouter();
+    const supabase = createClient();
 
     const handleSocialLogin = async (provider: "kakao" | "google") => {
-        // [개발자 모드] 실제 인증 전 온보딩 상태 체크 모뮬레이션
-        console.log(`${provider} login (dev mode) - Checking status`);
-        
-        // 인증 후 신규 유저 여부에 따른 라우팅 로직
-        const isNewUser = true; 
+        const { error } = await supabase.auth.signInWithOAuth({
+            provider,
+            options: {
+                redirectTo: `${window.location.origin}/auth/callback`,
+            },
+        });
 
-        if (isNewUser) {
-            router.push("/onboarding");
-        } else {
-            router.push("/home");
+        if (error) {
+            console.error(`${provider} login error:`, error.message);
+            alert("로그인 중 오류가 발생했습니다.");
         }
     };
+
 
     return (
         <div className="flex flex-col items-center justify-center min-h-screen p-6 bg-background">

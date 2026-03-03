@@ -16,24 +16,27 @@ export const dogApi = {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('인증된 사용자가 아닙니다.');
 
-    // 1. 보호자 정보 업데이트 (기존 row가 존재한다고 가정)
-    const { error: guardianError } = await supabase
+    // 1. 보호자 정보 업서트 (존재하면 업데이트, 없으면 생성)
+    // user_id를 기반으로 업서트 수행
+    const { data: guardian, error: guardianError } = await supabase
       .from('guardians')
-      .update({
+      .upsert({
         ...guardianData,
+        user_id: user.id,
         onboarding_progress: 100, // 온보딩 완료
         updated_at: new Date().toISOString(),
-      })
-      .eq('user_id', user.id);
+      }, { onConflict: 'user_id' })
+      .select()
+      .single();
 
     if (guardianError) throw guardianError;
 
-    // 2. 강아지 프로필 생성
+    // 2. 강아지 프로필 생성 (위에서 조회한 실제 guardian.id 사용)
     const { data: dog, error: dogError } = await supabase
       .from('dogs')
       .insert({
         ...dogData,
-        guardian_id: user.id, // RLS 정책에 따라 실제로는 guardians.id가 필요할 수 있음
+        guardian_id: guardian.id, 
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       })
@@ -44,6 +47,7 @@ export const dogApi = {
 
     return dog;
   },
+
 
   /**
    * 사진 업로드 (강아지/보호자)

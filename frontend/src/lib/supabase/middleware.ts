@@ -34,29 +34,64 @@ export async function updateSession(request: NextRequest) {
         data: { user },
     } = await supabase.auth.getUser()
 
-    // Redirect root to home/login
+    const isMainApp = 
+        request.nextUrl.pathname.startsWith('/home') ||
+        request.nextUrl.pathname.startsWith('/chat') ||
+        request.nextUrl.pathname.startsWith('/danglog') ||
+        request.nextUrl.pathname.startsWith('/profile') ||
+        request.nextUrl.pathname.startsWith('/schedules') ||
+        request.nextUrl.pathname.startsWith('/modes') ||
+        request.nextUrl.pathname.startsWith('/care') ||
+        request.nextUrl.pathname.startsWith('/family');
+
+    const isAuthPage = 
+        request.nextUrl.pathname.startsWith('/login') || 
+        request.nextUrl.pathname.startsWith('/register');
+
+    const isOnboardingPage = request.nextUrl.pathname.startsWith('/onboarding');
+
+    // 1. Redirect root to home/login
     if (request.nextUrl.pathname === '/') {
         const url = request.nextUrl.clone()
         url.pathname = user ? '/home' : '/login'
         return NextResponse.redirect(url)
     }
 
-    // Protect all routes inside /app/(main)
-    /* [개발자 모드] 임시로 인증 체크 비활성화
-    if (
-        !user &&
-        !request.nextUrl.pathname.startsWith('/login') &&
-        !request.nextUrl.pathname.startsWith('/register') &&
-        !request.nextUrl.pathname.startsWith('/auth') // for oauth callbacks
-    ) {
+    // 2. Protect main app routes
+    if (!user && isMainApp) {
         const url = request.nextUrl.clone()
         url.pathname = '/login'
         return NextResponse.redirect(url)
     }
-    */
 
-    // If user is logged in, but tries to access login page, redirect to home
-    if (user && (request.nextUrl.pathname.startsWith('/login') || request.nextUrl.pathname.startsWith('/register'))) {
+    // 3. Handle Onboarding Check for logged-in users
+    if (user && (isMainApp || isOnboardingPage)) {
+        // Query onboarding status
+        const { data: guardian } = await supabase
+            .from('guardians')
+            .select('onboarding_progress')
+            .eq('user_id', user.id)
+            .maybeSingle();
+
+        const progress = guardian?.onboarding_progress ?? 0;
+
+        if (progress < 100 && isMainApp) {
+            // Force onboarding if incomplete
+            const url = request.nextUrl.clone()
+            url.pathname = '/onboarding'
+            return NextResponse.redirect(url)
+        }
+
+        if (progress === 100 && isOnboardingPage) {
+            // Skip onboarding if already done
+            const url = request.nextUrl.clone()
+            url.pathname = '/home'
+            return NextResponse.redirect(url)
+        }
+    }
+
+    // 4. Redirect logged-in users away from auth pages
+    if (user && isAuthPage) {
         const url = request.nextUrl.clone()
         url.pathname = '/home'
         return NextResponse.redirect(url)
