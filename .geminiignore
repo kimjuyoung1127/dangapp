@@ -1,0 +1,19 @@
+# Gemini CLI 분석 및 탐색 제외 목록
+node_modules/
+.next/
+dist/
+build/
+.git/
+*.log
+*.lock
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+.env*
+*.svg
+*.png
+*.jpg
+*.jpeg
+*.webp
+*.gif
+*.ico

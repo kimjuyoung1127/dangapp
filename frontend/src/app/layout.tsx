@@ -47,6 +47,7 @@ export const viewport: Viewport = {
 };
 
 import Providers from '@/components/providers/Providers';
+import { AppShell } from '@/components/shared/AppShell';
 
 export default function RootLayout({
     children,
@@ -57,9 +58,12 @@ export default function RootLayout({
         <html lang="ko" className={cn(sora.variable, notoSansKR.variable)}>
             <body className="font-body text-foreground bg-background antialiased min-h-screen">
                 <Providers>
-                    {children}
+                    <AppShell>
+                        {children}
+                    </AppShell>
                 </Providers>
             </body>
         </html>
     );
 }
+

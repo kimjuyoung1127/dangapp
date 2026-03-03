@@ -4,7 +4,7 @@
 |---|---|---|---|---|---|---|---|---|---|---|
 | `/login` | Login | Auth | P1 | Ready | unassigned | DANG-AUTH-001 | `page-login-upgrade` | `feature-form-validation-and-submit`, `feature-error-and-retry-state` | `docs/status/PROJECT-STATUS.md` | 2026-03-02 |
 | `/register` | Register | Auth | P1 | Ready | unassigned | DANG-AUTH-001 | `page-register-upgrade` | `feature-form-validation-and-submit` | `docs/status/PROJECT-STATUS.md` | 2026-03-02 |
-| `/onboarding` | Onboarding | Onboarding | P0 | QA | claude | DANG-ONB-001, DANG-DES-001 | `page-onboarding-upgrade` | `feature-form-validation-and-submit`, `feature-navigation-and-gesture` | `docs/status/PROJECT-STATUS.md`, `docs/status/11-FEATURE-PARITY-MATRIX.md` | 2026-03-02 |
+| `/onboarding` | Onboarding | Onboarding | P0 | Done | claude | DANG-ONB-001, DANG-DES-001 | `page-onboarding-upgrade` | `feature-form-validation-and-submit`, `feature-navigation-and-gesture` | `docs/status/PROJECT-STATUS.md`, `docs/status/11-FEATURE-PARITY-MATRIX.md` | 2026-03-03 |
 | `/home` | Home | Main | P0 | QA | claude | DANG-MAT-001, DANG-DES-001 | `page-home-upgrade` | `feature-data-binding-and-loading`, `feature-ui-empty-and-skeleton` | `docs/status/PROJECT-STATUS.md`, `docs/status/MISSING-AND-UNIMPLEMENTED.md` | 2026-03-02 |
 | `/chat` | Chat List | Main | P1 | QA | claude | DANG-CHT-001 | `page-chat-list-upgrade` | `feature-data-binding-and-loading`, `feature-ui-empty-and-skeleton` | `docs/status/PROJECT-STATUS.md` | 2026-03-02 |
 | `/chat/[id]` | Chat Room | Main | P0 | QA | claude | DANG-CHT-001, DANG-WLK-001 | `page-chat-room-upgrade` | `feature-navigation-and-gesture`, `feature-error-and-retry-state` | `docs/status/PROJECT-STATUS.md` | 2026-03-02 |

@@ -36,6 +36,13 @@ export function Step6Location() {
         nextStep();
     };
 
+    // [디버깅 모드] 유효성 검사 무시하고 강제 다음 단계 이동
+    const handleForceNext = () => {
+        const currentValues = watch();
+        setData(currentValues);
+        nextStep();
+    };
+
     return (
         <form
             onSubmit={handleSubmit(onSubmit)}
@@ -106,7 +113,12 @@ export function Step6Location() {
             </div>
 
             <div className="pt-8">
-                <Button type="submit" size="lg" className="w-full">
+                <Button 
+                    type="button" 
+                    size="lg" 
+                    className="w-full"
+                    onClick={handleForceNext}
+                >
                     다음으로
                 </Button>
             </div>

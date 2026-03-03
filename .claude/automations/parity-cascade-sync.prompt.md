@@ -105,6 +105,10 @@ MISSING-AND-UNIMPLEMENTED.md (미구현 갭 → resolved 마킹)
    ```
 
 ### Step 8 — 잠금 해제
+1. 잠금 파일 `docs/status/.parity-cascade.lock`에 아래 JSON을 덮어쓰기 (삭제 금지, raw timestamp 금지):
+   ```json
+   {"status":"released","released_at":"<ISO>"}
+   ```
 
 ## DRY_RUN=true
 - Step 4, Step 5, Step 6에서 파일 수정 없이 계획만 출력.

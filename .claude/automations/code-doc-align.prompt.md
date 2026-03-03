@@ -43,7 +43,7 @@
 1. 각 `page.tsx`에서 `MOCK_`, `dummy`, `setTimeout.*setIsLoading`, `mock-guardian` 패턴 검색.
 2. Board에서 QA/Done인데 mock 잔존 → `MOCK_RESIDUE` 리스트.
 
-### Step 5 — 보고서 출력
+### Step 5 — 보고서 출력 (DRY_RUN=false일 때만)
 1. `docs/status/INTEGRITY-REPORT.md` 덮어쓰기:
    ```
    # Integrity Report — {날짜}
@@ -66,7 +66,10 @@
    ```
 
 ### Step 6 — 잠금 해제
-1. 잠금 파일 released 상태로 업데이트.
+1. 잠금 파일 `docs/status/.code-doc-align.lock`에 아래 JSON을 덮어쓰기 (삭제 금지):
+   ```json
+   {"status":"released","released_at":"<ISO>"}
+   ```
 
 ## DRY_RUN=true
 - Step 5에서 파일 수정 없이 터미널에 보고서 내용만 출력.

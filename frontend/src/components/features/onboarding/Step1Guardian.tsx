@@ -52,6 +52,13 @@ export function Step1Guardian() {
         nextStep();
     };
 
+    // [디버깅 모드] 유효성 검사 무시하고 강제 다음 단계 이동
+    const handleForceNext = () => {
+        const currentValues = watch();
+        setData(currentValues);
+        nextStep();
+    };
+
     return (
         <form
             onSubmit={handleSubmit(onSubmit)}
@@ -88,7 +95,7 @@ export function Step1Guardian() {
                     />
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                         <label className="text-sm font-medium text-foreground">
                             생년월일 <span className="text-foreground-muted text-xs">(선택)</span>
@@ -104,17 +111,32 @@ export function Step1Guardian() {
                         <label className="text-sm font-medium text-foreground">
                             성별 <span className="text-foreground-muted text-xs">(선택)</span>
                         </label>
-                        <select
-                            {...register("gender")}
-                            className="w-full px-4 h-14 rounded-xl border border-border bg-card focus:outline-none focus:ring-2 focus:ring-primary transition-all"
-                        >
-                            <option value="">선택</option>
-                            <option value="female">여성</option>
-                            <option value="male">남성</option>
-                            <option value="other">기타</option>
-                        </select>
+                        <div className="flex gap-2 h-14">
+                            <ToggleChip
+                                className="flex-1 justify-center"
+                                selected={watch("gender") === "female"}
+                                onClick={() => setValue("gender", "female")}
+                            >
+                                여성
+                            </ToggleChip>
+                            <ToggleChip
+                                className="flex-1 justify-center"
+                                selected={watch("gender") === "male"}
+                                onClick={() => setValue("gender", "male")}
+                            >
+                                남성
+                            </ToggleChip>
+                            <ToggleChip
+                                className="flex-1 justify-center"
+                                selected={watch("gender") === "other"}
+                                onClick={() => setValue("gender", "other")}
+                            >
+                                기타
+                            </ToggleChip>
+                        </div>
                     </div>
                 </div>
+
 
                 <div className="space-y-3">
                     <label className="text-sm font-medium text-foreground">
@@ -146,7 +168,12 @@ export function Step1Guardian() {
             </div>
 
             <div className="pt-8">
-                <Button type="submit" size="lg" className="w-full">
+                <Button 
+                    type="button" 
+                    size="lg" 
+                    className="w-full"
+                    onClick={handleForceNext}
+                >
                     다음으로
                 </Button>
             </div>

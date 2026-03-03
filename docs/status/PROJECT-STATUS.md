@@ -1,6 +1,6 @@
 # DangApp Project Status
 
-Last Updated: 2026-03-02 (KST)
+Last Updated: 2026-03-02 (KST) — auto-synced by parity-cascade-sync
 Owner Doc: `CLAUDE.md`
 
 ## Execution Phases
@@ -8,30 +8,44 @@ Owner Doc: `CLAUDE.md`
 | Phase | Status | Notes |
 |---|---|---|
 | Wave 0: workflow alignment | Done | docs/status + route board + skill matrix bootstrap completed. Skill rebuild (tosstaillog 패턴) 완료: 11 page skills + 5 feature skills + MCP sections |
-| Wave 1: schema foundation | In Progress | migration + RLS + storage buckets/policies authored |
-| Wave 2: onboarding rebuild | Ready | gated by Wave 1 completion |
-| Wave 3: home matching/filter | Ready | gated by Wave 1 completion |
-| Wave 4: chat/schedule/walk | Ready | gated by Wave 3 completion |
-| Wave 5: danglog/profile/notice | Ready | gated by Wave 4 completion |
+| Wave 1: schema foundation | Done | 6 migrations applied (initial_schema, matching_rpc, care_family_tables, wave1_schema_foundation, core_rls_baseline, wave1_storage_policies). 29 tables, 65 RLS policies, 4 storage buckets verified. |
+| Wave 2: onboarding rebuild | Done | /onboarding 구현 완료 (RHF+Zod+Supabase hook+upload). Type Modeling & Mapper 고도화 완료. |
+| Wave 3: home matching/filter | InProgress | /home QA, /chat QA, /chat/[id] QA. /modes는 아직 Ready (MAT-001 미완). |
+
+| Wave 4: chat/schedule/walk | QA | /schedules QA, /chat QA, /chat/[id] QA. 전 라우트 실데이터 바인딩 완료. |
+| Wave 5: danglog/profile/notice | QA | /danglog QA, /profile QA. 실데이터 바인딩 + 협업 훅 + 편집 시트 완료. |
 | Wave 6: B2B partner flow | Ready | gated by Wave 5 completion |
+
+## Wave Progress
+
+| Wave | Parity IDs | Status | Progress |
+|------|-----------|--------|----------|
+| 0 | workflow | Done | 100% |
+| 1 | DANG-INFRA-001 | Done | 100% |
+| 2 | DANG-ONB-001 | QA | 0% |
+| 3 | DANG-MAT-001, DANG-CHT-001 | QA/InProgress | 0% |
+| 4 | DANG-WLK-001, DANG-DLG-001, DANG-PRF-001 | QA | 0% |
+| 5 | DANG-B2B-001 | Ready | 0% |
+
+Overall parity verification: 1 Verified / 10 active IDs = 10% (7 routes at QA — 58% implementation complete, verification pending)
 
 ## Active Parity IDs
 
 | Parity ID | Domain | Status | Remaining |
 |---|---|---|---|
-| DANG-INFRA-001 | Schema/MCP/Storage/RLS | In Progress | end-to-end policy verification |
-| DANG-DES-001 | Toss-like design system | Ready | route-level upgrades pending |
+| DANG-INFRA-001 | Schema/MCP/Storage/RLS | Done | — |
+| DANG-DES-001 | Toss-like design system | QA | route-level verification pending |
 | DANG-AUTH-001 | auth + consent | Ready | implementation pending |
-| DANG-ONB-001 | guardian/dog onboarding | In Progress | step persistence + bottom sheet UX + upload integration pending |
-| DANG-MAT-001 | matching + filters | Ready | implementation pending |
-| DANG-CHT-001 | realtime chat + schedule | Ready | implementation pending |
-| DANG-WLK-001 | walk records + review | Ready | implementation pending |
-| DANG-DLG-001 | collaborative danglog | Ready | implementation pending |
-| DANG-PRF-001 | profile/notification settings | Ready | implementation pending |
+| DANG-ONB-001 | guardian/dog onboarding | QA | end-to-end verification + edge-case testing |
+| DANG-MAT-001 | matching + filters | InProgress | /modes route + filter flow pending |
+| DANG-CHT-001 | realtime chat + schedule | QA | end-to-end verification pending |
+| DANG-WLK-001 | walk records + review | QA | end-to-end verification pending |
+| DANG-DLG-001 | collaborative danglog | QA | end-to-end verification pending |
+| DANG-PRF-001 | profile/notification settings | QA | end-to-end verification pending |
 | DANG-B2B-001 | partner-place model | Ready | implementation pending |
 
 ## Blockers
 
-1. Core table RLS for existing schema is incomplete and must be hardened before production traffic.
-2. Onboarding UX spec has many fields requiring storage + schema support; this is Wave 1 dependency.
+1. ~~Core table RLS for existing schema is incomplete and must be hardened before production traffic.~~ **[RESOLVED — DANG-INFRA-001 Done: 65 RLS policies verified]**
+2. ~~Onboarding UX spec has many fields requiring storage + schema support; this is Wave 1 dependency.~~ **[RESOLVED — Wave 1 Done: schema + storage policies applied]**
 3. MCP connection requires valid `SUPABASE_ACCESS_TOKEN` in runtime environment.

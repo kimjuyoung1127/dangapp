@@ -1,4 +1,4 @@
-// Step7ActivityTimes.tsx — 활동 시간 + 최종 제출 (전체 선택, Supabase 영속화) (DANG-ONB-001)
+// Step7ActivityTimes.tsx — 활동 시간 + 최종 제출 (DANG-ONB-001)
 
 "use client";
 
@@ -8,17 +8,16 @@ import { useCompleteOnboarding } from "@/lib/hooks/useOnboarding";
 import { Button } from "@/components/ui/Button";
 import { ToggleChip } from "@/components/ui/ToggleChip";
 
-const TIME_SLOTS: Array<{ id: "morning" | "afternoon" | "evening"; label: string }> = [
-    { id: "morning", label: "아침 (06:00~09:00)" },
-    { id: "afternoon", label: "낮 (12:00~15:00)" },
-    { id: "evening", label: "저녁 (18:00~21:00)" },
+const TIME_SLOTS: Array<{ id: "morning" | "afternoon" | "evening"; label: string; icon: string }> = [
+    { id: "morning", label: "오전", icon: "🌅" },
+    { id: "afternoon", label: "오후", icon: "☀️" },
+    { id: "evening", label: "저녁", icon: "🌙" },
 ];
 
 export function Step7ActivityTimes() {
     const router = useRouter();
-    const { data, setData, completionScore, isSubmitting, submitError, setSubmitting, setSubmitError, photoFile } =
+    const { data, setData, completionScore, isSubmitting, submitError, submitOnboarding, photoFile } =
         useOnboardingStore();
-    const completeMutation = useCompleteOnboarding();
 
     const weekdayTimes = data.weekday_activity_times || [];
     const weekendTimes = data.weekend_activity_times || [];
@@ -38,90 +37,96 @@ export function Step7ActivityTimes() {
     };
 
     const handleComplete = async () => {
-        setSubmitting(true);
-        setSubmitError(null);
-
         try {
-            await completeMutation.mutateAsync({ data, photoFile });
+            await submitOnboarding();
             router.push("/home");
         } catch (err) {
-            const message = err instanceof Error ? err.message : "저장에 실패했습니다. 다시 시도해주세요.";
-            setSubmitError(message);
-        } finally {
-            setSubmitting(false);
+            // 에러는 스토어의 submitError에 저장되므로 여기서는 별도 처리가 필요 없을 수 있음
+            console.error("Onboarding submission failed:", err);
         }
     };
 
-    return (
-        <div className="flex flex-col h-full">
-            <div className="flex-1 space-y-6">
-                <div className="space-y-4">
-                    <label className="text-sm font-medium text-foreground">
-                        활동 시간 선택 <span className="text-foreground-muted text-xs">(선택)</span>
-                    </label>
 
-                    <div className="rounded-2xl border border-border p-4 space-y-3">
-                        <p className="text-sm font-medium text-foreground">평일</p>
-                        {TIME_SLOTS.map((slot) => (
-                            <ToggleChip
-                                key={`weekday-${slot.id}`}
-                                size="lg"
-                                fullWidth
-                                selected={weekdayTimes.includes(slot.id)}
-                                onClick={() => toggleWeekday(slot.id)}
-                                className="justify-between text-left"
-                            >
-                                <span>{slot.label}</span>
-                                {weekdayTimes.includes(slot.id) && (
-                                    <span className="w-5 h-5 rounded-full bg-primary flex items-center justify-center text-white text-xs">
-                                        ✓
-                                    </span>
-                                )}
-                            </ToggleChip>
-                        ))}
+    return (
+        <div className="flex flex-col h-full overflow-y-auto pb-10 scrollbar-hide">
+            <div className="flex-1 space-y-10">
+                <div className="space-y-2">
+                    <h2 className="text-2xl font-bold text-foreground">활동 시간을 알려주세요</h2>
+                    <p className="text-sm text-foreground-muted">맞춤형 매칭을 위해 활동 가능한 시간을 선택해주세요.</p>
+                </div>
+
+                <div className="space-y-8">
+                    {/* 평일 섹션 */}
+                    <div className="space-y-4">
+                        <div className="flex items-center gap-2">
+                            <span className="text-base font-semibold text-foreground">평일 활동 시간</span>
+                            <span className="text-xs text-foreground-muted">(다중 선택 가능)</span>
+                        </div>
+                        <div className="grid grid-cols-3 gap-3">
+                            {TIME_SLOTS.map((slot) => (
+                                <ToggleChip
+                                    key={`weekday-${slot.id}`}
+                                    className="h-20 flex flex-col justify-center items-center gap-1 border-2"
+                                    selected={weekdayTimes.includes(slot.id)}
+                                    onClick={() => toggleWeekday(slot.id)}
+                                >
+                                    <span className="text-xl">{slot.icon}</span>
+                                    <span className="text-sm font-medium">{slot.label}</span>
+                                </ToggleChip>
+                            ))}
+                        </div>
                     </div>
 
-                    <div className="rounded-2xl border border-border p-4 space-y-3">
-                        <p className="text-sm font-medium text-foreground">주말</p>
-                        {TIME_SLOTS.map((slot) => (
-                            <ToggleChip
-                                key={`weekend-${slot.id}`}
-                                size="lg"
-                                fullWidth
-                                selected={weekendTimes.includes(slot.id)}
-                                onClick={() => toggleWeekend(slot.id)}
-                                className="justify-between text-left"
-                            >
-                                <span>{slot.label}</span>
-                                {weekendTimes.includes(slot.id) && (
-                                    <span className="w-5 h-5 rounded-full bg-primary flex items-center justify-center text-white text-xs">
-                                        ✓
-                                    </span>
-                                )}
-                            </ToggleChip>
-                        ))}
+                    {/* 주말 섹션 */}
+                    <div className="space-y-4">
+                        <div className="flex items-center gap-2">
+                            <span className="text-base font-semibold text-foreground">주말 활동 시간</span>
+                            <span className="text-xs text-foreground-muted">(다중 선택 가능)</span>
+                        </div>
+                        <div className="grid grid-cols-3 gap-3">
+                            {TIME_SLOTS.map((slot) => (
+                                <ToggleChip
+                                    key={`weekend-${slot.id}`}
+                                    className="h-20 flex flex-col justify-center items-center gap-1 border-2"
+                                    selected={weekendTimes.includes(slot.id)}
+                                    onClick={() => toggleWeekend(slot.id)}
+                                >
+                                    <span className="text-xl">{slot.icon}</span>
+                                    <span className="text-sm font-medium">{slot.label}</span>
+                                </ToggleChip>
+                            ))}
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <div className="pt-8">
-                <p className="text-xs text-foreground-muted mb-3 text-center">
-                    온보딩 완성도: {completionScore()}%
-                </p>
+            <div className="pt-8 space-y-4">
+                <div className="flex flex-col items-center gap-1">
+                    <div className="w-full h-1 bg-border rounded-full overflow-hidden">
+                        <div 
+                            className="h-full bg-primary transition-all duration-500" 
+                            style={{ width: `${completionScore()}%` }} 
+                        />
+                    </div>
+                    <p className="text-xs text-foreground-muted">
+                        온보딩 완성도 {completionScore()}%
+                    </p>
+                </div>
 
                 {submitError && (
-                    <p className="text-sm text-red-500 text-center mb-3">{submitError}</p>
+                    <p className="text-sm text-red-500 text-center">{submitError}</p>
                 )}
 
                 <Button
                     size="lg"
-                    className="w-full"
+                    className="w-full h-14 text-lg font-bold"
                     onClick={handleComplete}
                     disabled={isSubmitting}
                 >
-                    {isSubmitting ? "저장 중..." : "가입 완료하고 시작하기!"}
+                    {isSubmitting ? "가입 정보 전송 중..." : "가입 완료하고 시작하기"}
                 </Button>
             </div>
         </div>
     );
 }
+

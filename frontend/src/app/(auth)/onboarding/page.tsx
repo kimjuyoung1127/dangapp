@@ -12,6 +12,7 @@ import { Step2DogInfo } from "@/components/features/onboarding/Step2DogInfo";
 import { Step3DogAge } from "@/components/features/onboarding/Step3DogAge";
 import { Step4DogTemperament } from "@/components/features/onboarding/Step4DogTemperament";
 import { Step5DogPhoto } from "@/components/features/onboarding/Step5DogPhoto";
+import { StepPhoneAuth } from "@/components/features/onboarding/StepPhoneAuth";
 import { Step6Location } from "@/components/features/onboarding/Step6Location";
 import { Step7ActivityTimes } from "@/components/features/onboarding/Step7ActivityTimes";
 import { Skeleton } from "@/components/ui/Skeleton";
@@ -77,11 +78,17 @@ export default function OnboardingPage() {
                 };
             case 6:
                 return {
+                    title: "본인 인증",
+                    subtitle: "안전한 이웃 매칭을 위해 본인 확인이 필요해요.",
+                    component: <StepPhoneAuth />,
+                };
+            case 7:
+                return {
                     title: "동네 설정",
                     subtitle: "가까워서 만나기 편한 보호자를 찾아드릴게요.",
                     component: <Step6Location />,
                 };
-            case 7:
+            case 8:
                 return {
                     title: "산책 시간",
                     subtitle: "내 라이프스타일과 겹치는 사람과 만나요.",
