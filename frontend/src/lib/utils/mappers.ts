@@ -17,15 +17,15 @@ export const mapOnboardingToDog = (data: OnboardingData): DogInsert => {
     age: data.dog_age ?? null,
     birth_date: data.dog_birth_date ?? null,
     weight_kg: data.dog_weight_kg ?? null,
-    gender: (data.dog_gender as any) ?? null,
+    gender: (data.dog_gender as 'male' | 'female') ?? null,
     neutered: data.dog_neutered ?? null,
-    temperament: (data.dog_temperament || []) as any, 
-    temperament_profile: (data.dog_temperament_profile || {}) as any, // JSONB
-    weekday_walk_slots: (data.weekday_activity_times || []) as any, // Enum 배열
-    weekend_walk_slots: (data.weekend_activity_times || []) as any, // Enum 배열
+    temperament: (data.dog_temperament || []) as unknown as any[], 
+    temperament_profile: (data.dog_temperament_profile || {}) as unknown as any, // JSONB
+    weekday_walk_slots: (data.weekday_activity_times || []) as any[], // Enum 배열
+    weekend_walk_slots: (data.weekend_activity_times || []) as any[], // Enum 배열
     photo_urls: data.dog_photo_url ? [data.dog_photo_url] : [],
     vaccination_docs: data.dog_document_urls || [],
-    documents: (data.dog_document_urls || []) as any,
+    documents: (data.dog_document_urls || []) as unknown as any,
   };
 };
 
@@ -42,12 +42,13 @@ export const mapOnboardingToGuardian = (data: OnboardingData): GuardianUpdate =>
     bio: data.bio ?? null,
     address_name: data.address_name ?? null,
     verified_region: data.verified_region ?? false,
-    usage_purpose: (data.usage_purpose || []) as any, // Enum 배열
+    usage_purpose: (data.usage_purpose || []) as any[], // Enum 배열
     preferred_radius_km: data.preferred_radius_km ?? 2,
     onboarding_progress: 100,
-    activity_times: (data.weekday_activity_times || []) as any, // 기존 하위호환용
+    activity_times: (data.weekday_activity_times || []) as unknown as any, // 기존 하위호환용
   };
 };
+
 
 
 

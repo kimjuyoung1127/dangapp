@@ -126,21 +126,24 @@ export const useOnboardingStore = create<OnboardingState>((set, get) => ({
             // 3. API 호출 (인증 에러가 나더라도 개발 환경에선 성공한 것처럼 로그만 남김)
             try {
                 await dogApi.createDogProfile(dogPayload, guardianPayload);
-            } catch (error: any) {
-                console.error("API Error during onboarding:", error.message);
+            } catch (error) {
+                const apiError = error as Error;
+                console.error("API Error during onboarding:", apiError.message);
                 if (process.env.NODE_ENV === "production") {
                     throw error; // 운영 환경에서만 에러 던짐
                 }
                 console.log("Development mode: Proceeding to home despite API error.");
             }
-        } catch (error: any) {
-            const message = error.message || '가입 정보 저장 중 오류가 발생했습니다.';
+        } catch (error) {
+            const err = error as Error;
+            const message = err.message || '가입 정보 저장 중 오류가 발생했습니다.';
             setSubmitError(message);
             throw error;
         } finally {
             setSubmitting(false);
         }
     },
+
 
     completionScore: (): number => {
         const state = get().data;

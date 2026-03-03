@@ -5,9 +5,9 @@
 import { useState, useEffect } from "react";
 import { useOnboardingStore } from "@/stores/useOnboardingStore";
 import { Button } from "@/components/ui/Button";
-import { cn } from "@/lib/utils";
 
 export function StepPhoneAuth() {
+
     const { data, setData, nextStep } = useOnboardingStore();
     const [phoneNumber, setPhoneNumber] = useState(data.phone_number || "");
     const [authCode, setAuthCode] = useState("");
