@@ -1,11 +1,34 @@
 # Schema Changelog
 
+## 2026-03-04 — Remote Supabase Apply & Runtime Fix (MCP)
+
+원격 프로젝트(`fjpvtivpulreulfxmxfe`)에 매칭/위치 RPC를 재적용하고 런타임 스모크를 통해 의존 스키마 누락을 즉시 복구함.
+
+### Remote Apply (Management API)
+- `20260304090001_matching_logic_v2.sql` 원격 적용 완료 (`match_guardians_v2` 재설치).
+- `20260304100001_set_guardian_location_rpc.sql` 원격 적용 완료 (`set_guardian_location` 재설치).
+
+### Runtime Issue Detected
+- `match_guardians_v2` 스모크 호출 시 `deleted_at` 컬럼 누락(`SQLSTATE 42703`) 확인.
+- 원인: Phase 2 함수는 `guardians.deleted_at`, `guardians.visibility_level` 컬럼 의존, 원격 스키마는 일부 미적용 상태.
+
+### Dependency Fix
+- `20260304090000_schema_high_fidelity_phase1.sql` 원격 적용으로 의존 컬럼(`deleted_at`, `visibility_level`) 생성 및 정책 정렬.
+
+### Verification
+- 함수 존재 확인: `public.match_guardians_v2`, `public.set_guardian_location`.
+- `match_guardians_v2` 스모크 호출 정상 응답(에러 없음, 결과 0건).
+- `set_guardian_location` 권한 가드 확인: 비소유자 호출 시 권한 예외 발생.
+
+---
+
 ## 2026-03-04 — Review Hardening Patch (Stability/RLS/Matching)
 
 리뷰 피드백 기반으로 High Fidelity 3단계 마이그레이션을 안정화하는 보강 패치를 반영함.
 
 ### Phase 1 Hardening
 - **auth_sync_trigger 안정화**: `handle_new_user`에서 이메일/전화 fallback 처리 및 예외 fail-open(`RAISE WARNING`) 적용.
+- **set_guardian_location RPC 신설**: 위경도 좌표를 PostGIS `POINT` 형식으로 안전하게 저장하는 전용 함수 추가 (보안: `auth.uid()` 소유권 체크 포함).
 - **RLS 연계 보강**: `guardians`, `dogs` 조회 정책에 `deleted_at` + `visibility_level` 조건 반영.
 - **Spatial Index 보강**: `guardians.location` GIST 인덱스 추가 (`ST_DWithin` 탐색 성능 보강).
 - **신규 테이블 보호**: `verified_regions`, `trust_score_history`에 RLS 및 정책 추가.

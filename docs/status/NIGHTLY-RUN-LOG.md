@@ -1,6 +1,6 @@
-# Nightly Run Log — 2026-03-03
+# Nightly Run Log — 2026-03-04
 
-**Run time**: 2026-03-03T23:00:00+09:00
+**Run time**: 2026-03-04T14:01:18Z
 **DRY_RUN**: false
 
 ## Actions
@@ -15,8 +15,9 @@
 
 | Folder | Date | Age (days) | Status |
 |--------|------|------------|--------|
-| `docs/daily/03-02` | 2026-03-02 | 1 | Recent — skip |
-| `docs/daily/03-03` | 2026-03-03 | 0 | Today — skip |
+| `docs/daily/03-02` | 2026-03-02 | 2 | Recent — skip |
+| `docs/daily/03-03` | 2026-03-03 | 1 | Recent — skip |
+| `docs/daily/03-04` | 2026-03-04 | 0 | Today — skip |
 | `docs/daily/3-02`  | —          | — | MALFORMED name |
 
 **Stale folders (>7 days old)**: none
@@ -60,4 +61,5 @@ All Source of Truth references verified:
 
 **Previous entries**
 
+- 2026-03-03: 0 compressed, 1 MISPLACED (3-02), 0 BROKEN_REF.
 - 2026-03-02: Initialized DangApp docs control-plane.

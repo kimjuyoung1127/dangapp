@@ -51,20 +51,13 @@ export function Step6Location() {
             },
             (error) => {
                 console.error("Geolocation error:", error);
-                alert("위치 정보를 가져오는 데 실패했습니다.");
+                alert("위치 정보를 가져오는 데 실패했습니다. 직접 주소를 입력해 주세요.");
             }
         );
     };
 
     const onSubmit = (values: Step6Data) => {
         setData(values);
-        nextStep();
-    };
-
-    // [디버깅 모드] 유효성 검사 무시하고 강제 다음 단계 이동
-    const handleForceNext = () => {
-        const currentValues = watch();
-        setData(currentValues);
         nextStep();
     };
 
@@ -103,7 +96,7 @@ export function Step6Location() {
                     <div className="flex items-center gap-2">
                         <ToggleChip
                             selected={verifiedRegion === true}
-                            onClick={() => setValue("verified_region", true)}
+                            onClick={handleVerifyLocation}
                         >
                             현재 위치 인증
                         </ToggleChip>
@@ -139,10 +132,10 @@ export function Step6Location() {
 
             <div className="pt-8">
                 <Button 
-                    type="button" 
+                    type="submit" 
                     size="lg" 
                     className="w-full"
-                    onClick={handleForceNext}
+                    disabled={!watch("address_name")}
                 >
                     다음으로
                 </Button>

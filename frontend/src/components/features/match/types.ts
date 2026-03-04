@@ -24,4 +24,5 @@ export interface MatchGuardianProfile {
     dogs: DogProfile[];
     distance_meters?: number;
     compatibility_score?: number;
+    time_overlap_score?: number; // Locked Decisions 연동
 }

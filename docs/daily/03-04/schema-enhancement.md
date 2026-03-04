@@ -32,22 +32,38 @@
 - `PROJECT-STATUS.md`: Wave 1 완료 및 MCP 블로커 해제 반영.
 
 ### 4. 리뷰 보강 및 긴급 패치 반영 (Review Hardening & Emergency Fix)
-- **[Critical] 온보딩-매칭 데이터 단절 해소:**
-    - `Step6Location.tsx`: `navigator.geolocation`을 통한 실제 위경도 좌표(`latitude`, `longitude`) 캡처 로직 추가.
+- **[Resolved - Critical] 위치 인증 실동작 보장:** 
+    - `Step6Location.tsx`: `handleVerifyLocation` 핸들러를 버튼에 바인딩하고 `type="submit"`으로 폼 유효성 검사 로직을 복구함.
+- **[Resolved - Critical] RPC 보안 강화:**
+    - `set_guardian_location`: `SECURITY DEFINER` 함수 내부에서 `auth.uid()`와 가디언 소유자를 대조하는 체크 로직을 추가하여 타인 위치 조작 원천 차단.
+- **[Resolved - Critical] 온보딩-매칭 데이터 단절 해소:**
     - `mappers.ts`: 수집된 좌표를 PostGIS `POINT(lng lat)` 형식으로 변환하여 `guardians.location` 필드에 저장하도록 매퍼 고도화.
     - `activity_times`: 매칭 RPC(`v2`) 규격에 맞춰 평일/주말 시간대를 단일 배열로 병합 및 규격화.
-- **[High] 기존 유저 백필 (Backfill):**
+- **[Resolved - High] 기존 유저 백필 (Backfill):**
     - 트리거 설치 전 가입한 기존 유저(`gmdqn2tp@gmail.com`)를 `public.users`로 복사하는 수동 SQL 스크립트 실행 완료.
 - **[High] 프론트엔드 연동 기초:**
     - `useMatch.ts`: 신규 RPC `match_guardians_v2` 호출 및 응답 스키마(`target_guardian_id`) 대응 완료.
     - `useOnboardingStore.ts`: 위경도 좌표 저장을 위한 신규 상태 필드 추가.
 
+### 5. 원격 Supabase 즉시 반영 및 런타임 복구 (MCP/Management API)
+- **함수 재배포 완료:**
+    - `20260304090001_matching_logic_v2.sql` 원격 적용 (`match_guardians_v2` 재설치).
+    - `20260304100001_set_guardian_location_rpc.sql` 원격 적용 (`set_guardian_location` 재설치).
+- **스모크 중 의존 누락 탐지 및 복구:**
+    - `match_guardians_v2` 호출에서 `deleted_at` 컬럼 누락 오류(`SQLSTATE 42703`) 확인.
+    - 의존 마이그레이션 `20260304090000_schema_high_fidelity_phase1.sql` 원격 적용으로 `guardians.deleted_at`, `guardians.visibility_level` 복구.
+- **최종 검증:**
+    - 함수 존재 확인: `match_guardians_v2`, `set_guardian_location`.
+    - `match_guardians_v2` 스모크 호출 성공(에러 없음).
+    - `set_guardian_location` 권한 가드 동작 확인(비소유자 호출 시 권한 예외).
+
 ## ✅ 검증 결과
 - **Auth Sync:** 트리거 로직 검증 완료.
-- **Matching RPC:** SQL 레벨에서 가중치 기반 정렬 로직 정상 작동 확인.
+- **Matching RPC:** SQL 레벨에서 가중치 기반 정렬 로직 정상 작동 확인 + 원격 런타임 에러 해소.
 - **Data Integrity:** `public.users` 테이블과 `auth.users` 간의 연결 고리 확보.
+- **Production Readiness (DB):** `match_guardians_v2` / `set_guardian_location` 원격 함수 및 의존 컬럼 정합성 확인.
 
 ## 🚀 다음 권장 작업
-1. **Migrations Apply & Smoke Test:** 로컬/원격 환경에 Phase 1~3 + 보강 패치를 적용하고 RPC/정책 스모크 테스트 수행.
-2. **Location Geocoding:** 온보딩 6단계에서 `address_name` 외에 실제 위경도 좌표를 `location` 필드에 저장하는 로직 추가.
-3. **/modes + Family UI:** `dog_ownership` 기반 가족 초대/관리 UX 및 `/modes` 라우트 플로우 구현/검증.
+1. **Onboarding Atomic RPC:** `guardians upsert + location + dogs insert`를 단일 트랜잭션 RPC로 통합.
+2. **/modes + Family UI:** `dog_ownership` 기반 가족 초대/관리 UX 및 `/modes` 라우트 플로우 구현/검증.
+3. **E2E 검증:** `/home` 매칭 카드 점수 노출과 실제 RPC 응답 정합성(end-to-end) 검증.

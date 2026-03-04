@@ -12,18 +12,21 @@ export const dogApi = {
   /**
    * 반려견 프로필 생성 및 보호자 온보딩 상태 업데이트
    */
-  async createDogProfile(dogData: DogInsert, guardianData: GuardianUpdate) {
+  async createDogProfile(
+    dogData: DogInsert, 
+    guardianData: GuardianUpdate, 
+    locationCoords?: { lat: number; lng: number }
+  ) {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('인증된 사용자가 아닙니다.');
 
-    // 1. 보호자 정보 업서트 (존재하면 업데이트, 없으면 생성)
-    // user_id를 기반으로 업서트 수행
+    // 1. 보호자 정보 업서트
     const { data: guardian, error: guardianError } = await supabase
       .from('guardians')
       .upsert({
         ...guardianData,
         user_id: user.id,
-        onboarding_progress: 100, // 온보딩 완료
+        onboarding_progress: 100,
         updated_at: new Date().toISOString(),
       }, { onConflict: 'user_id' })
       .select()
@@ -31,7 +34,17 @@ export const dogApi = {
 
     if (guardianError) throw guardianError;
 
-    // 2. 강아지 프로필 생성 (위에서 조회한 실제 guardian.id 사용)
+    // 1-1. 위치 좌표가 있다면 RPC 호출 (Locked Decisions 1.2, 3.5)
+    if (locationCoords) {
+        const { error: locError } = await supabase.rpc('set_guardian_location', {
+            p_guardian_id: guardian.id,
+            p_lng: locationCoords.lng,
+            p_lat: locationCoords.lat
+        });
+        if (locError) console.warn("Location update failed via RPC:", locError.message);
+    }
+
+    // 2. 강아지 프로필 생성
     const { data: dog, error: dogError } = await supabase
       .from('dogs')
       .insert({

@@ -41,16 +41,16 @@ export const mapOnboardingToGuardian = (data: OnboardingData): GuardianUpdate =>
     avatar_url: data.avatar_url ?? null,
     bio: data.bio ?? null,
     address_name: data.address_name ?? null,
-    // PostGIS POINT(lng lat) 형식으로 변환
-    location: data.longitude && data.latitude 
-      ? `POINT(${data.longitude} ${data.latitude})` as any 
-      : null,
+    // location 필드는 dogApi에서 전용 RPC(set_guardian_location)로 저장하므로 여기서는 제외
     verified_region: data.verified_region ?? false,
     usage_purpose: (data.usage_purpose || []) as any[], // Enum 배열
     preferred_radius_km: data.preferred_radius_km ?? 2,
     onboarding_progress: 100,
-    // RPC와 정렬을 위해 배열 형식으로 통일
-    activity_times: [...(data.weekday_activity_times || []), ...(data.weekend_activity_times || [])] as any[],
+    // Locked Decisions 1.3: 평일/주말 합집합의 평탄 배열(JSON array)로 저장
+    activity_times: Array.from(new Set([
+      ...(data.weekday_activity_times || []), 
+      ...(data.weekend_activity_times || [])
+    ])) as any[],
   };
 };
 

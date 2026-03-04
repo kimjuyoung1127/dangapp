@@ -20,53 +20,51 @@ export function useMatchingGuardians({
     return useQuery<MatchGuardianProfile[]>({
         queryKey: ["matching-guardians", guardianId, mode],
         queryFn: async () => {
-            // 1. RPC 호출: 추천 보호자 리스트 (30명)
-            const { data: matchedIds, error: rpcError } = await supabase.rpc(
+            // 1. RPC v2 호출: 추천 보호자 리스트
+            const { data: matchedResults, error: rpcError } = await supabase.rpc(
                 "match_guardians_v2",
                 {
                     p_guardian_id: guardianId,
                     p_mode: mode ?? "basic",
                     p_limit: 30,
-                    p_offset: 0,
                 }
             );
 
             if (rpcError) throw rpcError;
-            if (!matchedIds || matchedIds.length === 0) return [];
+            if (!matchedResults || matchedResults.length === 0) return [];
 
-            // 2. 매칭된 보호자 상세 정보 (guardians + users + dogs)
-            const guardianIds = matchedIds.map(
+            // 2. 매칭된 보호자 상세 정보 조회 (ID 기반)
+            const guardianIds = matchedResults.map(
                 (m: { target_guardian_id: string }) => m.target_guardian_id
             );
 
             const { data: fullProfiles, error: fetchError } = await supabase
                 .from("guardians")
-                .select(
-                    `
+                .select(`
                     *,
                     users ( trust_score, trust_level ),
                     dogs ( * )
-                `
-                )
+                `)
                 .in("id", guardianIds);
 
             if (fetchError) throw fetchError;
 
-            // 3. RPC 거리/호환성 점수 병합
-            const profiles = (fullProfiles ?? []).map((profile) => {
-                const matchInfo = matchedIds.find(
-                    (m: {
-                        target_guardian_id: string;
-                        distance_meters: number;
-                        compatibility_score: number;
-                    }) => m.target_guardian_id === profile.id
+            // 3. 데이터 병합 및 RPC 순서 강제 복원 (Locked Decisions 3.3)
+            const profiles = guardianIds.map((id: string) => {
+                const profile = fullProfiles?.find((p) => p.id === id);
+                const matchInfo = matchedResults.find(
+                    (m: { target_guardian_id: string }) => m.target_guardian_id === id
                 );
+
+                if (!profile) return null;
+
                 return {
                     ...profile,
                     distance_meters: matchInfo?.distance_meters,
                     compatibility_score: matchInfo?.compatibility_score,
+                    time_overlap_score: matchInfo?.time_overlap_score,
                 } as MatchGuardianProfile;
-            });
+            }).filter(Boolean) as MatchGuardianProfile[];
 
             return profiles;
         },

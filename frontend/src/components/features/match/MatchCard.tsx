@@ -2,7 +2,7 @@
 "use client";
 
 import Image from "next/image";
-import { Heart, X, ShieldCheck, MapPin } from "lucide-react";
+import { Heart, X, ShieldCheck, MapPin, Zap } from "lucide-react";
 import { TapScale, ScrollReveal } from "@/components/ui/MotionWrappers";
 import { cn, formatDistance } from "@/lib/utils";
 import { getTrustLevelInfo } from "@/lib/constants/reviews";
@@ -21,23 +21,43 @@ export default function MatchCard({ profile, onLike, onPass }: MatchCardProps) {
     const distance = formatDistance(profile.distance_meters);
     const photoSrc = dog?.photo_urls?.[0] || "/placeholder-dog.svg";
 
+    // 매칭 점수 계산 (리뷰 기반 반올림)
+    const score = profile.compatibility_score != null ? Math.round(profile.compatibility_score) : null;
+    const isHighMatch = score != null && score >= 90;
+    const hasTimeOverlap = profile.time_overlap_score != null && profile.time_overlap_score > 0;
+
     return (
         <div className="relative w-full max-w-md mx-auto pb-24 space-y-6">
             {/* 1. 프로필 헤더 (이름 + 신뢰 뱃지 + 거리) */}
             <div className="flex items-center justify-between px-2">
-                <div className="flex items-center gap-2">
-                    <h2 className="text-2xl font-display font-bold text-foreground">
-                        {profile.nickname}
-                    </h2>
-                    <span className="inline-flex items-center gap-1 bg-primary text-white text-xs px-2 py-0.5 rounded-full font-medium">
-                        <ShieldCheck className="w-3.5 h-3.5" /> Lv.{trustLevel}
-                    </span>
-                    <span className={cn("text-xs font-medium", trustInfo.color)}>
-                        {trustInfo.label}
-                    </span>
+                <div className="flex flex-col gap-1">
+                    <div className="flex items-center gap-2">
+                        <h2 className="text-2xl font-display font-bold text-foreground">
+                            {profile.nickname}
+                        </h2>
+                        {score != null && (
+                            <span className={cn(
+                                "inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[10px] font-bold",
+                                isHighMatch ? "bg-primary text-white" : "bg-muted text-foreground-muted"
+                            )}>
+                                <Zap className="w-2.5 h-2.5 fill-current" />
+                                {score}% 찰떡궁합
+                            </span>
+                        )}
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <span className="inline-flex items-center gap-1 bg-primary-light/30 text-primary text-[10px] px-1.5 py-0.5 rounded-md font-semibold">
+                            Lv.{trustLevel} {trustInfo.label}
+                        </span>
+                        {hasTimeOverlap && (
+                            <span className="text-[10px] text-green-600 font-medium bg-green-50 px-1.5 py-0.5 rounded-md">
+                                산책 시간대 비슷!
+                            </span>
+                        )}
+                    </div>
                 </div>
                 {distance && (
-                    <div className="flex items-center gap-1 text-foreground-muted text-sm">
+                    <div className="flex items-center gap-1 text-foreground-muted text-sm self-start mt-1">
                         <MapPin className="w-4 h-4" />
                         <span>{distance}</span>
                     </div>
@@ -81,7 +101,7 @@ export default function MatchCard({ profile, onLike, onPass }: MatchCardProps) {
             </ScrollReveal>
 
             {/* 3. 강아지 성향 태그 */}
-            {dog?.temperament && dog.temperament.length > 0 && (
+            {dog?.temperament && (Array.isArray(dog.temperament)) && dog.temperament.length > 0 && (
                 <ScrollReveal>
                     <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
                         {dog.temperament.map((tag, idx) => (
@@ -117,37 +137,6 @@ export default function MatchCard({ profile, onLike, onPass }: MatchCardProps) {
                     </TapScale>
                 </div>
             </ScrollReveal>
-
-            {/* 5. 강아지 성향 카드 */}
-            {dog?.temperament && dog.temperament.length > 0 && (
-                <ScrollReveal>
-                    <div className="relative bg-card p-6 rounded-3xl shadow-sm border border-border mt-8">
-                        <p className="text-sm text-foreground-muted mb-2 font-medium">
-                            {dog.name}의 성격
-                        </p>
-                        <div className="flex flex-wrap gap-2 pr-12">
-                            {dog.temperament.map((t, idx) => (
-                                <span
-                                    key={idx}
-                                    className="bg-primary-light/20 text-primary px-3 py-1 rounded-full text-sm font-medium"
-                                >
-                                    {t}
-                                </span>
-                            ))}
-                        </div>
-
-                        <TapScale className="absolute -bottom-5 right-4 z-10">
-                            <button
-                                onClick={() => onLike("temperament")}
-                                aria-label="성격 좋아요"
-                                className="w-12 h-12 rounded-full bg-primary flex items-center justify-center text-white shadow-lg shadow-primary/20"
-                            >
-                                <Heart className="w-6 h-6" />
-                            </button>
-                        </TapScale>
-                    </div>
-                </ScrollReveal>
-            )}
 
             {/* 전체 패스(X) 버튼 플로팅 */}
             <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-20">

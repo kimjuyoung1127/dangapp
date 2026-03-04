@@ -1,7 +1,7 @@
 // page.tsx — /home 매칭 추천 페이지 (DANG-MAT-001)
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { AppShell } from "@/components/shared/AppShell";
@@ -46,6 +46,19 @@ export default function HomePage() {
         mode: activeMode,
         enabled: !!guardianId,
     });
+
+    // 디버깅 로그
+    useEffect(() => {
+        console.log("--- Home Page State ---");
+        console.log("Current Guardian:", guardian);
+        console.log("Matching Profiles:", profiles);
+        console.log("Loading Status:", { guardianLoading, profilesLoading });
+    }, [guardian, profiles, guardianLoading, profilesLoading]);
+
+    // Locked Decisions 4.4: 데이터 수신 또는 모드 변경 시 인덱스 리셋 (리뷰 4번 해결)
+    useEffect(() => {
+        setCurrentIndex(0);
+    }, [profiles, activeMode]);
 
     // 3. Like/Pass 뮤테이션 + 채팅방 생성
     const matchAction = useCreateMatchAction();

@@ -125,9 +125,13 @@ export const useOnboardingStore = create<OnboardingState>((set, get) => ({
             const dogPayload = mapOnboardingToDog({ ...data, dog_photo_url: finalPhotoUrl });
             const guardianPayload = mapOnboardingToGuardian(data);
 
-            // 3. API 호출 (인증 에러가 나더라도 개발 환경에선 성공한 것처럼 로그만 남김)
+            // 3. API 호출
             try {
-                await dogApi.createDogProfile(dogPayload, guardianPayload);
+                const locationCoords = (data.latitude && data.longitude) 
+                    ? { lat: data.latitude, lng: data.longitude } 
+                    : undefined;
+
+                await dogApi.createDogProfile(dogPayload, guardianPayload, locationCoords);
             } catch (error) {
                 const apiError = error as Error;
                 console.error("API Error during onboarding:", apiError.message);

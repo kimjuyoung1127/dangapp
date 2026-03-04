@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
-
+import { LogOut } from "lucide-react";
 
 const ROUTES = [
   { path: "/login", label: "🔑 로그인" },
@@ -23,13 +24,26 @@ export function DebugNavigator() {
   const [isOpen, setIsOpen] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
+  const supabase = createClient();
 
-  // 배포 시 보안 취약점이 되지 않도록 환경 변수 기반으로 변경
+  const handleLogout = async () => {
+    try {
+      await supabase.auth.signOut();
+      setIsOpen(false);
+      router.replace("/login");
+      // 세션 완전 초기화를 위해 약간의 지연 후 리로드
+      setTimeout(() => {
+        window.location.href = "/login";
+      }, 100);
+    } catch (error) {
+      console.error("Logout error:", error);
+      alert("로그아웃 중 오류가 발생했습니다.");
+    }
+  };
+
+  // 개발 환경에서만 노출
   const isDev = process.env.NODE_ENV === "development"; 
-
   if (!isDev) return null;
-
-
 
   return (
     <div className="fixed bottom-24 right-6 z-[9999] flex flex-col items-end gap-2">
@@ -39,7 +53,7 @@ export function DebugNavigator() {
             <span className="text-xs font-bold text-primary">DEBUG NAVIGATOR</span>
             <span className="text-[10px] text-foreground-muted">Current: {pathname}</span>
           </div>
-          <div className="flex flex-col gap-1 max-h-[60vh] overflow-y-auto scrollbar-hide">
+          <div className="flex flex-col gap-1 max-h-[60vh] overflow-y-auto scrollbar-hide mb-3">
             {ROUTES.map((route) => (
               <button
                 key={route.path}
@@ -58,6 +72,14 @@ export function DebugNavigator() {
               </button>
             ))}
           </div>
+          
+          <button
+            onClick={handleLogout}
+            className="w-full px-3 py-2.5 bg-red-50 text-red-600 rounded-xl text-sm font-bold flex items-center justify-center gap-2 hover:bg-red-100 transition-colors border border-red-100"
+          >
+            <LogOut className="w-4 h-4" />
+            세션 로그아웃
+          </button>
         </div>
       )}
       
