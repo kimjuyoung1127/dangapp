@@ -10,12 +10,6 @@ interface UseMatchingGuardiansOptions {
     enabled?: boolean;
 }
 
-const MODE_TO_PURPOSE: Record<string, string> = {
-    basic: "friend",
-    care: "care",
-    family: "family",
-};
-
 export function useMatchingGuardians({
     guardianId,
     mode,
@@ -28,9 +22,10 @@ export function useMatchingGuardians({
         queryFn: async () => {
             // 1. RPC 호출: 추천 보호자 리스트 (30명)
             const { data: matchedIds, error: rpcError } = await supabase.rpc(
-                "match_guardians",
+                "match_guardians_v2",
                 {
                     p_guardian_id: guardianId,
+                    p_mode: mode ?? "basic",
                     p_limit: 30,
                     p_offset: 0,
                 }
@@ -41,7 +36,7 @@ export function useMatchingGuardians({
 
             // 2. 매칭된 보호자 상세 정보 (guardians + users + dogs)
             const guardianIds = matchedIds.map(
-                (m: { guardian_id: string }) => m.guardian_id
+                (m: { target_guardian_id: string }) => m.target_guardian_id
             );
 
             const { data: fullProfiles, error: fetchError } = await supabase
@@ -58,13 +53,13 @@ export function useMatchingGuardians({
             if (fetchError) throw fetchError;
 
             // 3. RPC 거리/호환성 점수 병합
-            let profiles = (fullProfiles ?? []).map((profile) => {
+            const profiles = (fullProfiles ?? []).map((profile) => {
                 const matchInfo = matchedIds.find(
                     (m: {
-                        guardian_id: string;
+                        target_guardian_id: string;
                         distance_meters: number;
                         compatibility_score: number;
-                    }) => m.guardian_id === profile.id
+                    }) => m.target_guardian_id === profile.id
                 );
                 return {
                     ...profile,
@@ -72,15 +67,6 @@ export function useMatchingGuardians({
                     compatibility_score: matchInfo?.compatibility_score,
                 } as MatchGuardianProfile;
             });
-
-            // 4. 모드 필터 (클라이언트 사이드 usage_purpose 필터)
-            if (mode && mode !== "basic") {
-                const purposeKey = MODE_TO_PURPOSE[mode];
-                profiles = profiles.filter(
-                    (p) =>
-                        p.usage_purpose && p.usage_purpose.includes(purposeKey as "friend" | "care" | "family")
-                );
-            }
 
             return profiles;
         },

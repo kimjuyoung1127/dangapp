@@ -36,6 +36,8 @@ export type OnboardingData = {
     dog_document_urls?: string[];
 
     // Match Preferences
+    latitude?: number;
+    longitude?: number;
     address_name?: string;
     verified_region?: boolean;
     weekday_activity_times?: Array<'morning' | 'afternoon' | 'evening'>;

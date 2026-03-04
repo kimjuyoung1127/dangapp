@@ -31,6 +31,31 @@ export function Step6Location() {
     const radiusValue = watch("preferred_radius_km") ?? 3;
     const verifiedRegion = watch("verified_region");
 
+    const handleVerifyLocation = () => {
+        if (!navigator.geolocation) {
+            alert("위치 정보를 지원하지 않는 브라우저입니다.");
+            return;
+        }
+
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                const { latitude, longitude } = position.coords;
+                // 좌표를 스토어에 저장 (추후 매퍼에서 POINT 형식으로 변환)
+                setData({ 
+                    latitude, 
+                    longitude,
+                    verified_region: true 
+                });
+                setValue("verified_region", true);
+                alert("위치 인증에 성공했습니다.");
+            },
+            (error) => {
+                console.error("Geolocation error:", error);
+                alert("위치 정보를 가져오는 데 실패했습니다.");
+            }
+        );
+    };
+
     const onSubmit = (values: Step6Data) => {
         setData(values);
         nextStep();

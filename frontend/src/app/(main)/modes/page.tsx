@@ -1,4 +1,4 @@
-// modes/page.tsx — 모드 선택 허브 (Basic/Care/Family 카드)
+// modes/page.tsx — 모드 선택 허브 (Basic/Care/Family 카드) (DANG-MAT-001)
 
 "use client";
 
@@ -8,19 +8,26 @@ import { AppShell } from "@/components/shared/AppShell";
 import ModeCard from "@/components/features/modes/ModeCard";
 import ModeUnlockDialog from "@/components/features/modes/ModeUnlockDialog";
 import { MODE_CONFIG, type ModeConfig } from "@/lib/constants/modes";
-
-// 더미 데이터 (Supabase 연동 전 시각적 확인용)
-const MOCK_TRUST_LEVEL = 2;
-const MOCK_TRUST_SCORE = 35;
-const MOCK_UNLOCKED: string[] = ["basic", "care"];
+import { useModeUnlocks } from "@/lib/hooks/useMode";
+import { useCurrentGuardian } from "@/lib/hooks/useCurrentGuardian";
 
 export default function ModesPage() {
     const router = useRouter();
     const [activeMode, setActiveMode] = useState<string>("basic");
     const [lockedMode, setLockedMode] = useState<ModeConfig | null>(null);
 
+    const { data: guardian } = useCurrentGuardian();
+    const guardianId = guardian?.id ?? "";
+    const trustLevel = guardian?.trust_level ?? 0;
+    const trustScore = guardian?.trust_score ?? 0;
+
+    const { data: unlocks = [] } = useModeUnlocks(guardianId);
+    const unlockedModes = new Set(unlocks.map((u) => u.mode));
+    // basic 모드는 항상 해제
+    unlockedModes.add("basic");
+
     const handleSelect = (config: ModeConfig) => {
-        const isUnlocked = MOCK_UNLOCKED.includes(config.mode);
+        const isUnlocked = unlockedModes.has(config.mode);
 
         if (!isUnlocked) {
             setLockedMode(config);
@@ -48,9 +55,9 @@ export default function ModesPage() {
                         <ModeCard
                             key={config.mode}
                             config={config}
-                            isUnlocked={MOCK_UNLOCKED.includes(config.mode)}
+                            isUnlocked={unlockedModes.has(config.mode)}
                             isActive={activeMode === config.mode}
-                            currentLevel={MOCK_TRUST_LEVEL}
+                            currentLevel={trustLevel}
                             onSelect={() => handleSelect(config)}
                         />
                     ))}
@@ -63,8 +70,8 @@ export default function ModesPage() {
                     isOpen={!!lockedMode}
                     onClose={() => setLockedMode(null)}
                     config={lockedMode}
-                    currentLevel={MOCK_TRUST_LEVEL}
-                    currentScore={MOCK_TRUST_SCORE}
+                    currentLevel={trustLevel}
+                    currentScore={trustScore}
                 />
             )}
         </AppShell>

@@ -1,8 +1,8 @@
-// family/page.tsx — 패밀리 그룹 목록 페이지
+// family/page.tsx — 패밀리 그룹 목록 페이지 (DANG-MAT-001)
 
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { AppShell } from "@/components/shared/AppShell";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { TapScale, StaggerList, StaggerItem } from "@/components/ui/MotionWrappers";
@@ -10,34 +10,19 @@ import { Plus, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import FamilyGroupCard from "@/components/features/family/FamilyGroupCard";
 import FamilyGroupForm from "@/components/features/family/FamilyGroupForm";
+import { useFamilyGroups, useFamilyMembers } from "@/lib/hooks/useFamily";
+import { useCurrentGuardian } from "@/lib/hooks/useCurrentGuardian";
 import type { Database } from "@/types/database.types";
 
 type FamilyGroup = Database["public"]["Tables"]["family_groups"]["Row"];
 
-// 더미 데이터
-const MOCK_GROUPS: FamilyGroup[] = [
-    {
-        id: "fg-1",
-        name: "초코네 가족",
-        creator_id: "mock-user",
-        dog_ids: ["dog-1", "dog-2"],
-        created_at: "2026-02-20T00:00:00Z",
-    },
-];
-
-const MOCK_MEMBER_COUNTS: Record<string, number> = {
-    "fg-1": 3,
-};
-
 export default function FamilyPage() {
     const [isFormOpen, setIsFormOpen] = useState(false);
-    const [isLoading, setIsLoading] = useState(true);
 
-    // 임시 로딩 시뮬레이션
-    useEffect(() => {
-        const timer = setTimeout(() => setIsLoading(false), 1000);
-        return () => clearTimeout(timer);
-    }, []);
+    const { data: guardian } = useCurrentGuardian();
+    const guardianId = guardian?.id ?? "";
+
+    const { data: groups = [], isLoading } = useFamilyGroups(guardianId);
 
     return (
         <AppShell>
@@ -58,7 +43,7 @@ export default function FamilyPage() {
                         <FamilyGroupSkeleton />
                         <FamilyGroupSkeleton />
                     </div>
-                ) : MOCK_GROUPS.length === 0 ? (
+                ) : groups.length === 0 ? (
                     <div className="text-center py-12 space-y-3">
                         <p className="text-foreground-muted text-sm">
                             아직 패밀리 그룹이 없어요.
@@ -74,13 +59,8 @@ export default function FamilyPage() {
                     </div>
                 ) : (
                     <StaggerList className="space-y-4">
-                        {MOCK_GROUPS.map((group) => (
-                            <StaggerItem key={group.id}>
-                                <FamilyGroupCard
-                                    group={group}
-                                    memberCount={MOCK_MEMBER_COUNTS[group.id] ?? 0}
-                                />
-                            </StaggerItem>
+                        {groups.map((group) => (
+                            <FamilyGroupCardWithCount key={group.id} group={group} />
                         ))}
                     </StaggerList>
                 )}
@@ -98,12 +78,24 @@ export default function FamilyPage() {
             </TapScale>
 
             {/* 그룹 생성 폼 */}
-            <FamilyGroupForm
-                isOpen={isFormOpen}
-                onClose={() => setIsFormOpen(false)}
-                creatorId="mock-user"
-            />
+            {guardian && (
+                <FamilyGroupForm
+                    isOpen={isFormOpen}
+                    onClose={() => setIsFormOpen(false)}
+                    creatorId={guardian.id}
+                />
+            )}
         </AppShell>
+    );
+}
+
+/** 멤버 수를 실 데이터로 조회하는 래퍼 */
+function FamilyGroupCardWithCount({ group }: { group: FamilyGroup }) {
+    const { data: members = [] } = useFamilyMembers(group.id);
+    return (
+        <StaggerItem>
+            <FamilyGroupCard group={group} memberCount={members.length} />
+        </StaggerItem>
     );
 }
 

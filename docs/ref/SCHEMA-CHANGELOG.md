@@ -1,5 +1,136 @@
 # Schema Changelog
 
+## 2026-03-04 — Review Hardening Patch (Stability/RLS/Matching)
+
+리뷰 피드백 기반으로 High Fidelity 3단계 마이그레이션을 안정화하는 보강 패치를 반영함.
+
+### Phase 1 Hardening
+- **auth_sync_trigger 안정화**: `handle_new_user`에서 이메일/전화 fallback 처리 및 예외 fail-open(`RAISE WARNING`) 적용.
+- **RLS 연계 보강**: `guardians`, `dogs` 조회 정책에 `deleted_at` + `visibility_level` 조건 반영.
+- **Spatial Index 보강**: `guardians.location` GIST 인덱스 추가 (`ST_DWithin` 탐색 성능 보강).
+- **신규 테이블 보호**: `verified_regions`, `trust_score_history`에 RLS 및 정책 추가.
+
+### Phase 2 Hardening
+- **match_guardians_v2 재정의**: JSONB 기반 `activity_times`를 안전하게 처리하도록 `time_slot_overlap_count` 함수 도입.
+- **모드 필터 활성화**: `p_mode`가 SQL 레벨에서 실제 필터로 동작하도록 반영.
+- **문법/실행 안정성**: 함수 구조 정비 및 반환 컬럼(`target_guardian_id`) 고정.
+
+### Phase 3 Hardening
+- **RLS 정책 추가**: `dog_ownership`, `schedule_participants`, `partner_places`, `reservations`, `reports` 전체 RLS 활성화 및 정책 작성.
+- **운영 인덱스 보강**: 소유권/참여자/예약/신고 조회 인덱스 추가.
+- **수정 트리거 추가**: `partner_places`에 `updated_at` 트리거 적용.
+
+### Frontend Sync
+- **useMatch 연동 업데이트**: `match_guardians_v2` RPC 시그니처(`p_mode`, `target_guardian_id`)에 맞춰 훅 동기화.
+
+---
+
+## 2026-03-04 — High Fidelity Schema Upgrade (Wave 3 Foundation)
+
+당앱의 확장성과 안정성을 위해 기존 스키마를 대폭 고도화하는 3단계 마이그레이션을 수행함.
+
+### Phase 1: Auth Sync & Profile Enrichment
+- **auth_sync_trigger**: `auth.users` 가입 시 `public.users` 자동 생성 트리거 추가 (초기 매너 온도 36.5도 설정).
+- **profile_visibility**: 보호자 프로필 공개 범위 제어 (`all`, `neighbors`, `friends`, `private`) 추가.
+- **verified_regions**: 다중 지역 인증 및 인증 이력 추적 테이블 신설.
+- **soft_delete**: `guardians`, `dogs` 테이블에 `deleted_at` 컬럼 도입.
+
+### Phase 2: Advanced Matching Logic (v2)
+- **array_overlap_count**: 두 배열 간의 교집합 개수를 반환하는 유틸리티 함수 추가.
+- **match_guardians_v2**: 거리(40%) + 시간대 겹침(30%) + 신뢰도(20%) + 다양성(10%) 가중치 기반의 2세대 매칭 RPC 구현.
+- **visibility_filter**: 비공개 프로필 및 삭제 유저를 매칭 결과에서 자동 제외.
+
+### Phase 3: Social & B2B Foundation
+- **dog_ownership**: 반려견-보호자 N:M 관계 지원 (가족 계정 및 공동 관리 기능 기반).
+- **schedule_participants**: 한 약속에 여러 명의 보호자와 반려견이 참여할 수 있는 다대다 일정 구조 구축.
+- **partner_places / reservations**: B2B 장소(카페/병원 등) 정보 및 예약 파이프라인 테이블 신설.
+- **reports**: 유저 신고 및 관리 시스템 구축.
+
+---
+
+## 2026-03-03 — Dawn Sweep 미등재 테이블 보완
+
+
+Per SCHEMA-DRIFT-REPORT (2026-03-03), 15 tables exist in `database.types.ts` but were not
+individually documented. Entries added below for traceability.
+
+### blocks
+- Purpose: 특정 보호자 간 상호 차단 관리
+- Key columns: `blocker_id`, `blocked_id`, `created_at`
+- Status: Wave 1 baseline
+
+### care_requests
+- Purpose: 돌봄 요청 (산책·돌봄·미용·병원)
+- Key columns: `requester_id`, `caregiver_id`, `dog_id`, `care_type`, `status (pending/accepted/completed/cancelled)`, `datetime`, `duration_hours`
+- Status: Wave 1 — DANG-B2B-001
+
+### chat_messages
+- Purpose: 채팅방 개별 메시지
+- Key columns: `room_id`, `sender_id`, `content`, `read_at`
+- Status: Wave 1 — DANG-CHT-001
+
+### chat_participants
+- Purpose: 채팅방 참여자 매핑
+- Key columns: `room_id`, `user_id`, `joined_at`
+- Status: Wave 1 — DANG-CHT-001
+
+### chat_rooms
+- Purpose: 매칭 또는 그룹 채팅 컨테이너
+- Key columns: `type (direct/group)`, `last_message_at`
+- Status: Wave 1 — DANG-CHT-001
+
+### danglog_comments
+- Purpose: 댕로그 게시물 댓글
+- Key columns: `danglog_id`, `author_id`, `content`, `created_at`
+- Status: Wave 1 — DANG-WLK-001 / DANG-DLG-001
+
+### danglog_invites
+- Purpose: 공동기록 초대 (생성/수락/거절)
+- Key columns: `danglog_id`, `inviter_id`, `invitee_id`, `status`
+- Status: Wave 1 — DANG-DLG-001
+
+### danglog_likes
+- Purpose: 댕로그 좋아요 토글
+- Key columns: `danglog_id`, `guardian_id`
+- Status: Wave 1 — DANG-DLG-001
+
+### family_groups
+- Purpose: 패밀리 모드 그룹 컨테이너
+- Key columns: `name`, `creator_id`, `dog_ids (text[])`
+- Status: Wave 1 — DANG-MAT-001
+
+### family_members
+- Purpose: 패밀리 그룹 멤버 매핑
+- Key columns: `group_id`, `member_id`, `role (owner/member)`, `joined_at`
+- Status: Wave 1 — DANG-MAT-001
+
+### mode_unlocks
+- Purpose: 모드 잠금해제 이력 (Basic / Care / Family)
+- Key columns: `guardian_id`, `mode`, `unlocked_at`
+- Status: Wave 1 — DANG-MAT-001
+
+### notifications
+- Purpose: 인앱 알림 수신함
+- Key columns: `recipient_id`, `type`, `payload (jsonb)`, `read_at`
+- Status: Wave 1 (UI binding pending)
+
+### schedules
+- Purpose: 산책·돌봄 일정 예약
+- Key columns: `guardian_id`, `dog_id`, `scheduled_at`, `duration_minutes`, `type`
+- Status: Wave 1 — DANG-MAT-001
+
+### trust_badges
+- Purpose: 신뢰 뱃지 획득 이력 (신분증·예방접종·리뷰 등)
+- Key columns: `guardian_id`, `badge_type`, `verified_at`
+- Status: Wave 1 — DANG-PRF-001
+
+### walk_reviews
+- Purpose: 산책 후 상호 평가 리뷰
+- Key columns: `walk_id`, `reviewer_id`, `reviewee_id`, `rating`, `comment`
+- Status: Wave 1 — DANG-WLK-001
+
+---
+
 ## 2026-03-02
 
 - Added Wave 1 schema expansion migration for onboarding, matching request metadata, walk records/reviews, collaborative danglog, notification settings, and consent logs.

@@ -1,4 +1,4 @@
-// care/page.tsx — 돌봄 요청 목록 페이지
+// care/page.tsx — 돌봄 요청 목록 페이지 (DANG-B2B-001)
 
 "use client";
 
@@ -10,46 +10,19 @@ import { Plus, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import CareRequestList from "@/components/features/care/CareRequestList";
 import CareRequestForm from "@/components/features/care/CareRequestForm";
-import type { Database } from "@/types/database.types";
+import { useCareRequests } from "@/lib/hooks/useCare";
+import { useCurrentGuardian } from "@/lib/hooks/useCurrentGuardian";
 
-type CareRequest = Database["public"]["Tables"]["care_requests"]["Row"];
 type TabType = "sent" | "received";
-
-// 더미 데이터
-const MOCK_REQUESTS: CareRequest[] = [
-    {
-        id: "cr-1",
-        requester_id: "mock-user",
-        caregiver_id: "mock-partner-1",
-        dog_id: null,
-        title: "주말 산책 대행 부탁드려요",
-        description: "토요일 오후에 한강 산책 부탁드립니다.",
-        care_type: "walk",
-        datetime: "2026-03-05T14:00:00Z",
-        duration_hours: 2,
-        status: "pending",
-        created_at: "2026-02-28T10:00:00Z",
-        updated_at: "2026-02-28T10:00:00Z",
-    },
-    {
-        id: "cr-2",
-        requester_id: "mock-user",
-        caregiver_id: "mock-partner-2",
-        dog_id: null,
-        title: "동물병원 방문 동행",
-        description: null,
-        care_type: "hospital",
-        datetime: "2026-03-02T10:00:00Z",
-        duration_hours: 1,
-        status: "accepted",
-        created_at: "2026-02-27T08:00:00Z",
-        updated_at: "2026-02-27T09:00:00Z",
-    },
-];
 
 export default function CarePage() {
     const [activeTab, setActiveTab] = useState<TabType>("sent");
     const [isFormOpen, setIsFormOpen] = useState(false);
+
+    const { data: guardian } = useCurrentGuardian();
+    const guardianId = guardian?.id ?? "";
+
+    const { data: requests = [], isLoading } = useCareRequests(guardianId, activeTab);
 
     const tabs: { key: TabType; label: string }[] = [
         { key: "sent", label: "보낸 요청" },
@@ -91,10 +64,7 @@ export default function CarePage() {
                 </div>
 
                 {/* 요청 목록 */}
-                <CareRequestList
-                    requests={activeTab === "sent" ? MOCK_REQUESTS : []}
-                    isLoading={false}
-                />
+                <CareRequestList requests={requests} isLoading={isLoading} />
             </div>
 
             {/* FAB */}
@@ -109,12 +79,14 @@ export default function CarePage() {
             </TapScale>
 
             {/* 돌봄 요청 폼 */}
-            <CareRequestForm
-                isOpen={isFormOpen}
-                onClose={() => setIsFormOpen(false)}
-                requesterId="mock-user"
-                caregiverId="mock-partner"
-            />
+            {guardian && (
+                <CareRequestForm
+                    isOpen={isFormOpen}
+                    onClose={() => setIsFormOpen(false)}
+                    requesterId={guardian.id}
+                    caregiverId=""
+                />
+            )}
         </AppShell>
     );
 }
