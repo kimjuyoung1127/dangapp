@@ -823,12 +823,201 @@ export interface Database {
                     criteria_met_json?: Json
                 }
             }
+            partner_places: {
+                Row: {
+                    id: string
+                    name: string
+                    category: string
+                    address_name: string | null
+                    location: any | null
+                    description: string | null
+                    photo_urls: string[]
+                    business_hours: Json | null
+                    is_verified: boolean
+                    amenities: string[]
+                    created_at: string
+                    updated_at: string
+                }
+                Insert: {
+                    id?: string
+                    name: string
+                    category: string
+                    address_name?: string | null
+                    location?: any | null
+                    description?: string | null
+                    photo_urls?: string[]
+                    business_hours?: Json | null
+                    is_verified?: boolean
+                    amenities?: string[]
+                    created_at?: string
+                    updated_at?: string
+                }
+                Update: {
+                    id?: string
+                    name?: string
+                    category?: string
+                    address_name?: string | null
+                    location?: any | null
+                    description?: string | null
+                    photo_urls?: string[]
+                    business_hours?: Json | null
+                    is_verified?: boolean
+                    amenities?: string[]
+                    created_at?: string
+                    updated_at?: string
+                }
+            }
+            reservations: {
+                Row: {
+                    id: string
+                    place_id: string
+                    guardian_id: string
+                    dog_id: string | null
+                    reserved_at: string
+                    status: 'pending' | 'confirmed' | 'completed' | 'cancelled'
+                    guest_count: number
+                    request_memo: string | null
+                    created_at: string
+                }
+                Insert: {
+                    id?: string
+                    place_id: string
+                    guardian_id: string
+                    dog_id?: string | null
+                    reserved_at: string
+                    status?: 'pending' | 'confirmed' | 'completed' | 'cancelled'
+                    guest_count?: number
+                    request_memo?: string | null
+                    created_at?: string
+                }
+                Update: {
+                    id?: string
+                    place_id?: string
+                    guardian_id?: string
+                    dog_id?: string | null
+                    reserved_at?: string
+                    status?: 'pending' | 'confirmed' | 'completed' | 'cancelled'
+                    guest_count?: number
+                    request_memo?: string | null
+                    created_at?: string
+                }
+            }
+            reports: {
+                Row: {
+                    id: string
+                    reporter_id: string | null
+                    target_guardian_id: string
+                    reason_category: string
+                    content: string | null
+                    evidence_urls: string[]
+                    status: 'pending' | 'reviewing' | 'resolved' | 'dismissed'
+                    admin_memo: string | null
+                    created_at: string
+                }
+                Insert: {
+                    id?: string
+                    reporter_id?: string | null
+                    target_guardian_id: string
+                    reason_category: string
+                    content?: string | null
+                    evidence_urls?: string[]
+                    status?: 'pending' | 'reviewing' | 'resolved' | 'dismissed'
+                    admin_memo?: string | null
+                    created_at?: string
+                }
+                Update: {
+                    id?: string
+                    reporter_id?: string | null
+                    target_guardian_id?: string
+                    reason_category?: string
+                    content?: string | null
+                    evidence_urls?: string[]
+                    status?: 'pending' | 'reviewing' | 'resolved' | 'dismissed'
+                    admin_memo?: string | null
+                    created_at?: string
+                }
+            }
+            dog_ownership: {
+                Row: {
+                    dog_id: string
+                    guardian_id: string
+                    role: 'owner' | 'co_owner' | 'sitter'
+                    is_primary: boolean
+                    created_at: string
+                }
+                Insert: {
+                    dog_id: string
+                    guardian_id: string
+                    role?: 'owner' | 'co_owner' | 'sitter'
+                    is_primary?: boolean
+                    created_at?: string
+                }
+                Update: {
+                    dog_id?: string
+                    guardian_id?: string
+                    role?: 'owner' | 'co_owner' | 'sitter'
+                    is_primary?: boolean
+                    created_at?: string
+                }
+            }
+            schedule_participants: {
+                Row: {
+                    schedule_id: string
+                    guardian_id: string
+                    dog_id: string | null
+                    status: 'invited' | 'accepted' | 'declined'
+                    joined_at: string
+                }
+                Insert: {
+                    schedule_id: string
+                    guardian_id: string
+                    dog_id?: string | null
+                    status?: 'invited' | 'accepted' | 'declined'
+                    joined_at?: string
+                }
+                Update: {
+                    schedule_id?: string
+                    guardian_id?: string
+                    dog_id?: string | null
+                    status?: 'invited' | 'accepted' | 'declined'
+                    joined_at?: string
+                }
+            }
         }
         Views: {
             [_ in never]: never
         }
         Functions: {
-            [_ in never]: never
+            match_guardians_v2: {
+                Args: {
+                    p_guardian_id: string
+                    p_mode?: 'basic' | 'care' | 'family'
+                    p_limit?: number
+                    p_offset?: number
+                }
+                Returns: {
+                    target_guardian_id: string
+                    distance_meters: number
+                    time_overlap_score: number
+                    compatibility_score: number
+                    is_verified: boolean
+                }[]
+            }
+            create_chat_room_with_participants: {
+                Args: {
+                    p_my_guardian_id: string
+                    p_partner_guardian_id: string
+                }
+                Returns: string
+            }
+            set_guardian_location: {
+                Args: {
+                    p_guardian_id: string
+                    p_lng: number
+                    p_lat: number
+                }
+                Returns: undefined
+            }
         }
         Enums: {
             user_role: 'user' | 'admin'
@@ -846,6 +1035,12 @@ export interface Database {
             care_type: 'walk' | 'sitting' | 'grooming' | 'hospital' | 'other'
             care_status: 'pending' | 'accepted' | 'completed' | 'cancelled'
             family_role: 'owner' | 'admin' | 'member'
+            profile_visibility: 'public' | 'neighbor' | 'private'
+            place_category: 'cafe' | 'hospital' | 'salon' | 'park'
+            reservation_status: 'pending' | 'confirmed' | 'completed' | 'cancelled'
+            report_status: 'pending' | 'reviewing' | 'resolved' | 'dismissed'
+            dog_ownership_role: 'owner' | 'co_owner' | 'sitter'
+            schedule_participant_status: 'invited' | 'accepted' | 'declined'
         }
         CompositeTypes: {
             [_ in never]: never

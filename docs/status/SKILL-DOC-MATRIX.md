@@ -13,3 +13,10 @@
 | `page-modes-upgrade` | `/modes` | `frontend/src/app/(main)/modes/page.tsx`, `frontend/src/stores/useModeStore.ts`, `frontend/src/lib/hooks/useMode.ts` | `docs/status/PROJECT-STATUS.md` | `feature-navigation-and-gesture` | mode_unlocks 실 데이터, 신뢰 점수 기반 잠금해제 |
 | `page-care-upgrade` | `/care` | `frontend/src/app/(main)/care/page.tsx`, `frontend/src/lib/hooks/useCare.ts` | `docs/status/PROJECT-STATUS.md` | `feature-data-binding-and-loading` | care_requests CRUD, 유형 필터, 돌봄자 선택 |
 | `page-family-upgrade` | `/family` | `frontend/src/app/(main)/family/page.tsx`, `frontend/src/lib/hooks/useFamily.ts` | `docs/status/PROJECT-STATUS.md` | `feature-data-binding-and-loading` | family_groups CRUD, 멤버 초대/관리 |
+
+## Ops Skills
+
+| ops_skill | purpose | sections | related_parity |
+|---|---|---|---|
+| `dang-supabase-mcp` | Supabase MCP 작업 절차 및 실패 대응 | `00-overview`, `20-runbook`, `30-failure-modes`, `40-qa-checklist` | DANG-INFRA-001 |
+| `dang-rpc-diagnosis` | RPC/쿼리 빈 결과·에러 체계적 진단 및 수정 | `00-overview`, `10-diagnosis-runbook`, `20-fix-patterns`, `30-verification` | DANG-MAT-001, DANG-CHT-001 |

@@ -46,34 +46,43 @@ export function useMySchedules(guardianId: string | undefined) {
             }
             const schedules = Array.from(uniqueMap.values());
 
-            // 상대방 이름 조회
-            const results: ScheduleWithPartner[] = [];
+            // 상대방 ID 수집 (배치 조회용)
+            const partnerIdMap = new Map<string, string | null>();
+            const partnerIdSet = new Set<string>();
 
             for (const schedule of schedules) {
-                // 상대방 ID: organizer가 아닌 participant, 또는 내가 organizer면 participant 중 첫 번째
                 let partnerId: string | null = null;
                 if (schedule.organizer_id === guardianId) {
                     partnerId = schedule.participant_ids.find((id) => id !== guardianId) ?? null;
                 } else {
                     partnerId = schedule.organizer_id;
                 }
-
-                let partnerName = "알 수 없음";
-                if (partnerId) {
-                    const { data: partner } = await supabase
-                        .from("guardians")
-                        .select("nickname")
-                        .eq("id", partnerId)
-                        .single();
-                    partnerName = partner?.nickname ?? "알 수 없음";
-                }
-
-                results.push({
-                    ...schedule,
-                    partnerName,
-                    partnerGuardianId: partnerId ?? "",
-                });
+                partnerIdMap.set(schedule.id, partnerId);
+                if (partnerId) partnerIdSet.add(partnerId);
             }
+
+            // 배치: 상대방 닉네임 일괄 조회
+            const nameMap = new Map<string, string>();
+            const partnerIds = Array.from(partnerIdSet);
+            if (partnerIds.length > 0) {
+                const { data: partners } = await supabase
+                    .from("guardians")
+                    .select("id, nickname")
+                    .in("id", partnerIds);
+                for (const p of partners ?? []) {
+                    nameMap.set(p.id, p.nickname);
+                }
+            }
+
+            // 결과 조립
+            const results: ScheduleWithPartner[] = schedules.map((schedule) => {
+                const partnerId = partnerIdMap.get(schedule.id) ?? null;
+                return {
+                    ...schedule,
+                    partnerName: partnerId ? (nameMap.get(partnerId) ?? "알 수 없음") : "알 수 없음",
+                    partnerGuardianId: partnerId ?? "",
+                };
+            });
 
             // 최신순 정렬
             results.sort((a, b) => new Date(b.datetime).getTime() - new Date(a.datetime).getTime());

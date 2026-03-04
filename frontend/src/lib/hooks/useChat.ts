@@ -14,15 +14,15 @@ export function useChatRooms(guardianId: string) {
         queryKey: ["chat-rooms", guardianId],
         queryFn: async () => {
             // 1. 내가 참여 중인 room_ids
-            const { data: participants, error: pErr } = await supabase
+            const { data: myParticipants, error: pErr } = await supabase
                 .from("chat_participants")
                 .select("room_id")
                 .eq("guardian_id", guardianId);
 
             if (pErr) throw pErr;
-            if (!participants || participants.length === 0) return [];
+            if (!myParticipants || myParticipants.length === 0) return [];
 
-            const roomIds = participants.map((p) => p.room_id);
+            const roomIds = myParticipants.map((p) => p.room_id);
 
             // 2. 채팅방 정보
             const { data: rooms, error: rErr } = await supabase
@@ -32,74 +32,84 @@ export function useChatRooms(guardianId: string) {
                 .order("last_message_at", { ascending: false, nullsFirst: false });
 
             if (rErr) throw rErr;
-            if (!rooms) return [];
+            if (!rooms || rooms.length === 0) return [];
 
-            // 3. 각 방의 상대방 정보 + 마지막 메시지 + 안 읽은 수
-            const results: ChatRoomItem[] = [];
+            // 3. 배치: 모든 방의 상대방 participant 일괄 조회
+            const { data: allParticipants } = await supabase
+                .from("chat_participants")
+                .select("room_id, guardian_id")
+                .in("room_id", roomIds)
+                .neq("guardian_id", guardianId);
 
-            for (const room of rooms) {
-                // 상대방 guardian_id
-                const { data: otherParticipant } = await supabase
-                    .from("chat_participants")
-                    .select("guardian_id")
-                    .eq("room_id", room.id)
-                    .neq("guardian_id", guardianId)
-                    .single();
-
-                // 상대방 프로필
-                let partner = {
-                    id: "",
-                    nickname: "알 수 없음",
-                    avatar_url: null as string | null,
-                    dogs: [] as { name: string; photo_urls: string[] | null }[],
-                };
-
-                if (otherParticipant) {
-                    const { data: g } = await supabase
-                        .from("guardians")
-                        .select("id, nickname, avatar_url, dogs(name, photo_urls)")
-                        .eq("id", otherParticipant.guardian_id)
-                        .single();
-
-                    if (g) {
-                        partner = {
-                            id: g.id,
-                            nickname: g.nickname,
-                            avatar_url: g.avatar_url,
-                            dogs: (g.dogs as { name: string; photo_urls: string[] | null }[]) || [],
-                        };
-                    }
-                }
-
-                // 마지막 메시지
-                const { data: lastMsg } = await supabase
-                    .from("chat_messages")
-                    .select("content, type")
-                    .eq("room_id", room.id)
-                    .order("created_at", { ascending: false })
-                    .limit(1)
-                    .single();
-
-                // 안 읽은 메시지 수
-                const { count: unreadCount } = await supabase
-                    .from("chat_messages")
-                    .select("id", { count: "exact", head: true })
-                    .eq("room_id", room.id)
-                    .neq("sender_id", guardianId)
-                    .not("read_by", "cs", `{${guardianId}}`);
-
-                results.push({
-                    id: room.id,
-                    type: room.type as "direct" | "group",
-                    last_message_at: room.last_message_at,
-                    partner,
-                    lastMessage: lastMsg?.content ?? null,
-                    lastMessageType: (lastMsg?.type as ChatRoomItem["lastMessageType"]) ?? "text",
-                    unreadCount: unreadCount ?? 0,
-                });
+            const partnerByRoom = new Map<string, string>();
+            const partnerIds = new Set<string>();
+            for (const p of allParticipants ?? []) {
+                partnerByRoom.set(p.room_id, p.guardian_id);
+                partnerIds.add(p.guardian_id);
             }
 
-            return results;
+            // 4. 배치: 상대방 프로필 일괄 조회
+            const partnerIdArray = Array.from(partnerIds);
+            const partnerMap = new Map<string, {
+                id: string;
+                nickname: string;
+                avatar_url: string | null;
+                dogs: { name: string; photo_urls: string[] | null }[];
+            }>();
+
+            if (partnerIdArray.length > 0) {
+                const { data: partners } = await supabase
+                    .from("guardians")
+                    .select("id, nickname, avatar_url, dogs(name, photo_urls)")
+                    .in("id", partnerIdArray);
+
+                for (const g of partners ?? []) {
+                    partnerMap.set(g.id, {
+                        id: g.id,
+                        nickname: g.nickname,
+                        avatar_url: g.avatar_url,
+                        dogs: (g.dogs as { name: string; photo_urls: string[] | null }[]) || [],
+                    });
+                }
+            }
+
+            // 5. 각 방의 마지막 메시지 + 안 읽은 수 (room별로 필요하지만 병렬 실행)
+            const roomDetails = await Promise.all(
+                rooms.map(async (room) => {
+                    const [lastMsgResult, unreadResult] = await Promise.all([
+                        supabase
+                            .from("chat_messages")
+                            .select("content, type")
+                            .eq("room_id", room.id)
+                            .order("created_at", { ascending: false })
+                            .limit(1)
+                            .single(),
+                        supabase
+                            .from("chat_messages")
+                            .select("id", { count: "exact", head: true })
+                            .eq("room_id", room.id)
+                            .neq("sender_id", guardianId)
+                            .not("read_by", "cs", `{${guardianId}}`),
+                    ]);
+
+                    const partnerId = partnerByRoom.get(room.id);
+                    const partner = partnerId
+                        ? partnerMap.get(partnerId) ?? { id: "", nickname: "알 수 없음", avatar_url: null, dogs: [] }
+                        : { id: "", nickname: "알 수 없음", avatar_url: null, dogs: [] };
+
+                    return {
+                        id: room.id,
+                        type: room.type as "direct" | "group",
+                        last_message_at: room.last_message_at,
+                        partner,
+                        lastMessage: lastMsgResult.data?.content ?? null,
+                        lastMessageType: (lastMsgResult.data?.type as ChatRoomItem["lastMessageType"]) ?? "text",
+                        unreadCount: unreadResult.count ?? 0,
+                    } satisfies ChatRoomItem;
+                })
+            );
+
+            return roomDetails;
         },
         enabled: !!guardianId,
     });
@@ -292,6 +302,7 @@ export function useChatPartner(roomId: string, myGuardianId: string) {
 }
 
 // ─── 채팅방 생성 또는 기존 방 찾기 (매칭 후 채팅 진입용) ───
+// SECURITY DEFINER RPC로 RLS 우회하여 양쪽 participant 원자적 삽입
 export function useGetOrCreateChatRoom() {
     const supabase = createClient();
 
@@ -303,46 +314,16 @@ export function useGetOrCreateChatRoom() {
             myGuardianId: string;
             partnerGuardianId: string;
         }) => {
-            // 기존 방 확인: 내가 참여한 방 중 상대방도 참여한 direct 방
-            const { data: myRooms } = await supabase
-                .from("chat_participants")
-                .select("room_id")
-                .eq("guardian_id", myGuardianId);
+            const { data, error } = await supabase.rpc(
+                "create_chat_room_with_participants",
+                {
+                    p_my_guardian_id: myGuardianId,
+                    p_partner_guardian_id: partnerGuardianId,
+                }
+            );
 
-            if (myRooms && myRooms.length > 0) {
-                const myRoomIds = myRooms.map((r) => r.room_id);
-
-                const { data: sharedRoom } = await supabase
-                    .from("chat_participants")
-                    .select("room_id")
-                    .eq("guardian_id", partnerGuardianId)
-                    .in("room_id", myRoomIds)
-                    .limit(1)
-                    .single();
-
-                if (sharedRoom) return sharedRoom.room_id;
-            }
-
-            // 새 방 생성
-            const { data: newRoom, error: roomErr } = await supabase
-                .from("chat_rooms")
-                .insert({ type: "direct" })
-                .select("id")
-                .single();
-
-            if (roomErr) throw roomErr;
-
-            // 참여자 등록
-            const { error: pErr } = await supabase
-                .from("chat_participants")
-                .insert([
-                    { room_id: newRoom.id, guardian_id: myGuardianId },
-                    { room_id: newRoom.id, guardian_id: partnerGuardianId },
-                ]);
-
-            if (pErr) throw pErr;
-
-            return newRoom.id;
+            if (error) throw error;
+            return data as string;
         },
     });
 }

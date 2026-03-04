@@ -1,7 +1,7 @@
 // page.tsx — /home 매칭 추천 페이지 (DANG-MAT-001)
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { AppShell } from "@/components/shared/AppShell";
@@ -47,13 +47,8 @@ export default function HomePage() {
         enabled: !!guardianId,
     });
 
-    // 디버깅 로그
-    useEffect(() => {
-        console.log("--- Home Page State ---");
-        console.log("Current Guardian:", guardian);
-        console.log("Matching Profiles:", profiles);
-        console.log("Loading Status:", { guardianLoading, profilesLoading });
-    }, [guardian, profiles, guardianLoading, profilesLoading]);
+    // guardian 위치 설정 여부
+    const hasLocation = useMemo(() => !!guardian?.location, [guardian?.location]);
 
     // Locked Decisions 4.4: 데이터 수신 또는 모드 변경 시 인덱스 리셋 (리뷰 4번 해결)
     useEffect(() => {
@@ -171,7 +166,7 @@ export default function HomePage() {
                         <MatchCardSkeleton />
                     </div>
                 ) : !hasProfiles ? (
-                    <MatchEmptyState />
+                    <MatchEmptyState reason={!hasLocation ? "no-location" : "no-results"} />
                 ) : (
                     <div className="space-y-6">
                         <MatchCard
