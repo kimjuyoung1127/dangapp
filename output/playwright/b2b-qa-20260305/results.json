@@ -1,0 +1,40 @@
+{
+  "timestamp": "2026-03-05 12:21:30 +09:00",
+  "base_url": "http://localhost:3100",
+  "routes": {
+    "/modes": {
+      "actual_url": "http://localhost:3100/login",
+      "domContentLoadedMs": 102,
+      "loadMs": 446,
+      "responseStartMs": 57,
+      "pass": true,
+      "note": "Protected route redirect works for unauthenticated session."
+    },
+    "/care": {
+      "actual_url": "http://localhost:3100/login",
+      "domContentLoadedMs": 171,
+      "loadMs": 430,
+      "responseStartMs": 74,
+      "pass": true,
+      "note": "Protected route redirect works for unauthenticated session."
+    },
+    "/family": {
+      "actual_url": "http://localhost:3100/login",
+      "domContentLoadedMs": 135,
+      "loadMs": 405,
+      "responseStartMs": 78,
+      "pass": true,
+      "note": "Protected route redirect works for unauthenticated session."
+    }
+  },
+  "speed_gate": {
+    "target_domContentLoadedMs": 500,
+    "result": "pass"
+  },
+  "qa_blocker": "No authenticated local session available; in-route functional checks for /modes, /care, /family require login completion.",
+  "screenshots": [
+    "modes-redirect-login.png",
+    "care-redirect-login.png",
+    "family-redirect-login.png"
+  ]
+}

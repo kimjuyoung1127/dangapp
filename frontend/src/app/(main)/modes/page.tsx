@@ -1,8 +1,6 @@
-// modes/page.tsx — 모드 선택 허브 (Basic/Care/Family 카드) (DANG-MAT-001)
-
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AppShell } from "@/components/shared/AppShell";
 import ModeCard from "@/components/features/modes/ModeCard";
@@ -22,14 +20,22 @@ export default function ModesPage() {
     const trustScore = guardian?.trust_score ?? 0;
 
     const { data: unlocks = [] } = useModeUnlocks(guardianId);
-    const unlockedModes = new Set(unlocks.map((u) => u.mode));
-    // basic 모드는 항상 해제
-    unlockedModes.add("basic");
+
+    const unlockedModes = useMemo(() => {
+        const set = new Set(unlocks.map((unlock) => unlock.mode));
+        set.add("basic");
+        return set;
+    }, [unlocks]);
+
+    const isModeUnlocked = (config: ModeConfig) => {
+        if (config.mode === "basic") return true;
+        return unlockedModes.has(config.mode) || trustLevel >= config.requiredLevel;
+    };
 
     const handleSelect = (config: ModeConfig) => {
-        const isUnlocked = unlockedModes.has(config.mode);
+        const unlocked = isModeUnlocked(config);
 
-        if (!isUnlocked) {
+        if (!unlocked) {
             setLockedMode(config);
             return;
         }
@@ -37,25 +43,26 @@ export default function ModesPage() {
         setActiveMode(config.mode);
 
         if (config.mode === "care") {
-            router.push("/care");
-        } else if (config.mode === "family") {
-            router.push("/family");
+            void router.push("/care");
+            return;
+        }
+
+        if (config.mode === "family") {
+            void router.push("/family");
         }
     };
 
     return (
         <AppShell>
             <div className="px-4 py-6 space-y-6">
-                <h1 className="text-2xl font-display font-bold text-foreground">
-                    모드 선택
-                </h1>
+                <h1 className="text-2xl font-display font-bold text-foreground">Mode selection</h1>
 
                 <div className="space-y-4">
                     {MODE_CONFIG.map((config) => (
                         <ModeCard
                             key={config.mode}
                             config={config}
-                            isUnlocked={unlockedModes.has(config.mode)}
+                            isUnlocked={isModeUnlocked(config)}
                             isActive={activeMode === config.mode}
                             currentLevel={trustLevel}
                             onSelect={() => handleSelect(config)}
@@ -64,7 +71,6 @@ export default function ModesPage() {
                 </div>
             </div>
 
-            {/* 잠금 해제 안내 다이얼로그 */}
             {lockedMode && (
                 <ModeUnlockDialog
                     isOpen={!!lockedMode}

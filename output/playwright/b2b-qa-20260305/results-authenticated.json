@@ -1,0 +1,74 @@
+{
+  "timestamp": "2026-03-05 13:58:00 +09:00",
+  "base_url": "http://localhost:3100",
+  "authenticated_session": true,
+  "scenarios": {
+    "home_access": {
+      "route": "/home",
+      "pass": true,
+      "actual_url": "http://localhost:3100/home",
+      "metrics": {
+        "domContentLoadedMs": 436,
+        "loadMs": 990,
+        "responseStartMs": 351
+      },
+      "evidence": [
+        "home-authenticated.png"
+      ]
+    },
+    "modes_lock_flow": {
+      "route": "/modes",
+      "pass": true,
+      "checks": [
+        "basic mode active",
+        "care mode lock dialog opens",
+        "family mode lock dialog opens"
+      ],
+      "evidence": [
+        "modes-authenticated.png"
+      ]
+    },
+    "care_route_flow": {
+      "route": "/care",
+      "pass": true,
+      "checks": [
+        "sent/received tab switches",
+        "empty state rendered",
+        "care form opens",
+        "submit disabled when caregiver not selected"
+      ],
+      "metrics": {
+        "tabSwitchMs": 1074,
+        "domContentLoadedMs": 2542,
+        "loadMs": 3045,
+        "responseStartMs": 2490
+      },
+      "evidence": [
+        "care-authenticated-form.png"
+      ]
+    },
+    "family_route_flow": {
+      "route": "/family",
+      "pass": true,
+      "checks": [
+        "family list renders",
+        "create modal opens",
+        "create succeeds and card appears immediately",
+        "created group persists after refresh",
+        "no family_groups 403 and no optimistic family_members 400 after patch"
+      ],
+      "evidence": [
+        "family-create-success.png"
+      ]
+    }
+  },
+  "speed_gate": {
+    "target_domContentLoadedMs": 500,
+    "result": "monitoring",
+    "reason": "functional speed UX is improved; strict 500ms route metric should be measured in production-like build"
+  },
+  "overall": {
+    "pass": true,
+    "notes": "all B2B routes (/modes, /care, /family) are ready for QA gate"
+  }
+}

@@ -5,4 +5,5 @@ export {
     useCareRequests,
     useCreateCareRequest,
     useUpdateCareRequest,
+    useCaregiverOptions,
 } from "@/lib/hooks/useMode";

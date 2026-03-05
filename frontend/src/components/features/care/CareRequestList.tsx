@@ -1,8 +1,6 @@
-// CareRequestList.tsx — 돌봄 요청 목록 (StaggerList + Skeleton)
-
 "use client";
 
-import { StaggerList, StaggerItem } from "@/components/ui/MotionWrappers";
+import { StaggerItem, StaggerList } from "@/components/ui/MotionWrappers";
 import { Skeleton } from "@/components/ui/Skeleton";
 import CareRequestCard from "./CareRequestCard";
 import type { Database } from "@/types/database.types";
@@ -12,13 +10,17 @@ type CareRequest = Database["public"]["Tables"]["care_requests"]["Row"];
 interface CareRequestListProps {
     requests: CareRequest[];
     isLoading: boolean;
+    isError?: boolean;
+    onRetry?: () => void;
 }
 
 export default function CareRequestList({
     requests,
     isLoading,
+    isError = false,
+    onRetry,
 }: CareRequestListProps) {
-    if (isLoading) {
+    if (isLoading && requests.length === 0) {
         return (
             <div className="space-y-4">
                 <CareRequestSkeleton />
@@ -27,16 +29,33 @@ export default function CareRequestList({
         );
     }
 
+    if (isError && requests.length === 0) {
+        return (
+            <div className="text-center py-8 space-y-3">
+                <p className="text-sm text-red-600">Failed to load requests.</p>
+                {onRetry && (
+                    <button
+                        type="button"
+                        className="text-sm font-medium text-primary"
+                        onClick={onRetry}
+                    >
+                        Retry
+                    </button>
+                )}
+            </div>
+        );
+    }
+
     if (requests.length === 0) {
         return (
             <p className="text-sm text-foreground-muted text-center py-8">
-                아직 요청이 없어요.
+                No requests yet.
             </p>
         );
     }
 
     return (
-        <StaggerList className="space-y-4">
+        <StaggerList className="space-y-4" animateOnMount={false}>
             {requests.map((request) => (
                 <StaggerItem key={request.id}>
                     <CareRequestCard request={request} />

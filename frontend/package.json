@@ -4,10 +4,11 @@
   "main": "index.js",
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "npm run check:encoding && next build",
     "start": "next start",
-    "lint": "next lint",
-    "analyze": "ANALYZE=true next build"
+    "lint": "npm run check:encoding && next lint",
+    "analyze": "ANALYZE=true next build",
+    "check:encoding": "node ../scripts/check-encoding.mjs"
   },
   "keywords": [],
   "author": "",

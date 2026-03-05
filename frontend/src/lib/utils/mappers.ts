@@ -1,36 +1,42 @@
-// mappers.ts — UI 상태와 DB 스키마 간의 변환 (DANG-ONB-001)
+// mappers.ts - map onboarding UI state to DB payloads (DANG-ONB-001)
 
 import type { OnboardingData } from '@/stores/useOnboardingStore';
-import type { Database } from '@/types/database.types';
+import type { Database, Json } from '@/types/database.types';
 
 type DogInsert = Database['public']['Tables']['dogs']['Insert'];
 type GuardianUpdate = Database['public']['Tables']['guardians']['Update'];
+type DogWalkSlot = NonNullable<DogInsert['weekday_walk_slots']>[number];
+
+const toUniqueTimeSlots = (
+  weekday?: DogWalkSlot[],
+  weekend?: DogWalkSlot[]
+): DogWalkSlot[] => Array.from(new Set([...(weekday ?? []), ...(weekend ?? [])]));
 
 /**
- * OnboardingData를 Supabase의 dogs 테이블 Insert 타입으로 변환
+ * Maps OnboardingData to Supabase dogs Insert payload.
  */
 export const mapOnboardingToDog = (data: OnboardingData): DogInsert => {
   return {
-    guardian_id: '', // API 호출부에서 실제 ID로 채워짐
-    name: data.dog_name || '이름 없음',
-    breed: data.dog_breed || '믹스견',
+    guardian_id: '', // Filled by API layer using current guardian context.
+    name: data.dog_name || 'Unknown',
+    breed: data.dog_breed || 'Mixed',
     age: data.dog_age ?? null,
     birth_date: data.dog_birth_date ?? null,
     weight_kg: data.dog_weight_kg ?? null,
-    gender: (data.dog_gender as 'male' | 'female') ?? null,
+    gender: data.dog_gender ?? null,
     neutered: data.dog_neutered ?? null,
-    temperament: (data.dog_temperament || []) as unknown as any[], 
-    temperament_profile: (data.dog_temperament_profile || {}) as unknown as any, // JSONB
-    weekday_walk_slots: (data.weekday_activity_times || []) as any[], // Enum 배열
-    weekend_walk_slots: (data.weekend_activity_times || []) as any[], // Enum 배열
+    temperament: (data.dog_temperament ?? []) as Json,
+    temperament_profile: (data.dog_temperament_profile ?? {}) as Json,
+    weekday_walk_slots: (data.weekday_activity_times ?? []) as DogWalkSlot[],
+    weekend_walk_slots: (data.weekend_activity_times ?? []) as DogWalkSlot[],
     photo_urls: data.dog_photo_url ? [data.dog_photo_url] : [],
-    vaccination_docs: data.dog_document_urls || [],
-    documents: (data.dog_document_urls || []) as unknown as any,
+    vaccination_docs: data.dog_document_urls ?? [],
+    documents: (data.dog_document_urls ?? []) as Json,
   };
 };
 
 /**
- * OnboardingData를 Supabase의 guardians 테이블 Update 타입으로 변환
+ * Maps OnboardingData to Supabase guardians Update payload.
  */
 export const mapOnboardingToGuardian = (data: OnboardingData): GuardianUpdate => {
   return {
@@ -41,20 +47,11 @@ export const mapOnboardingToGuardian = (data: OnboardingData): GuardianUpdate =>
     avatar_url: data.avatar_url ?? null,
     bio: data.bio ?? null,
     address_name: data.address_name ?? null,
-    // location 필드는 dogApi에서 전용 RPC(set_guardian_location)로 저장하므로 여기서는 제외
+    // location is applied via set_guardian_location RPC in API layer.
     verified_region: data.verified_region ?? false,
-    usage_purpose: (data.usage_purpose || []) as any[], // Enum 배열
+    usage_purpose: data.usage_purpose ?? [],
     preferred_radius_km: data.preferred_radius_km ?? 2,
     onboarding_progress: 100,
-    // Locked Decisions 1.3: 평일/주말 합집합의 평탄 배열(JSON array)로 저장
-    activity_times: Array.from(new Set([
-      ...(data.weekday_activity_times || []), 
-      ...(data.weekend_activity_times || [])
-    ])) as any[],
+    activity_times: toUniqueTimeSlots(data.weekday_activity_times, data.weekend_activity_times) as Json,
   };
 };
-
-
-
-
-

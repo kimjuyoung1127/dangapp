@@ -4,7 +4,6 @@
 
 import { useRouter } from "next/navigation";
 import { useOnboardingStore } from "@/stores/useOnboardingStore";
-import { useCompleteOnboarding } from "@/lib/hooks/useOnboarding";
 import { Button } from "@/components/ui/Button";
 import { ToggleChip } from "@/components/ui/ToggleChip";
 
@@ -16,7 +15,7 @@ const TIME_SLOTS: Array<{ id: "morning" | "afternoon" | "evening"; label: string
 
 export function Step7ActivityTimes() {
     const router = useRouter();
-    const { data, setData, completionScore, isSubmitting, submitError, submitOnboarding, photoFile } =
+    const { data, setData, completionScore, isSubmitting, submitError, submitOnboarding } =
         useOnboardingStore();
 
     const weekdayTimes = data.weekday_activity_times || [];

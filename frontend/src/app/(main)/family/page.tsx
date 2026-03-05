@@ -1,13 +1,11 @@
-// family/page.tsx — 패밀리 그룹 목록 페이지 (DANG-MAT-001)
-
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
+import { ArrowLeft, Plus } from "lucide-react";
 import { AppShell } from "@/components/shared/AppShell";
 import { Skeleton } from "@/components/ui/Skeleton";
-import { TapScale, StaggerList, StaggerItem } from "@/components/ui/MotionWrappers";
-import { Plus, ArrowLeft } from "lucide-react";
-import Link from "next/link";
+import { StaggerItem, StaggerList, TapScale } from "@/components/ui/MotionWrappers";
 import FamilyGroupCard from "@/components/features/family/FamilyGroupCard";
 import FamilyGroupForm from "@/components/features/family/FamilyGroupForm";
 import { useFamilyGroups, useFamilyMembers } from "@/lib/hooks/useFamily";
@@ -22,43 +20,55 @@ export default function FamilyPage() {
     const { data: guardian } = useCurrentGuardian();
     const guardianId = guardian?.id ?? "";
 
-    const { data: groups = [], isLoading } = useFamilyGroups(guardianId);
+    const {
+        data: groups = [],
+        isLoading,
+        isError,
+        refetch,
+    } = useFamilyGroups(guardianId);
 
     return (
         <AppShell>
             <div className="px-4 py-6 space-y-6">
-                {/* 헤더 */}
                 <div className="flex items-center gap-3">
                     <Link href="/modes">
                         <ArrowLeft className="w-5 h-5 text-foreground-muted" />
                     </Link>
-                    <h1 className="text-2xl font-display font-bold text-foreground">
-                        패밀리 모드
-                    </h1>
+                    <h1 className="text-2xl font-display font-bold text-foreground">Family mode</h1>
                 </div>
 
-                {/* 그룹 목록 */}
                 {isLoading ? (
                     <div className="space-y-4">
                         <FamilyGroupSkeleton />
                         <FamilyGroupSkeleton />
                     </div>
+                ) : isError ? (
+                    <div className="text-center py-10 space-y-3">
+                        <p className="text-sm text-red-600">Failed to load family groups.</p>
+                        <button
+                            type="button"
+                            className="text-primary text-sm font-medium"
+                            onClick={() => {
+                                void refetch();
+                            }}
+                        >
+                            Retry
+                        </button>
+                    </div>
                 ) : groups.length === 0 ? (
                     <div className="text-center py-12 space-y-3">
-                        <p className="text-foreground-muted text-sm">
-                            아직 패밀리 그룹이 없어요.
-                        </p>
+                        <p className="text-foreground-muted text-sm">No family groups yet.</p>
                         <TapScale>
                             <button
                                 onClick={() => setIsFormOpen(true)}
                                 className="text-primary font-medium text-sm"
                             >
-                                첫 그룹 만들기
+                                Create your first group
                             </button>
                         </TapScale>
                     </div>
                 ) : (
-                    <StaggerList className="space-y-4">
+                    <StaggerList className="space-y-4" animateOnMount={false}>
                         {groups.map((group) => (
                             <FamilyGroupCardWithCount key={group.id} group={group} />
                         ))}
@@ -66,18 +76,16 @@ export default function FamilyPage() {
                 )}
             </div>
 
-            {/* FAB */}
             <TapScale className="fixed bottom-24 right-6 z-20">
                 <button
                     onClick={() => setIsFormOpen(true)}
-                    aria-label="새 패밀리 그룹 생성"
+                    aria-label="Create family group"
                     className="w-14 h-14 bg-primary rounded-full flex items-center justify-center text-white shadow-lg"
                 >
                     <Plus className="w-6 h-6" />
                 </button>
             </TapScale>
 
-            {/* 그룹 생성 폼 */}
             {guardian && (
                 <FamilyGroupForm
                     isOpen={isFormOpen}
@@ -89,12 +97,16 @@ export default function FamilyPage() {
     );
 }
 
-/** 멤버 수를 실 데이터로 조회하는 래퍼 */
 function FamilyGroupCardWithCount({ group }: { group: FamilyGroup }) {
-    const { data: members = [] } = useFamilyMembers(group.id);
+    const { data: members = [], isError } = useFamilyMembers(group.id);
+
     return (
         <StaggerItem>
-            <FamilyGroupCard group={group} memberCount={members.length} />
+            <FamilyGroupCard
+                group={group}
+                memberCount={isError ? 0 : members.length}
+                memberCountError={isError}
+            />
         </StaggerItem>
     );
 }

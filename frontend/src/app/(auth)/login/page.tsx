@@ -1,13 +1,9 @@
 "use client";
 
 import Image from "next/image";
-import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { Button } from "@/components/ui/Button";
-import { cn } from "@/lib/utils";
 
 export default function LoginPage() {
-    const router = useRouter();
     const supabase = createClient();
 
     const handleSocialLogin = async (provider: "kakao" | "google") => {

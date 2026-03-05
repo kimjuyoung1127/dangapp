@@ -1,0 +1,55 @@
+{
+  "timestamp": "2026-03-05 11:58:52 +09:00",
+  "base_url": "http://localhost:3100",
+  "scenario1": {
+    "name": "unauth_home_redirect",
+    "actual_url": "http://localhost:3100/login",
+    "pass": true,
+    "evidence": [
+      ".playwright-cli/page-2026-03-05T02-58-41-872Z.yml",
+      ".playwright-cli/page-2026-03-05T02-57-18-857Z.png"
+    ]
+  },
+  "scenario2": {
+    "name": "login_render_google_visible",
+    "google_button": true,
+    "kakao_button": true,
+    "pass": true,
+    "evidence": [
+      ".playwright-cli/page-2026-03-05T02-58-42-795Z.yml",
+      ".playwright-cli/page-2026-03-05T02-57-24-555Z.png"
+    ]
+  },
+  "scenario3": {
+    "name": "google_oauth_redirect",
+    "actual_url_contains": [
+      "accounts.google.com",
+      "redirect_uri=https%3A%2F%2Ffjpvtivpulreulfxmxfe.supabase.co%2Fauth%2Fv1%2Fcallback"
+    ],
+    "pass": true,
+    "evidence": [
+      ".playwright-cli/page-2026-03-05T02-58-45-605Z.yml",
+      ".playwright-cli/page-2026-03-05T02-58-47-825Z.png"
+    ]
+  },
+  "scenario4": {
+    "name": "callback_without_code",
+    "actual_url": "http://localhost:3100/login?error=auth-code-error",
+    "pass": true,
+    "evidence": [
+      ".playwright-cli/page-2026-03-05T02-58-48-949Z.yml"
+    ]
+  },
+  "scenario5": {
+    "name": "register_render",
+    "form_visible": true,
+    "email_input_visible": true,
+    "pass": true,
+    "evidence": [
+      ".playwright-cli/page-2026-03-05T02-58-51-675Z.yml",
+      ".playwright-cli/page-2026-03-05T02-57-37-821Z.png"
+    ]
+  },
+  "kakao": "Deferred(Kakao auth)",
+  "overall_pass": true
+}

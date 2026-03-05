@@ -81,7 +81,8 @@ Dual-agent handoff: `docs/ref/DUAL-AGENT-HANDOFF.md`
 | `docs/status/DANGAPP-MASTER-EXECUTION-PLAN.md` | execution master plan |
 | `docs/status/DANGAPP-MASTER-EXECUTION-REVIEW.md` | plan review results |
 | `docs/ref/SCHEMA-CHANGELOG.md` | schema and migration notes |
-| `docs/ref/SUPABASE-MCP-RUNBOOK.md` | MCP setup and operation runbook |
+| docs/ref/SUPABASE-MCP-RUNBOOK.md | MCP setup and operation runbook |
+| docs/ref/WSL-CODEX-ENCODING-RUNBOOK.md | WSL-first encoding-safe Codex workflow |
 
 ## Completion Format
 

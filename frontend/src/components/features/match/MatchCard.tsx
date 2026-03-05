@@ -2,7 +2,7 @@
 "use client";
 
 import Image from "next/image";
-import { Heart, X, ShieldCheck, MapPin, Zap } from "lucide-react";
+import { Heart, X, MapPin, Zap } from "lucide-react";
 import { TapScale, ScrollReveal } from "@/components/ui/MotionWrappers";
 import { cn, formatDistance } from "@/lib/utils";
 import { getTrustLevelInfo } from "@/lib/constants/reviews";

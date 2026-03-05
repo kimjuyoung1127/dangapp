@@ -1,5 +1,3 @@
-// CareRequestForm.tsx — 돌봄 요청 작성 BottomSheet
-
 "use client";
 
 import { useState } from "react";
@@ -9,15 +7,15 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { BottomSheet } from "@/components/ui/MotionWrappers";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
-import { useCreateCareRequest } from "@/lib/hooks/useMode";
+import { useCreateCareRequest, type CaregiverOption } from "@/lib/hooks/useMode";
 import { type CareType } from "@/lib/constants/modes";
 import CareTypeSelect from "./CareTypeSelect";
 import { X } from "lucide-react";
 
 const careRequestSchema = z.object({
-    title: z.string().min(1, "제목을 입력해주세요"),
+    title: z.string().min(1, "Title is required"),
     description: z.string().optional(),
-    datetime: z.string().min(1, "일시를 선택해주세요"),
+    datetime: z.string().min(1, "Date/time is required"),
     duration_hours: z.number().min(1).max(24),
 });
 
@@ -28,6 +26,9 @@ interface CareRequestFormProps {
     onClose: () => void;
     requesterId: string;
     caregiverId: string;
+    caregiverOptions: CaregiverOption[];
+    onCaregiverChange: (caregiverId: string) => void;
+    onSubmitError?: (message: string) => void;
     dogId?: string;
 }
 
@@ -36,9 +37,13 @@ export default function CareRequestForm({
     onClose,
     requesterId,
     caregiverId,
+    caregiverOptions,
+    onCaregiverChange,
+    onSubmitError,
     dogId,
 }: CareRequestFormProps) {
     const [careType, setCareType] = useState<CareType | null>(null);
+    const [submitError, setSubmitError] = useState<string | null>(null);
     const createMutation = useCreateCareRequest();
 
     const {
@@ -52,57 +57,103 @@ export default function CareRequestForm({
     });
 
     const onSubmit = async (formData: CareRequestFormData) => {
-        if (!careType) return;
+        setSubmitError(null);
 
-        await createMutation.mutateAsync({
-            requester_id: requesterId,
-            caregiver_id: caregiverId,
-            dog_id: dogId ?? null,
-            title: formData.title,
-            description: formData.description || null,
-            care_type: careType,
-            datetime: formData.datetime,
-            duration_hours: formData.duration_hours,
-        });
+        if (!careType || !caregiverId) {
+            const message = "Select care type and partner before submitting.";
+            setSubmitError(message);
+            onSubmitError?.(message);
+            return;
+        }
 
-        reset();
-        setCareType(null);
-        onClose();
+        try {
+            await createMutation.mutateAsync({
+                requester_id: requesterId,
+                caregiver_id: caregiverId,
+                dog_id: dogId ?? null,
+                title: formData.title,
+                description: formData.description || null,
+                care_type: careType,
+                datetime: formData.datetime,
+                duration_hours: formData.duration_hours,
+            });
+
+            reset();
+            setCareType(null);
+            onClose();
+        } catch {
+            const message = "Failed to create request. Please retry.";
+            setSubmitError(message);
+            onSubmitError?.(message);
+        }
     };
 
     return (
         <BottomSheet isOpen={isOpen} onClose={onClose}>
             <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-5">
-                {/* 상단 바 */}
                 <div className="flex items-center justify-between">
                     <button type="button" onClick={onClose}>
                         <X className="w-6 h-6 text-foreground-muted" />
                     </button>
-                    <h3 className="text-xl font-display font-semibold">
-                        돌봄 요청
-                    </h3>
+                    <h3 className="text-xl font-display font-semibold">Care request</h3>
                     <Button
                         type="submit"
                         size="sm"
-                        disabled={!careType || createMutation.isPending}
+                        disabled={!careType || !caregiverId || createMutation.isPending}
                     >
-                        {createMutation.isPending ? "전송 중..." : "요청"}
+                        {createMutation.isPending ? "Submitting..." : "Submit"}
                     </Button>
                 </div>
 
-                {/* 돌봄 유형 */}
+                {submitError && (
+                    <div
+                        className="rounded-xl border border-red-300 bg-red-50 text-red-700 text-sm px-3 py-2"
+                        role="status"
+                        aria-live="polite"
+                    >
+                        {submitError}
+                    </div>
+                )}
+
                 <div>
                     <label className="text-sm font-medium text-foreground-muted mb-2 block">
-                        돌봄 유형
+                        Care partner
+                    </label>
+                    <select
+                        value={caregiverId}
+                        onChange={(event) => onCaregiverChange(event.target.value)}
+                        className={cn(
+                            "w-full px-4 py-3 rounded-xl border bg-card",
+                            "text-foreground",
+                            "focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent",
+                            caregiverId ? "border-border" : "border-amber-300"
+                        )}
+                    >
+                        <option value="">Select partner</option>
+                        {caregiverOptions.map((option) => (
+                            <option key={option.id} value={option.id}>
+                                {option.nickname} (Lv.{option.trustLevel})
+                            </option>
+                        ))}
+                    </select>
+                    {caregiverOptions.length === 0 && (
+                        <p className="text-xs text-foreground-muted mt-1">
+                            No available partners yet. Create a connection first.
+                        </p>
+                    )}
+                </div>
+
+                <div>
+                    <label className="text-sm font-medium text-foreground-muted mb-2 block">
+                        Care type
                     </label>
                     <CareTypeSelect value={careType} onChange={setCareType} />
                 </div>
 
-                {/* 제목 */}
                 <div>
                     <input
                         {...register("title")}
-                        placeholder="요청 제목"
+                        placeholder="Request title"
                         className={cn(
                             "w-full px-4 py-3 rounded-xl border bg-card",
                             "text-foreground placeholder:text-foreground-muted/50",
@@ -115,10 +166,9 @@ export default function CareRequestForm({
                     )}
                 </div>
 
-                {/* 일시 */}
                 <div>
                     <label className="text-sm font-medium text-foreground-muted mb-2 block">
-                        일시
+                        Date and time
                     </label>
                     <input
                         {...register("datetime")}
@@ -132,10 +182,9 @@ export default function CareRequestForm({
                     />
                 </div>
 
-                {/* 소요 시간 */}
                 <div>
                     <label className="text-sm font-medium text-foreground-muted mb-2 block">
-                        소요 시간 (시간)
+                        Duration (hours)
                     </label>
                     <input
                         {...register("duration_hours", { valueAsNumber: true })}
@@ -150,10 +199,9 @@ export default function CareRequestForm({
                     />
                 </div>
 
-                {/* 설명 */}
                 <textarea
                     {...register("description")}
-                    placeholder="상세 설명 (선택)"
+                    placeholder="Description (optional)"
                     rows={3}
                     className={cn(
                         "w-full px-4 py-3 rounded-xl border border-border bg-card resize-none",

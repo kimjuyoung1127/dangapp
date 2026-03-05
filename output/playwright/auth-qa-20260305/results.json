@@ -1,0 +1,17 @@
+{
+    "timestamp":  "2026-03-05 11:52:53 +09:00",
+    "scenario1_url":  "### Result\r\n\"http://localhost:3000/login\"\r\n### Ran Playwright code\r\n```js\r\nawait page.evaluate(\u0027() =\u003e location.href\u0027);\r\n```",
+    "scenario1_pass":  true,
+    "scenario2_google_button":  "### Error\r\nError: page._evaluateFunction: Passed function is not well-serializable!",
+    "scenario2_kakao_button":  "### Error\r\nError: page._evaluateFunction: Passed function is not well-serializable!",
+    "scenario2_pass":  false,
+    "scenario3_url":  "### Result\r\n\"http://localhost:3000/login\"\r\n### Ran Playwright code\r\n```js\r\nawait page.evaluate(\u0027() =\u003e location.href\u0027);\r\n```\r\n### Page\r\n- Page URL: http://localhost:3000/login\r\n- Page Title: SpectroTag - Smart Spectro-Tagging\r\n- Console: 0 errors, 1 warnings\r\n### Events\r\n- New console entries: .playwright-cli\\console-2026-03-05T02-52-58-913Z.log#L1",
+    "scenario3_pass":  false,
+    "scenario4_url":  "### Result\r\n\"http://localhost:3000/login?error=auth_callback_failed\"\r\n### Ran Playwright code\r\n```js\r\nawait page.evaluate(\u0027() =\u003e location.href\u0027);\r\n```",
+    "scenario4_pass":  false,
+    "scenario5_form":  "### Error\r\nError: page._evaluateFunction: ReferenceError: form is not defined\r\n    at eval (eval at evaluate (:301:30), \u003canonymous\u003e:1:32)\r\n    at UtilityScript.evaluate (\u003canonymous\u003e:303:16)\r\n    at UtilityScript.\u003canonymous\u003e (\u003canonymous\u003e:1:44)",
+    "scenario5_email":  "### Error\r\nError: page._evaluateFunction: ReferenceError: input is not defined\r\n    at eval (eval at evaluate (:301:30), \u003canonymous\u003e:1:32)\r\n    at UtilityScript.evaluate (\u003canonymous\u003e:303:16)\r\n    at UtilityScript.\u003canonymous\u003e (\u003canonymous\u003e:1:44)",
+    "scenario5_pass":  false,
+    "kakao":  "Deferred(Kakao auth)",
+    "overall_pass":  false
+}

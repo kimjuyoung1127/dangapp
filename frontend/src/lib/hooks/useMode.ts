@@ -1,21 +1,29 @@
-// useMode.ts — 모드 잠금/해제 + 돌봄 요청 + 패밀리 그룹 훅
-
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createClient } from "@/lib/supabase/client";
 import type { Database } from "@/types/database.types";
 
 type ModeUnlock = Database["public"]["Tables"]["mode_unlocks"]["Row"];
 type ModeUnlockInsert = Database["public"]["Tables"]["mode_unlocks"]["Insert"];
+type Match = Database["public"]["Tables"]["matches"]["Row"];
 type CareRequest = Database["public"]["Tables"]["care_requests"]["Row"];
 type CareRequestInsert = Database["public"]["Tables"]["care_requests"]["Insert"];
 type FamilyGroup = Database["public"]["Tables"]["family_groups"]["Row"];
 type FamilyGroupInsert = Database["public"]["Tables"]["family_groups"]["Insert"];
 type FamilyMember = Database["public"]["Tables"]["family_members"]["Row"];
 type FamilyMemberInsert = Database["public"]["Tables"]["family_members"]["Insert"];
+type Guardian = Database["public"]["Tables"]["guardians"]["Row"];
 
-// ─── 모드 잠금/해제 ─────────────────────────────
+export interface CaregiverOption {
+    id: string;
+    nickname: string;
+    trustLevel: number;
+}
 
-/** 잠금 해제된 모드 목록 */
+const careRequestKey = (guardianId: string, type: "sent" | "received") =>
+    ["care-requests", guardianId, type] as const;
+const familyGroupsKey = (guardianId: string) => ["family-groups", guardianId] as const;
+const familyMembersKey = (groupId: string) => ["family-members", groupId] as const;
+
 export function useModeUnlocks(guardianId: string) {
     const supabase = createClient();
 
@@ -31,10 +39,11 @@ export function useModeUnlocks(guardianId: string) {
             return (data || []) as ModeUnlock[];
         },
         enabled: !!guardianId,
+        staleTime: 5 * 60 * 1000,
+        refetchOnWindowFocus: false,
     });
 }
 
-/** 모드 잠금 해제 mutation */
 export function useUnlockMode() {
     const supabase = createClient();
     const queryClient = useQueryClient();
@@ -58,14 +67,11 @@ export function useUnlockMode() {
     });
 }
 
-// ─── 돌봄 요청 ─────────────────────────────
-
-/** 보낸/받은 돌봄 요청 목록 */
 export function useCareRequests(guardianId: string, type: "sent" | "received") {
     const supabase = createClient();
 
     return useQuery({
-        queryKey: ["care-requests", guardianId, type],
+        queryKey: careRequestKey(guardianId, type),
         queryFn: async () => {
             const column = type === "sent" ? "requester_id" : "caregiver_id";
             const { data, error } = await supabase
@@ -78,10 +84,12 @@ export function useCareRequests(guardianId: string, type: "sent" | "received") {
             return (data || []) as CareRequest[];
         },
         enabled: !!guardianId,
+        staleTime: 20 * 1000,
+        placeholderData: (previousData) => previousData,
+        refetchOnWindowFocus: false,
     });
 }
 
-/** 돌봄 요청 작성 */
 export function useCreateCareRequest() {
     const supabase = createClient();
     const queryClient = useQueryClient();
@@ -97,15 +105,128 @@ export function useCreateCareRequest() {
             if (error) throw error;
             return data as CareRequest;
         },
-        onSuccess: (_data, variables) => {
+        onMutate: async (variables) => {
+            await Promise.all([
+                queryClient.cancelQueries({
+                    queryKey: careRequestKey(variables.requester_id, "sent"),
+                }),
+                queryClient.cancelQueries({
+                    queryKey: careRequestKey(variables.caregiver_id, "received"),
+                }),
+            ]);
+
+            const previousSent = queryClient.getQueryData<CareRequest[]>(
+                careRequestKey(variables.requester_id, "sent")
+            );
+            const previousReceived = queryClient.getQueryData<CareRequest[]>(
+                careRequestKey(variables.caregiver_id, "received")
+            );
+
+            const optimisticRequest: CareRequest = {
+                id: `optimistic-${Date.now()}`,
+                requester_id: variables.requester_id,
+                caregiver_id: variables.caregiver_id,
+                dog_id: variables.dog_id ?? null,
+                title: variables.title,
+                description: variables.description ?? null,
+                care_type: variables.care_type,
+                datetime: variables.datetime,
+                duration_hours: variables.duration_hours ?? 1,
+                status: variables.status ?? "pending",
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString(),
+            };
+
+            queryClient.setQueryData<CareRequest[]>(
+                careRequestKey(variables.requester_id, "sent"),
+                (old = []) => [optimisticRequest, ...old]
+            );
+            queryClient.setQueryData<CareRequest[]>(
+                careRequestKey(variables.caregiver_id, "received"),
+                (old = []) => [optimisticRequest, ...old]
+            );
+
+            return {
+                previousSent,
+                previousReceived,
+                requesterId: variables.requester_id,
+                caregiverId: variables.caregiver_id,
+            };
+        },
+        onError: (_error, _variables, context) => {
+            if (!context) return;
+
+            queryClient.setQueryData(
+                careRequestKey(context.requesterId, "sent"),
+                context.previousSent
+            );
+            queryClient.setQueryData(
+                careRequestKey(context.caregiverId, "received"),
+                context.previousReceived
+            );
+        },
+        onSettled: (_data, _error, variables) => {
             queryClient.invalidateQueries({
-                queryKey: ["care-requests", variables.requester_id],
+                queryKey: careRequestKey(variables.requester_id, "sent"),
+            });
+            queryClient.invalidateQueries({
+                queryKey: careRequestKey(variables.caregiver_id, "received"),
             });
         },
     });
 }
 
-/** 돌봄 요청 상태 변경 (수락/완료/취소) */
+export function useCaregiverOptions(guardianId: string) {
+    const supabase = createClient();
+
+    return useQuery({
+        queryKey: ["caregiver-options", guardianId],
+        queryFn: async () => {
+            const { data: matches, error: matchError } = await supabase
+                .from("matches")
+                .select("from_guardian_id,to_guardian_id")
+                .eq("status", "accepted")
+                .or(`from_guardian_id.eq.${guardianId},to_guardian_id.eq.${guardianId}`);
+
+            if (matchError) throw matchError;
+
+            const partnerIds = Array.from(
+                new Set(
+                    ((matches || []) as Pick<Match, "from_guardian_id" | "to_guardian_id">[]).map(
+                        (match) =>
+                            match.from_guardian_id === guardianId
+                                ? match.to_guardian_id
+                                : match.from_guardian_id
+                    )
+                )
+            );
+
+            if (partnerIds.length === 0) {
+                return [] as CaregiverOption[];
+            }
+
+            const { data: guardians, error: guardianError } = await supabase
+                .from("guardians")
+                .select("id,nickname")
+                .in("id", partnerIds);
+
+            if (guardianError) throw guardianError;
+
+            return ((guardians || []) as Pick<Guardian, "id" | "nickname">[]).map(
+                (guardian) => ({
+                    id: guardian.id,
+                    nickname: guardian.nickname,
+                    trustLevel: 0,
+                })
+            );
+        },
+        enabled: !!guardianId,
+        staleTime: 60 * 1000,
+        refetchOnWindowFocus: false,
+        retry: 1,
+    });
+}
+
 export function useUpdateCareRequest() {
     const supabase = createClient();
     const queryClient = useQueryClient();
@@ -131,14 +252,11 @@ export function useUpdateCareRequest() {
     });
 }
 
-// ─── 패밀리 그룹 ─────────────────────────────
-
-/** 소속 그룹 목록 */
 export function useFamilyGroups(guardianId: string) {
     const supabase = createClient();
 
     return useQuery({
-        queryKey: ["family-groups", guardianId],
+        queryKey: familyGroupsKey(guardianId),
         queryFn: async () => {
             const { data: memberRows, error: memberError } = await supabase
                 .from("family_members")
@@ -147,7 +265,7 @@ export function useFamilyGroups(guardianId: string) {
 
             if (memberError) throw memberError;
 
-            const groupIds = (memberRows || []).map((r) => r.group_id);
+            const groupIds = (memberRows || []).map((row) => row.group_id);
             if (groupIds.length === 0) return [] as FamilyGroup[];
 
             const { data, error } = await supabase
@@ -160,43 +278,88 @@ export function useFamilyGroups(guardianId: string) {
             return (data || []) as FamilyGroup[];
         },
         enabled: !!guardianId,
+        staleTime: 30 * 1000,
+        refetchOnWindowFocus: false,
     });
 }
 
-/** 그룹 생성 (+ owner 멤버 자동 추가) */
 export function useCreateFamilyGroup() {
     const supabase = createClient();
     const queryClient = useQueryClient();
 
     return useMutation({
         mutationFn: async (input: FamilyGroupInsert) => {
-            const { data, error } = await supabase
-                .from("family_groups")
-                .insert(input)
-                .select()
-                .single();
-
+            const groupId = crypto.randomUUID();
+            const createdAt = new Date().toISOString();
+            const newGroup: FamilyGroup = {
+                id: groupId,
+                name: input.name ?? "",
+                creator_id: input.creator_id,
+                dog_ids: input.dog_ids ?? [],
+                created_at: createdAt,
+            };
+            const { error } = await supabase.from("family_groups").insert({
+                ...input,
+                id: groupId,
+            });
             if (error) throw error;
-            const group = data as FamilyGroup;
 
-            // 생성자를 owner로 추가
-            await supabase.from("family_members").insert({
-                group_id: group.id,
+            const { error: memberError } = await supabase.from("family_members").insert({
+                group_id: groupId,
                 member_id: input.creator_id,
                 role: "owner",
             });
 
-            return group;
+            if (memberError) {
+                await supabase.from("family_groups").delete().eq("id", groupId);
+                throw memberError;
+            }
+
+            return newGroup;
         },
-        onSuccess: (_data, variables) => {
+        onMutate: async (variables) => {
+            await queryClient.cancelQueries({
+                queryKey: familyGroupsKey(variables.creator_id),
+            });
+
+            const previousGroups = queryClient.getQueryData<FamilyGroup[]>(
+                familyGroupsKey(variables.creator_id)
+            );
+
+            const optimisticGroup: FamilyGroup = {
+                id: `optimistic-${Date.now()}`,
+                name: variables.name,
+                creator_id: variables.creator_id,
+                dog_ids: variables.dog_ids ?? [],
+                created_at: new Date().toISOString(),
+            };
+
+            queryClient.setQueryData<FamilyGroup[]>(
+                familyGroupsKey(variables.creator_id),
+                (old = []) => [optimisticGroup, ...old]
+            );
+
+            return {
+                previousGroups,
+                creatorId: variables.creator_id,
+            };
+        },
+        onError: (_error, _variables, context) => {
+            if (!context) return;
+
+            queryClient.setQueryData(
+                familyGroupsKey(context.creatorId),
+                context.previousGroups
+            );
+        },
+        onSettled: (_data, _error, variables) => {
             queryClient.invalidateQueries({
-                queryKey: ["family-groups", variables.creator_id],
+                queryKey: familyGroupsKey(variables.creator_id),
             });
         },
     });
 }
 
-/** 멤버 초대 */
 export function useAddFamilyMember() {
     const supabase = createClient();
     const queryClient = useQueryClient();
@@ -217,18 +380,18 @@ export function useAddFamilyMember() {
                 queryKey: ["family-groups"],
             });
             queryClient.invalidateQueries({
-                queryKey: ["family-members", variables.group_id],
+                queryKey: familyMembersKey(variables.group_id),
             });
         },
     });
 }
 
-/** 그룹 멤버 목록 */
 export function useFamilyMembers(groupId: string) {
     const supabase = createClient();
+    const isOptimisticGroup = groupId.startsWith("optimistic-");
 
     return useQuery({
-        queryKey: ["family-members", groupId],
+        queryKey: familyMembersKey(groupId),
         queryFn: async () => {
             const { data, error } = await supabase
                 .from("family_members")
@@ -239,6 +402,9 @@ export function useFamilyMembers(groupId: string) {
             if (error) throw error;
             return (data || []) as FamilyMember[];
         },
-        enabled: !!groupId,
+        enabled: !!groupId && !isOptimisticGroup,
+        staleTime: 30 * 1000,
+        retry: 0,
+        refetchOnWindowFocus: false,
     });
 }
