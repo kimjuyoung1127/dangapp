@@ -130,3 +130,23 @@ Overall parity verification: 1 Verified / 10 active IDs = 10% (7 routes at QA ??
   - evidence: `output/playwright/b2b-qa-20260305/family-create-success.png`
 - Board sync:
   - `/family` status updated from `Hold` to `QA`
+
+## 2026-03-05 Chat/DangLog Debug Seed + Handoff Update (Codex)
+
+- Implemented seed tooling for debug data:
+  - `scripts/seed-chat-danglog-debug.mjs`
+  - `scripts/cleanup-chat-danglog-debug.mjs`
+  - `scripts/check-chat-danglog-debug.mjs`
+  - root `package.json` scripts: `seed:debug`, `seed:cleanup`, `seed:check`
+- Security hardening:
+  - `scripts/seed-scenarios.mjs` rewritten to env-only (hardcoded service key removed)
+- Runtime seeding status:
+  - initial run PASS (`rooms=2`, `messages=20`, `danglogs=10`)
+  - fanout run PASS for all guardians (`chat_rooms=12`, `chat_messages=120`, `danglogs=60`)
+- UI/runtime observation:
+  - DangLog feed shows seeded records
+  - Chat list still empty in some user sessions despite seeded participant rows
+  - chat page updated to show explicit fetch-error UI (avoid empty-state masking)
+- Handoff next action (Claude):
+  - verify active session user -> `useCurrentGuardian()` -> `guardian.id` mapping
+  - trace `/chat` query result path in runtime for the same session

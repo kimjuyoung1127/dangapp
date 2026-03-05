@@ -1,123 +1,159 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from "@supabase/supabase-js";
+import { existsSync } from "node:fs";
+import { readFile } from "node:fs/promises";
 
-const SUPABASE_URL = 'https://fjpvtivpulreulfxmxfe.supabase.co';
-const SUPABASE_SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZqcHZ0aXZwdWxyZXVsZnhteGZlIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MjI2OTM3MiwiZXhwIjoyMDg3ODQ1MzcyfQ.a-g30QnbPw_LyLssPKNQqb7Z-zMZ9v2rBH4WT1lvAXA';
-
-const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY, {
-  auth: {
-    autoRefreshToken: false,
-    persistSession: false
+function getEnvOrThrow(primary, fallbacks = []) {
+  const keys = [primary, ...fallbacks];
+  for (const key of keys) {
+    const value = process.env[key];
+    if (value) return value;
   }
-});
+  throw new Error(`Missing required env var. Set one of: ${keys.join(", ")}`);
+}
+
+async function loadEnvFallbacks() {
+  const candidates = [".env.local", "frontend/.env.local", "frontend/.env.example"];
+  for (const filePath of candidates) {
+    if (!existsSync(filePath)) continue;
+    const raw = await readFile(filePath, "utf8");
+    for (const line of raw.split(/\r?\n/)) {
+      const trimmed = line.trim();
+      if (!trimmed || trimmed.startsWith("#")) continue;
+      const eqIndex = trimmed.indexOf("=");
+      if (eqIndex <= 0) continue;
+      const key = trimmed.slice(0, eqIndex).trim();
+      const value = trimmed.slice(eqIndex + 1).trim();
+      if (!process.env[key]) {
+        process.env[key] = value;
+      }
+    }
+  }
+}
+
+function assertNoError(error, step) {
+  if (error) {
+    throw new Error(`${step} failed: ${error.message}`);
+  }
+}
 
 async function seedScenarios() {
-  console.log('🚀 Starting Scenario-based Seeding...');
+  await loadEnvFallbacks();
 
-  const myUserId = 'a8b73aa4-8bbb-427f-af79-1a3dccec944e';
-  await supabase.rpc('set_guardian_location', {
-    p_guardian_id: myUserId,
-    p_lng: 126.9780,
-    p_lat: 37.5665
+  const supabaseUrl = getEnvOrThrow("SUPABASE_URL", ["NEXT_PUBLIC_SUPABASE_URL"]);
+  const serviceRoleKey = getEnvOrThrow("SUPABASE_SERVICE_ROLE_KEY");
+
+  const supabase = createClient(supabaseUrl, serviceRoleKey, {
+    auth: { autoRefreshToken: false, persistSession: false },
   });
-  console.log('✅ My location set to Seoul City Hall.');
+
+  const primaryGuardianId = process.env.SEED_SCENARIO_PRIMARY_GUARDIAN_ID ?? null;
 
   const scenarios = [
     {
-      id: '00000000-0000-0000-0000-000000000011',
-      email: 'perfect@test.com',
-      nickname: '우주아빠',
-      lng: 126.9790, lat: 37.5670, // 100m
-      activity: ['morning', 'evening'],
-      trust: 95,
-      dog: { name: '우주', breed: '골든 리트리버', age: 2, gender: 'male', temp: ['온순함', '활동적'] }
+      id: "00000000-0000-0000-0000-000000000011",
+      email: "scenario-perfect@example.local",
+      nickname: "scenario-perfect",
+      lng: 126.979,
+      lat: 37.567,
+      activity_times: ["morning", "evening"],
+      trust_score: 95,
+      dog: { name: "Buddy", breed: "Golden Retriever", age: 2, gender: "male" },
     },
     {
-      id: '00000000-0000-0000-0000-000000000022',
-      email: 'time@test.com',
-      nickname: '루피언니',
-      lng: 126.9900, lat: 37.5700, // ~1.5km
-      activity: ['afternoon'],
-      trust: 80,
-      dog: { name: '루피', breed: '비숑 프라제', age: 4, gender: 'female', temp: ['겁이많음', '사교적'] }
+      id: "00000000-0000-0000-0000-000000000022",
+      email: "scenario-time@example.local",
+      nickname: "scenario-time",
+      lng: 126.99,
+      lat: 37.57,
+      activity_times: ["afternoon"],
+      trust_score: 80,
+      dog: { name: "Lupi", breed: "Bichon Frise", age: 4, gender: "female" },
     },
     {
-      id: '00000000-0000-0000-0000-000000000033',
-      email: 'far@test.com',
-      nickname: '먼동네친구',
-      lng: 127.0200, lat: 37.5800, // ~4.5km
-      activity: ['morning'],
-      trust: 50,
-      dog: { name: '먼지', breed: '포메라니안', age: 1, gender: 'female', temp: ['활발함'] }
+      id: "00000000-0000-0000-0000-000000000033",
+      email: "scenario-far@example.local",
+      nickname: "scenario-far",
+      lng: 127.02,
+      lat: 37.58,
+      activity_times: ["morning"],
+      trust_score: 50,
+      dog: { name: "Mong", breed: "Pomeranian", age: 1, gender: "female" },
     },
-    {
-      id: '00000000-0000-0000-0000-000000000044',
-      email: 'multidog@test.com',
-      nickname: '다둥이네',
-      lng: 126.9700, lat: 37.5600, // Very close
-      activity: ['evening'],
-      trust: 99,
-      dogs: [
-        { name: '초코', breed: '푸들', age: 5, gender: 'male', is_main: true },
-        { name: '쿠키', breed: '푸들', age: 3, gender: 'female', is_main: false }
-      ]
-    }
   ];
 
-  for (const s of scenarios) {
-    try {
-      const { data: authUser, error: aErr } = await supabase.auth.admin.createUser({
-        id: s.id,
-        email: s.email,
-        password: 'password123',
-        email_confirm: true
-      });
-      if (aErr && aErr.message !== 'User already exists') {
-        console.warn(`Auth creation note: ${aErr.message}`);
-      }
+  console.log("Scenario seed started.");
 
-      await supabase.from('users').upsert({
-        id: s.id,
-        email: s.email,
-        trust_score: s.trust,
-        trust_level: Math.ceil(s.trust / 20)
-      });
+  for (const scenario of scenarios) {
+    const { error: authErr } = await supabase.auth.admin.createUser({
+      id: scenario.id,
+      email: scenario.email,
+      password: "password123",
+      email_confirm: true,
+    });
+    if (authErr && !authErr.message.includes("already")) {
+      throw new Error(`create auth user (${scenario.email}) failed: ${authErr.message}`);
+    }
 
-      await supabase.from('guardians').upsert({
-        id: s.id,
-        user_id: s.id,
-        nickname: s.nickname,
-        address_name: '서울시 중구',
-        activity_times: s.activity,
-        onboarding_progress: 100,
-        verified_region: true
-      });
+    const { error: userErr } = await supabase.from("users").upsert({
+      id: scenario.id,
+      email: scenario.email,
+      trust_score: scenario.trust_score,
+      trust_level: Math.max(1, Math.ceil(scenario.trust_score / 20)),
+    });
+    assertNoError(userErr, `upsert users (${scenario.email})`);
 
-      await supabase.rpc('set_guardian_location', {
-        p_guardian_id: s.id,
-        p_lng: s.lng,
-        p_lat: s.lat
-      });
+    const { error: guardianErr } = await supabase.from("guardians").upsert({
+      id: scenario.id,
+      user_id: scenario.id,
+      nickname: scenario.nickname,
+      address_name: "Seoul",
+      activity_times: scenario.activity_times,
+      onboarding_progress: 100,
+      verified_region: true,
+    });
+    assertNoError(guardianErr, `upsert guardians (${scenario.nickname})`);
 
-      const dogList = s.dogs || [s.dog];
-      for (const d of dogList) {
-        await supabase.from('dogs').upsert({
-          guardian_id: s.id,
-          name: d.name,
-          breed: d.breed,
-          age: d.age,
-          gender: d.gender,
-          temperament: d.temp || [],
-          is_main_dog: d.is_main || false
-        });
-      }
+    const { error: dogErr } = await supabase.from("dogs").insert({
+      guardian_id: scenario.id,
+      name: scenario.dog.name,
+      breed: scenario.dog.breed,
+      age: scenario.dog.age,
+      gender: scenario.dog.gender,
+      temperament: ["friendly", "active"],
+    });
+    if (dogErr && !dogErr.message.includes("duplicate")) {
+      throw new Error(`insert dog (${scenario.dog.name}) failed: ${dogErr.message}`);
+    }
 
-      console.log(`✅ Seeded: ${s.nickname}`);
-    } catch (err) {
-      console.error(`❌ Error ${s.nickname}:`, err.message);
+    const { error: locationErr } = await supabase.rpc("set_guardian_location", {
+      p_guardian_id: scenario.id,
+      p_lng: scenario.lng,
+      p_lat: scenario.lat,
+    });
+    if (locationErr) {
+      console.warn(`set_guardian_location warning (${scenario.nickname}): ${locationErr.message}`);
+    }
+
+    console.log(`- seeded ${scenario.nickname}`);
+  }
+
+  if (primaryGuardianId) {
+    const { error: meLocErr } = await supabase.rpc("set_guardian_location", {
+      p_guardian_id: primaryGuardianId,
+      p_lng: 126.978,
+      p_lat: 37.5665,
+    });
+    if (meLocErr) {
+      console.warn(`primary location warning: ${meLocErr.message}`);
+    } else {
+      console.log(`- updated primary guardian location (${primaryGuardianId})`);
     }
   }
 
-  console.log('\n✨ All scenarios seeded successfully. Ready for UI debugging!');
+  console.log("Scenario seed completed.");
 }
 
-seedScenarios();
+seedScenarios().catch((error) => {
+  console.error("[seed-scenarios] failed:", error.message);
+  process.exitCode = 1;
+});

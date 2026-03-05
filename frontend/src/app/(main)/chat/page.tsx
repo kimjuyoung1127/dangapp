@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { AppShell } from "@/components/shared/AppShell";
 import { Skeleton } from "@/components/ui/Skeleton";
+import { Button } from "@/components/ui/Button";
 import { ScrollReveal, TapScale } from "@/components/ui/MotionWrappers";
 import ChatEmptyState from "@/components/features/chat/ChatEmptyState";
 import { useCurrentGuardian } from "@/lib/hooks/useCurrentGuardian";
@@ -44,7 +45,7 @@ export default function ChatListPage() {
     const { data: guardian, isLoading: guardianLoading } = useCurrentGuardian();
     const guardianId = guardian?.id ?? "";
 
-    const { data: rooms = [], isLoading: roomsLoading } =
+    const { data: rooms = [], isLoading: roomsLoading, error: roomsError, refetch: refetchRooms } =
         useChatRooms(guardianId);
 
     const isLoading = guardianLoading || (!!guardianId && roomsLoading);
@@ -61,6 +62,13 @@ export default function ChatListPage() {
                         <ChatListSkeleton />
                         <ChatListSkeleton />
                         <ChatListSkeleton />
+                    </div>
+                ) : roomsError ? (
+                    <div className="rounded-3xl border border-red-200 bg-red-50 p-4 text-sm text-red-700 space-y-3">
+                        <p>채팅 목록을 불러오지 못했어요.</p>
+                        <Button size="sm" variant="outline" onClick={() => refetchRooms()}>
+                            다시 시도
+                        </Button>
                     </div>
                 ) : rooms.length === 0 ? (
                     <ChatEmptyState />

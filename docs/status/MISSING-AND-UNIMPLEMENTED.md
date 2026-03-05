@@ -55,3 +55,14 @@ Last Updated: 2026-03-05 (security hardening + quality gate sync)
   - optimistic member-count transient error removed
 - Current route status:
   - `/modes`, `/care`, `/family` are all at `QA`.
+
+## Chat/DangLog Debug Data Follow-up 2026-03-05
+
+- Completed:
+  - Chat/DangLog debug seed scripts and cleanup/check workflow are in place.
+  - Seed data injected successfully (medium + fanout runs).
+  - DangLog seeded data is visible in runtime.
+- Remaining gap:
+  - `/chat` can still show empty state in some sessions even with seeded participant rows.
+  - Potential session user / guardian mapping mismatch needs runtime confirmation.
+  - Temporary safeguard added: explicit chat fetch-error UI (`frontend/src/app/(main)/chat/page.tsx`).

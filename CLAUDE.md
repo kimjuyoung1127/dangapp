@@ -12,15 +12,15 @@ If this file is shown in a new session, continue work in this exact order:
 3. Continue the next unfinished priority/parity item.
 4. Update `docs/daily/MM-DD/page-<route>.md` and board status before finishing.
 
-Current checkpoint (as of 2026-03-02):
-- Wave 0 (workflow alignment): done.
-- Wave 1 (schema foundation): migration files authored, live Supabase apply pending.
-- Wave 2 (`/onboarding`, `DANG-ONB-001`): started, status is `InProgress`.
+Current checkpoint (as of 2026-03-05):
+- Security hardening + B2B QA blockers resolved (`/family` unblocked).
+- Auth QA completed (Kakao deferred).
+- Chat/DangLog debug seed workflow implemented and data injected.
 
 Immediate next actions:
-1. `DANG-INFRA-001`: apply and verify migrations in Supabase project.
-2. `DANG-ONB-001`: finish onboarding UX details + persistence + upload flow.
-3. `DANG-MAT-001`: start `/home` filter + friend request flow.
+1. `DANG-CHT-001`: resolve runtime case where `/chat` still shows empty despite seeded participant rows.
+2. Validate active session user -> `useCurrentGuardian()` -> `guardian.id` mapping and chat query runtime path.
+3. Keep docs/status and daily logs synced after chat issue is closed.
 
 Supabase MCP prerequisites:
 - `SUPABASE_ACCESS_TOKEN` must be set in shell env.
