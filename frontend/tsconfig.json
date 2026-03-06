@@ -21,6 +21,10 @@
                 "name": "next"
             }
         ],
+        "types": [
+            "vitest/globals",
+            "@testing-library/jest-dom"
+        ],
         "paths": {
             "@/*": [
                 "./src/*"
@@ -34,6 +38,8 @@
         ".next/types/**/*.ts"
     ],
     "exclude": [
-        "node_modules"
+        "node_modules",
+        "**/*.test.ts",
+        "**/*.test.tsx"
     ]
 }

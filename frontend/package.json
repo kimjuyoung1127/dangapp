@@ -7,6 +7,8 @@
     "build": "npm run check:encoding && next build",
     "start": "next start",
     "lint": "npm run check:encoding && next lint",
+    "test": "vitest",
+    "test:run": "vitest run",
     "analyze": "ANALYZE=true next build",
     "check:encoding": "node ../scripts/check-encoding.mjs"
   },
@@ -42,6 +44,11 @@
   },
   "devDependencies": {
     "@next/bundle-analyzer": "^16.1.6",
-    "eslint-config-next": "^14.2.15"
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.0",
+    "@testing-library/user-event": "^14.6.1",
+    "eslint-config-next": "^14.2.15",
+    "jsdom": "^27.0.0",
+    "vitest": "^3.2.4"
   }
 }

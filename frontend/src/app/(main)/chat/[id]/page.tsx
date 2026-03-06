@@ -1,4 +1,4 @@
-﻿// File: Chat room page with realtime messaging and schedule proposal creation.
+// File: Chat room page with realtime messaging and schedule proposal creation.
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -9,7 +9,16 @@ import { TapScale } from "@/components/ui/MotionWrappers";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { useCurrentGuardian } from "@/lib/hooks/useCurrentGuardian";
 import { useChatPartner, useChatRoom, useMarkAsRead, useSendMessage } from "@/lib/hooks/useChat";
-import { useCreateSchedule, useRespondSchedule } from "@/lib/hooks/useSchedule";
+import {
+    RespondScheduleMutationError,
+    useCreateSchedule,
+    useRespondSchedule,
+} from "@/lib/hooks/useSchedule";
+import {
+    buildScheduleResponseMap,
+    getScheduleResponseState,
+    isScheduleResponseActionable,
+} from "@/lib/scheduleResponse";
 import { cn } from "@/lib/utils";
 
 export default function ChatRoomPage({ params }: { params: { id: string } }) {
@@ -28,26 +37,13 @@ export default function ChatRoomPage({ params }: { params: { id: string } }) {
 
     const [inputText, setInputText] = useState("");
     const [isScheduleOpen, setIsScheduleOpen] = useState(false);
+    const [pendingResponseScheduleId, setPendingResponseScheduleId] = useState<string | null>(null);
+    const pendingResponseScheduleIdRef = useRef<string | null>(null);
 
     const { data: partner } = useChatPartner(roomId, myGuardianId);
 
     const scheduleResponseById = useMemo(() => {
-        const map = new Map<string, "accepted" | "rejected">();
-
-        for (const message of messages ?? []) {
-            if (message.type !== "system") continue;
-            const metadata = (message.metadata as Record<string, unknown>) || {};
-            const scheduleId =
-                typeof metadata.scheduleId === "string" ? metadata.scheduleId : null;
-            if (!scheduleId) continue;
-
-            if (metadata.proposalStatus === "accepted") map.set(scheduleId, "accepted");
-            if (metadata.proposalStatus === "rejected") map.set(scheduleId, "rejected");
-            if (metadata.status === "confirmed") map.set(scheduleId, "accepted");
-            if (metadata.status === "cancelled") map.set(scheduleId, "rejected");
-        }
-
-        return map;
+        return buildScheduleResponseMap(messages ?? []);
     }, [messages]);
 
     useEffect(() => {
@@ -135,6 +131,10 @@ export default function ChatRoomPage({ params }: { params: { id: string } }) {
     const handleRespondSchedule = useCallback(
         (scheduleId: string, response: "accepted" | "rejected") => {
             if (!myGuardianId) return;
+            if (pendingResponseScheduleIdRef.current === scheduleId) return;
+
+            pendingResponseScheduleIdRef.current = scheduleId;
+            setPendingResponseScheduleId(scheduleId);
 
             respondSchedule(
                 {
@@ -159,7 +159,17 @@ export default function ChatRoomPage({ params }: { params: { id: string } }) {
                         });
                     },
                     onError: (error) => {
+                        if (error instanceof RespondScheduleMutationError) {
+                            alert(error.message);
+                            return;
+                        }
                         alert(error instanceof Error ? error.message : "약속 응답 처리에 실패했습니다.");
+                    },
+                    onSettled: () => {
+                        if (pendingResponseScheduleIdRef.current === scheduleId) {
+                            pendingResponseScheduleIdRef.current = null;
+                            setPendingResponseScheduleId(null);
+                        }
                     },
                 }
             );
@@ -222,8 +232,15 @@ export default function ChatRoomPage({ params }: { params: { id: string } }) {
                     const scheduleLocation =
                         typeof metadata.location === "string" ? metadata.location : "";
                     const scheduleResponse = scheduleId
-                        ? scheduleResponseById.get(scheduleId) ?? null
-                        : null;
+                        ? getScheduleResponseState(scheduleResponseById, scheduleId)
+                        : "none";
+                    const isActionPending = pendingResponseScheduleId === scheduleId;
+                    const canRespond = isScheduleResponseActionable({
+                        isMyMessage: isMe,
+                        scheduleId,
+                        responseState: scheduleResponse,
+                        pendingScheduleId: pendingResponseScheduleId,
+                    });
 
                     return (
                         <div
@@ -250,7 +267,7 @@ export default function ChatRoomPage({ params }: { params: { id: string } }) {
                                             </p>
                                             <p>{scheduleLocation}</p>
                                         </div>
-                                        {!isMe && !scheduleResponse && (
+                                        {canRespond && (
                                             <div className="flex gap-2 mt-3">
                                                 <button
                                                     type="button"
@@ -261,7 +278,7 @@ export default function ChatRoomPage({ params }: { params: { id: string } }) {
                                                             alert("연결된 약속 ID가 없어 처리할 수 없습니다. 새 약속을 다시 제안해 주세요.");
                                                         }
                                                     }}
-                                                    disabled={isRespondingSchedule}
+                                                    disabled={isRespondingSchedule || isActionPending}
                                                     className="flex-1 py-1.5 bg-black/5 text-foreground rounded-xl text-sm font-medium hover:bg-black/10 transition-colors disabled:opacity-50"
                                                 >
                                                     거절
@@ -275,14 +292,17 @@ export default function ChatRoomPage({ params }: { params: { id: string } }) {
                                                             alert("연결된 약속 ID가 없어 처리할 수 없습니다. 새 약속을 다시 제안해 주세요.");
                                                         }
                                                     }}
-                                                    disabled={isRespondingSchedule}
+                                                    disabled={isRespondingSchedule || isActionPending}
                                                     className="flex-1 py-1.5 bg-primary text-white rounded-xl text-sm font-medium shadow-sm hover:brightness-110 transition-all disabled:opacity-50"
                                                 >
                                                     수락하기
                                                 </button>
                                             </div>
                                         )}
-                                        {!isMe && scheduleResponse ? (
+                                        {!isMe && isActionPending ? (
+                                            <p className="mt-2 text-xs text-foreground-muted">응답 처리 중...</p>
+                                        ) : null}
+                                        {!isMe && !isActionPending && scheduleResponse !== "none" ? (
                                             <p className="mt-2 text-xs text-foreground-muted">
                                                 {scheduleResponse === "accepted"
                                                     ? "이미 수락 처리된 약속입니다."

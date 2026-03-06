@@ -1,4 +1,4 @@
-﻿// File: Schedule hooks for list retrieval and schedule creation from chat flow.
+// File: Schedule hooks for list retrieval and schedule creation from chat flow.
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createClient } from "@/lib/supabase/client";
 import type { Database } from "@/types/database.types";
@@ -27,6 +27,87 @@ export interface CreateScheduleInput {
 export interface RespondScheduleInput {
     schedule_id: string;
     proposal_status: "accepted" | "rejected";
+}
+
+export type RespondScheduleErrorCode = "ALREADY_RESPONDED" | "FORBIDDEN" | "UNKNOWN";
+
+export interface RespondScheduleSuccess {
+    ok: true;
+    data: Schedule;
+}
+
+export interface RespondScheduleFailure {
+    ok: false;
+    code: RespondScheduleErrorCode;
+    message: string;
+}
+
+export type RespondScheduleResult = RespondScheduleSuccess | RespondScheduleFailure;
+
+interface RespondScheduleApiError {
+    code?: string | null;
+    message?: string | null;
+    status?: number | string;
+}
+
+const RESPOND_SCHEDULE_ERROR_MESSAGES: Record<RespondScheduleErrorCode, string> = {
+    ALREADY_RESPONDED: "이미 응답 처리된 약속입니다.",
+    FORBIDDEN: "이 약속에 응답할 권한이 없습니다.",
+    UNKNOWN: "약속 응답 처리에 실패했습니다. 잠시 후 다시 시도해주세요.",
+};
+
+function parseErrorStatus(error: RespondScheduleApiError | null): number | null {
+    if (!error || error.status === undefined || error.status === null) return null;
+    if (typeof error.status === "number") return error.status;
+    const numeric = Number.parseInt(error.status, 10);
+    return Number.isFinite(numeric) ? numeric : null;
+}
+
+function mapRespondScheduleErrorCode(
+    error: RespondScheduleApiError | null,
+    rows: Schedule[] | null
+): RespondScheduleErrorCode {
+    if (!error && (!rows || rows.length === 0)) return "ALREADY_RESPONDED";
+    if (!error) return "UNKNOWN";
+
+    const status = parseErrorStatus(error);
+    const code = error.code ?? "";
+    const message = error.message ?? "";
+
+    if (status === 406 || code === "PGRST116") return "ALREADY_RESPONDED";
+    if (message.includes("이미 응답")) return "ALREADY_RESPONDED";
+    if (status === 401 || status === 403 || code === "42501") return "FORBIDDEN";
+    return "UNKNOWN";
+}
+
+export function resolveRespondScheduleResult(params: {
+    data: Schedule[] | null;
+    error: RespondScheduleApiError | null;
+}): RespondScheduleResult {
+    if (params.error) {
+        const code = mapRespondScheduleErrorCode(params.error, params.data);
+        return { ok: false, code, message: RESPOND_SCHEDULE_ERROR_MESSAGES[code] };
+    }
+
+    if (!params.data || params.data.length === 0) {
+        const code: RespondScheduleErrorCode = "ALREADY_RESPONDED";
+        return { ok: false, code, message: RESPOND_SCHEDULE_ERROR_MESSAGES[code] };
+    }
+
+    return {
+        ok: true,
+        data: params.data[0] as Schedule,
+    };
+}
+
+export class RespondScheduleMutationError extends Error {
+    code: RespondScheduleErrorCode;
+
+    constructor(result: RespondScheduleFailure) {
+        super(result.message);
+        this.name = "RespondScheduleMutationError";
+        this.code = result.code;
+    }
 }
 
 export function useMySchedules(guardianId: string | undefined) {
@@ -160,11 +241,16 @@ export function useRespondSchedule() {
                 .select()
                 .limit(1);
 
-            if (error) throw error;
-            if (!data || data.length === 0) {
-                throw new Error("이미 응답 처리된 약속입니다.");
+            const result = resolveRespondScheduleResult({
+                data: (data as Schedule[] | null) ?? null,
+                error: error as RespondScheduleApiError | null,
+            });
+
+            if (!result.ok) {
+                throw new RespondScheduleMutationError(result);
             }
-            return data[0] as Schedule;
+
+            return result.data;
         },
         onSuccess: (updated) => {
             queryClient.invalidateQueries({ queryKey: ["my-schedules"] });
