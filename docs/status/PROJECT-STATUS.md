@@ -1,6 +1,6 @@
 # DangApp Project Status
 
-Last Updated: 2026-03-05 (KST) manual update (security hardening + env bootstrap sync)
+Last Updated: 2026-03-06 (KST) manual update (chat RLS recursion + schedule response stabilization)
 Owner Doc: `CLAUDE.md`
 
 ## Execution Phases
@@ -38,7 +38,7 @@ Overall parity verification: 1 Verified / 10 active IDs = 10% (7 routes at QA ??
 | DANG-AUTH-001 | auth + consent | Ready | implementation pending |
 | DANG-ONB-001 | guardian/dog onboarding | QA | end-to-end verification + edge-case testing |
 | DANG-MAT-001 | matching + filters | InProgress | /modes route + end-to-end verification pending |
-| DANG-CHT-001 | realtime chat + schedule | QA | end-to-end verification pending |
+| DANG-CHT-001 | realtime chat + schedule | QA | chat RLS recursion hotfix + legacy scheduleId backfill completed; final signed-in E2E evidence |
 | DANG-WLK-001 | walk records + review | QA | end-to-end verification pending |
 | DANG-DLG-001 | collaborative danglog | QA | end-to-end verification pending |
 | DANG-PRF-001 | profile/notification settings | QA | end-to-end verification pending |

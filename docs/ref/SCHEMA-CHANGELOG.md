@@ -159,3 +159,55 @@ individually documented. Entries added below for traceability.
 - Added Wave 1 schema expansion migration for onboarding, matching request metadata, walk records/reviews, collaborative danglog, notification settings, and consent logs.
 - Added companion storage migration for dog/profile/walk/danglog buckets and object policies.
 - Added baseline core RLS migration for existing public tables used by the web app.
+
+---
+
+## 2026-03-06 - Schema Drift Follow-up (Documentation + Usage Classification)
+
+This update closes drift-report documentation gaps and clarifies table usage status for current app scope.
+
+### Newly documented tables
+- `matches`
+  - Purpose: Like/pass/mutual-match relationship tracking between guardians.
+  - Current usage: Active in matching flow (`/home`).
+- `reviews`
+  - Purpose: User-level review aggregates and profile trust surface.
+  - Current usage: Active in profile/review flow.
+- `walk_records`
+  - Purpose: Walk execution evidence and post-schedule activity logs.
+  - Current usage: Active in walk record flow.
+
+### Unused table classification (current cycle)
+- Candidate for active usage (B2B rollout): `partner_places`, `reservations`, `dog_ownership`, `schedule_participants`
+- Candidate for deferred scope review: `blocks`, `notifications`, `reports`
+
+### Notes
+- This is a documentation/state-classification update only.
+- No schema migration was applied in this step.
+
+---
+
+## 2026-03-06 - Chat RLS Recursion Hotfix + Schedule Message Backfill
+
+### Problem
+- `GET /rest/v1/chat_messages` returned `500` with `42P17` (`infinite recursion detected in policy for relation "chat_participants"`).
+- Legacy schedule chat cards had no `metadata.scheduleId`, so accept/reject actions could not map to a concrete `schedules` row.
+
+### Migration: `20260306194000_fix_chat_rls_recursion.sql`
+- Added `public.is_room_participant(p_room_id uuid)` (`SECURITY DEFINER`, `STABLE`).
+- Replaced select policies to use helper function:
+  - `app_chat_rooms_select_participant_v1`
+  - `app_chat_participants_select_participant_v1`
+  - `app_chat_messages_select_participant_v1`
+- Result: recursive policy evaluation path removed.
+
+### Migration: `20260306195500_backfill_schedule_message_ids.sql`
+- Backfilled `chat_messages(type='schedule')` where `metadata.scheduleId` was missing.
+- Matching rule: `room_id + datetime(date/time metadata) + organizer/sender + location` against `schedules`.
+- If no matching schedule exists, creates a proposed schedule row and writes created `id` back to message metadata.
+- Result: historical schedule cards become actionable for response flow.
+
+### Verification
+- `chat_messages` room query that previously failed now returns `200`.
+- Missing `scheduleId` count reduced from `12` to `0`.
+- No schema shape change for client types; this is policy/runtime behavior stabilization.
