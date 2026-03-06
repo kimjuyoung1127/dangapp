@@ -12,6 +12,9 @@ test.describe("Auth state recorder @manual", () => {
 
         await page.goto("/login");
         await expect(page.getByRole("button", { name: "Continue with Google" })).toBeVisible();
+        await page.getByLabel("[필수] 이용약관에 동의합니다.").check();
+        await page.getByLabel("[필수] 개인정보 처리방침에 동의합니다.").check();
+        await page.getByRole("button", { name: "Continue with Google" }).click();
 
         // User performs Google OAuth manually; this test waits for an authenticated landing page.
         await page.waitForURL(/\/(home|onboarding)/, { timeout: 160_000 });

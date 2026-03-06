@@ -105,3 +105,11 @@
 - Current result:
   - `e2e:unauth` PASS
   - `e2e:signed` is gated/skip without `E2E_STORAGE_STATE`
+
+## 2026-03-06 Playwright Signed E2E Sync
+
+- Captured storage state with manual Chrome OAuth flow.
+- Signed suite result updated:
+  - `e2e:signed` PASS (2/2)
+  - full `e2e` PASS (5/5)
+- `/chat` signed scenario now tolerates valid empty variants (chat empty or recommendation empty) to avoid false negatives.

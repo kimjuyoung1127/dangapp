@@ -27,7 +27,7 @@ export default defineConfig({
     },
     outputDir: "../output/playwright/e2e/latest/test-results",
     webServer: {
-        command: `npm run dev -- --hostname 127.0.0.1 --port ${port}`,
+        command: `npx next dev --hostname 127.0.0.1 --port ${port}`,
         url: baseURL,
         cwd: ".",
         reuseExistingServer: true,
@@ -37,6 +37,17 @@ export default defineConfig({
         {
             name: "chromium",
             use: { ...devices["Desktop Chrome"] },
+        },
+        {
+            name: "chrome",
+            use: {
+                ...devices["Desktop Chrome"],
+                channel: "chrome",
+                launchOptions: {
+                    args: ["--disable-blink-features=AutomationControlled"],
+                    ignoreDefaultArgs: ["--enable-automation"],
+                },
+            },
         },
     ],
 });

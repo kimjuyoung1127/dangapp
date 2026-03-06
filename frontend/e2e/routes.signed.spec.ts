@@ -31,6 +31,14 @@ test.describe("Signed-in route QA @signed", () => {
             return;
         }
 
-        await expect(page.getByText(/아직 진행 중인 대화가 없어요|채팅/)).toBeVisible();
+        const chatEmptyState = page.getByText("아직 진행 중인 대화가 없어요");
+        const recommendationEmptyState = page.getByText("추천 항목이 없어요");
+
+        if (await chatEmptyState.count()) {
+            await expect(chatEmptyState).toBeVisible();
+            return;
+        }
+
+        await expect(recommendationEmptyState).toBeVisible();
     });
 });

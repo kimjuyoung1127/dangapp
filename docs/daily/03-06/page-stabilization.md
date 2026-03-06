@@ -146,6 +146,13 @@
 - Added folder-local guide:
   - `frontend/e2e/claude.md`
 
+20. Playwright signed-session execution completion
+- Updated auth recorder to auto-check required consent toggles before Google OAuth redirect.
+- Added Chrome-channel project config for manual auth capture reliability.
+- Stabilized signed chat route assertion:
+  - accepts chat-room detail path OR valid empty/recommendation state.
+- Captured storage state and executed signed suite with session reuse.
+
 ## Validation
 - `npx tsc --noEmit` (frontend): pass.
 - `npx eslint` on changed frontend files: pass.
@@ -183,6 +190,9 @@
 - `npm run e2e:unauth --prefix frontend`: pass (3/3).
 - `npm run e2e:signed --prefix frontend`: skip (2 skipped, `E2E_STORAGE_STATE` not set).
 - `npm run e2e --prefix frontend`: pass (3 passed / 2 skipped).
+- `npm run e2e:auth:record --prefix frontend`: pass (1/1).
+- `E2E_STORAGE_STATE=... npm run e2e:signed --prefix frontend`: pass (2/2).
+- `E2E_STORAGE_STATE=... npm run e2e --prefix frontend`: pass (5/5).
 
 ## Known Follow-ups
 1. Capture staging evidence for integrated E2E checklist scenarios.

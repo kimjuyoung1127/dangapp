@@ -1,6 +1,6 @@
 # DangApp Project Status
 
-Last Updated: 2026-03-06 (KST) manual update (chat/auth/family/modes + e2e harness)
+Last Updated: 2026-03-06 (KST) manual update (chat/auth/family/modes + signed e2e)
 Owner Doc: `CLAUDE.md`
 
 ## Execution Phases
@@ -35,9 +35,9 @@ Overall parity verification: 1 Verified / 10 active IDs = 10% (7 routes at QA ??
 |---|---|---|---|
 | DANG-INFRA-001 | Schema/MCP/Storage/RLS | Done | ??|
 | DANG-DES-001 | Toss-like design system | QA | route-level verification pending |
-| DANG-AUTH-001 | auth + consent | InProgress | Google OAuth entry + callback consent logging implemented; Playwright unauth auth-route checks PASS, signed-in OAuth evidence pending |
+| DANG-AUTH-001 | auth + consent | InProgress | Google OAuth entry + callback consent logging implemented; Playwright unauth/signed auth-route checks PASS, final production OAuth evidence packaging pending |
 | DANG-ONB-001 | guardian/dog onboarding | QA | end-to-end verification + edge-case testing |
-| DANG-MAT-001 | matching + filters | InProgress | `/modes` B2B status summary added + Playwright route harness added (`@unauth` pass, `@signed` gated by storageState), signed-in evidence pending |
+| DANG-MAT-001 | matching + filters | InProgress | `/modes` B2B status summary added + Playwright route harness added (`@unauth`/`@signed` both PASS with storageState), integrated checklist expansion pending |
 | DANG-CHT-001 | realtime chat + schedule | QA | chat RLS recursion hotfix + legacy scheduleId backfill + one-shot response guard + local regression tests completed; final signed-in E2E evidence |
 | DANG-WLK-001 | walk records + review | QA | end-to-end verification pending |
 | DANG-DLG-001 | collaborative danglog | QA | end-to-end verification pending |
@@ -260,3 +260,14 @@ Overall parity verification: 1 Verified / 10 active IDs = 10% (7 routes at QA ??
   - `npm run e2e:unauth --prefix frontend` PASS (3/3)
   - `npm run e2e:signed --prefix frontend` SKIP (2 skipped, `E2E_STORAGE_STATE` missing)
   - `npm run e2e --prefix frontend` PASS (3 passed / 2 skipped)
+
+## 2026-03-06 Playwright Signed Storage-State Verification Update (Codex)
+
+- Captured signed browser session storage state via:
+  - `npm run e2e:auth:record --prefix frontend` PASS
+- Signed suite executed with `E2E_STORAGE_STATE`:
+  - `npm run e2e:signed --prefix frontend` PASS (2/2)
+  - `npm run e2e --prefix frontend` PASS (5/5)
+- Signed flow coverage now includes:
+  - main protected routes no-login-bounce check
+  - chat route branch handling (room detail or valid empty/recommendation state)
