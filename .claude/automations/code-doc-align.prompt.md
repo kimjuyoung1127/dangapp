@@ -1,4 +1,4 @@
-﻿# code-doc-align - code and docs integrity check
+# code-doc-align - code and docs integrity check
 
 ## Meta
 - Task: DangApp code-to-doc integrity scan

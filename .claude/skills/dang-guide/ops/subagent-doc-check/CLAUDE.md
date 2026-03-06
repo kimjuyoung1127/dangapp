@@ -1,4 +1,4 @@
-﻿<!-- File: Local guide for the subagent-based doc consistency skill. -->
+<!-- File: Local guide for the subagent-based doc consistency skill. -->
 # subagent-doc-check
 
 ## Purpose

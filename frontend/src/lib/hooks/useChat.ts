@@ -1,4 +1,4 @@
-﻿// File: Chat data hooks for room list, message stream, and room creation flows.
+// File: Chat data hooks for room list, message stream, and room creation flows.
 import { useEffect } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createClient } from "@/lib/supabase/client";

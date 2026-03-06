@@ -1,9 +1,9 @@
-# review 컴포넌트
+# review components
 
-약속 완료 후 후기 작성/표시 기능.
+UI components for review submission and review display.
 
-- **ReviewForm**: BottomSheet + RHF + Zod (별점+태그+텍스트)
-- **StarRating**: 별점 입력/표시 (TapScale 래핑)
-- **ReviewTagSelect**: 태그 칩 멀티선택
-- **ReviewCard / ReviewList**: 후기 카드 목록 (ScrollReveal + StaggerList)
-- **데이터**: `useReview.ts` 훅 경유
+- `ReviewForm`: create or edit a review.
+- `StarRating`: capture or show rating.
+- `ReviewTagSelect`: choose review tags.
+- `ReviewCard` and `ReviewList`: render review summaries and lists.
+- Data flow should go through `useReview.ts`.

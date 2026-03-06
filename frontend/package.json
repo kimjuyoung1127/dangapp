@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "npm run check:encoding && next build",
+    "check:encoding:all": "node ../scripts/check-encoding.mjs --all",
     "start": "next start",
     "lint": "npm run check:encoding && next lint",
     "test": "vitest",

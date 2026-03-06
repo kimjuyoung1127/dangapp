@@ -1,20 +1,20 @@
 * text=auto eol=lf
 
-*.ts text eol=lf
-*.tsx text eol=lf
-*.js text eol=lf
-*.jsx text eol=lf
-*.mjs text eol=lf
-*.cjs text eol=lf
-*.json text eol=lf
-*.md text eol=lf
-*.sql text eol=lf
-*.yml text eol=lf
-*.yaml text eol=lf
-*.css text eol=lf
-*.scss text eol=lf
-*.html text eol=lf
-*.svg text eol=lf
+*.ts text working-tree-encoding=UTF-8 eol=lf
+*.tsx text working-tree-encoding=UTF-8 eol=lf
+*.js text working-tree-encoding=UTF-8 eol=lf
+*.jsx text working-tree-encoding=UTF-8 eol=lf
+*.mjs text working-tree-encoding=UTF-8 eol=lf
+*.cjs text working-tree-encoding=UTF-8 eol=lf
+*.json text working-tree-encoding=UTF-8 eol=lf
+*.md text working-tree-encoding=UTF-8 eol=lf
+*.sql text working-tree-encoding=UTF-8 eol=lf
+*.yml text working-tree-encoding=UTF-8 eol=lf
+*.yaml text working-tree-encoding=UTF-8 eol=lf
+*.css text working-tree-encoding=UTF-8 eol=lf
+*.scss text working-tree-encoding=UTF-8 eol=lf
+*.html text working-tree-encoding=UTF-8 eol=lf
+*.svg text working-tree-encoding=UTF-8 eol=lf
 
 # Binary assets
 *.png binary

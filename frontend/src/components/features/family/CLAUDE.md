@@ -1,9 +1,9 @@
-# family 컴포넌트
+# family components
 
-패밀리 모드 — 그룹 생성/관리/공동 일정.
+UI components for family group management and shared schedule flows.
 
-- **FamilyGroupCard**: 그룹 카드 (멤버 수, 반려견 정보)
-- **FamilyGroupForm**: 그룹 생성 BottomSheet
-- **FamilyMemberList**: 멤버 목록 + 초대
-- **SharedScheduleList**: 공동 일정 리스트 (기존 스케줄 재사용)
-- **데이터**: `useMode.ts` 훅 경유
+- `FamilyGroupCard`: show family group summary and members.
+- `FamilyGroupForm`: create or edit family groups.
+- `FamilyMemberList`: manage current members and invitations.
+- `SharedScheduleList`: render family schedule items.
+- Data flow should go through `useFamily.ts` or the matching hooks layer.

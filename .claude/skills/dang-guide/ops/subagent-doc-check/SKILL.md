@@ -1,4 +1,4 @@
-﻿---
+---
 name: subagent-doc-check
 description: Subagent-style consistency check for DangApp code, docs/status artifacts, and local CLAUDE.md rule chains. Use when work requires comparing multiple file groups across frontend, docs, supabase, and skill guidance before deciding what to update.
 ---

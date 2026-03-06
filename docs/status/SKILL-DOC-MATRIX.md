@@ -1,4 +1,4 @@
-﻿# Skill Doc Matrix
+# Skill Doc Matrix
 
 | page_skill | target_route | primary_code_paths | required_docs | feature_skills | acceptance_checks |
 |---|---|---|---|---|---|

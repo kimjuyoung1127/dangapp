@@ -1,4 +1,4 @@
-﻿# Subagent Patterns
+# Subagent Patterns
 
 Reusable decision rules for subagent-style exploration in DangApp.
 

@@ -1,4 +1,4 @@
-﻿# DangApp Orchestration Index (Slim)
+# DangApp Orchestration Index (Slim)
 
 DangApp execution rules, priorities, and source-of-truth pointers.
 

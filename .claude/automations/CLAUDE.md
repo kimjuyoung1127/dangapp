@@ -1,4 +1,4 @@
-﻿# automations/
+# automations/
 
 DangApp automation prompt index for deterministic documentation and status maintenance.
 

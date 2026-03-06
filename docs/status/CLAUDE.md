@@ -1,4 +1,4 @@
-﻿# Folder Guide
+# Folder Guide
 
 Status documents are the execution control-plane.
 

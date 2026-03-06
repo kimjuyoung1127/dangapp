@@ -1,4 +1,4 @@
-﻿---
+---
 # File: Skill instructions for folder/file guardrails and pattern-to-skill promotion.
 name: dang-folder-file-guardrails
 description: Enforce local CLAUDE.md in new folders, require top-of-file description comments, and promote repeatable good patterns into reusable skills.

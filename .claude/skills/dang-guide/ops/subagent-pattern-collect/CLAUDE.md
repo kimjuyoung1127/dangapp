@@ -1,4 +1,4 @@
-﻿<!-- File: Local guide for the subagent-based pattern collection skill. -->
+<!-- File: Local guide for the subagent-based pattern collection skill. -->
 # subagent-pattern-collect
 
 ## Purpose

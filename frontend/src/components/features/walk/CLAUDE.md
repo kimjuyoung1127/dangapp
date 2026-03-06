@@ -1,6 +1,7 @@
-# walk 컴포넌트
+# walk components
 
-산책 기록 + 후기 관련 UI 컴포넌트.
+UI components for walk record and walk review flows.
 
-- **WalkRecordForm**: 산책 기록 작성 BottomSheet (RHF + Zod + 이미지 업로드)
-- **데이터**: `useWalkRecord.ts`, `useWalkReview.ts` 훅 경유
+- `WalkRecordForm`: create or edit a walk record.
+- Related review or follow-up UI should stay aligned with walk completion behavior.
+- Data flow should go through `useWalkRecord.ts` and `useWalkReview.ts`.

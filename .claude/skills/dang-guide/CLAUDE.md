@@ -1,4 +1,4 @@
-﻿# dang-guide
+# dang-guide
 
 DangApp domain skills for infra, ops, and cross-cutting workflows.
 

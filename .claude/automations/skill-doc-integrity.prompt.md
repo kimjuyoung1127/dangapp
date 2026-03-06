@@ -1,4 +1,4 @@
-﻿# skill-doc-integrity - skill inventory and structure check
+# skill-doc-integrity - skill inventory and structure check
 
 ## Meta
 - Task: DangApp skill inventory integrity scan

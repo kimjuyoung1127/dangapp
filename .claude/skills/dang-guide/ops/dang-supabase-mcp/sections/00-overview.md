@@ -1,35 +1,18 @@
-# 00 — Overview
+# 00 Overview
 
-## MCP 서비스 컨텍스트
+## Purpose
+Use Supabase MCP for schema inspection, SQL execution, migrations, and verification when repo work touches database behavior.
 
-DangApp은 Supabase를 백엔드로 사용하며, Claude Code에서 MCP(Model Context Protocol)를 통해 Supabase에 직접 접근한다.
+## Prerequisites
+- `SUPABASE_ACCESS_TOKEN` is configured.
+- Repo MCP config is present.
+- You know whether the task is read-only, data-fix, or schema-change work.
 
-## 설정
+## Allowed Work
+- Inspect tables, logs, extensions, and policies.
+- Execute safe read queries.
+- Apply migrations intentionally.
+- Verify post-change behavior with explicit checks.
 
-### 환경변수
-- `SUPABASE_ACCESS_TOKEN`: Supabase 개인 액세스 토큰 (필수)
-
-### MCP 구성 파일
-- `.mcp.json` (repo root):
-  ```json
-  {
-    "mcpServers": {
-      "supabase": {
-        "command": "bash",
-        "args": ["-lc", "npx -y @supabase/mcp-server-supabase@latest --project-ref fjpvtivpulreulfxmxfe --access-token \"$SUPABASE_ACCESS_TOKEN\""]
-      }
-    }
-  }
-  ```
-
-### 프로젝트 정보
-- Project ref: `fjpvtivpulreulfxmxfe`
-- MCP 서버: `@supabase/mcp-server-supabase@latest`
-
-## 사용 가능한 MCP 도구
-- `list_tables`: 테이블 목록 조회
-- `execute_sql`: SQL 실행
-- `apply_migration`: 마이그레이션 적용
-- `get_logs`: 로그 조회
-- `list_extensions`: 확장 목록
-- `list_storage_buckets`: 스토리지 버킷 목록
+## Default Rule
+Start with read-only inspection before any write or migration action.

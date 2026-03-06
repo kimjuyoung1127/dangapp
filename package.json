@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "npm run dev --prefix frontend",
     "build": "npm run check:encoding && npm run build --prefix frontend",
+    "check:encoding:all": "node scripts/check-encoding.mjs --all",
     "start": "npm run start --prefix frontend",
     "lint": "npm run check:encoding && npm run lint --prefix frontend",
     "test": "npm run test --prefix frontend",

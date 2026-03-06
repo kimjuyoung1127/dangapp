@@ -1,4 +1,4 @@
-﻿// File: Schedule proposal modal with async submit and inline error handling.
+// File: Schedule proposal modal with async submit and inline error handling.
 import { useEffect, useState } from "react";
 import { BottomSheet, TapScale } from "@/components/ui/MotionWrappers";
 import { Calendar as CalendarIcon, MapPin, X } from "lucide-react";

@@ -1,4 +1,4 @@
-﻿# frontend CLAUDE.md
+# frontend CLAUDE.md
 
 ## Project
 DangApp frontend for a location-aware guardian and companion pet-care service.

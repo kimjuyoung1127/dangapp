@@ -1,4 +1,4 @@
-﻿<!-- File: Local operating rules for the dang-folder-file-guardrails skill folder. -->
+<!-- File: Local operating rules for the dang-folder-file-guardrails skill folder. -->
 # dang-folder-file-guardrails
 
 This folder stores a reusable skill for folder/file creation guardrails.

@@ -8,12 +8,12 @@ Owner Doc: `CLAUDE.md`
 | Phase | Status | Notes |
 |---|---|---|
 | Wave 0: workflow alignment | Done | docs/status + route board + skill matrix bootstrap completed. |
-| Wave 1: schema foundation | Done | 怨좊룄???꾨즺 (Phase 1~3) + 由щ럭 蹂닿컯 ?⑥튂 諛섏쁺 + ?먭꺽 Supabase ?ъ쟻???ㅻえ??寃利??꾨즺 (`match_guardians_v2`, `set_guardian_location`, Phase1 ?섏〈 而щ읆 蹂듦뎄). |
-| Wave 2: onboarding rebuild | Done | /onboarding 援ы쁽 ?꾨즺 (RHF+Zod+Supabase hook+upload). Type Modeling & Mapper 怨좊룄???꾨즺. |
-| Wave 3: home matching/filter | InProgress | `useMatch.ts` -> `match_guardians_v2` ?곕룞 ?꾨즺, ?먭꺽 ?⑥닔 誘몄꽕移??섏〈 ?꾨씫 ?댁뒋 ?댁냼(2026-03-04). `/modes` ?쇱슦??諛?E2E 寃利??붿뿬. |
+| Wave 1: schema foundation | Done | Schema phases 1-3 completed, core hardening applied, and Supabase function/storage foundations aligned for matching and location flows. |
+| Wave 2: onboarding rebuild | Done | `/onboarding` rebuilt with RHF, Zod, Supabase hooks, and upload flow. Type modeling and mapper cleanup completed. |
+4. ~~`match_guardians_v2` had 404 or wrong-result risk due to matching runtime and seed-data drift.~~ **[RESOLVED - 2026-03-04 matching runtime, seed alignment, and related function verification completed]**
 
-| Wave 4: chat/schedule/walk | QA | /schedules QA, /chat QA, /chat/[id] QA. ???쇱슦???ㅻ뜲?댄꽣 諛붿씤???꾨즺. |
-| Wave 5: danglog/profile/notice | QA | /danglog QA, /profile QA. ?ㅻ뜲?댄꽣 諛붿씤??+ ?묒뾽 ??+ ?몄쭛 ?쒗듃 ?꾨즺. |
+| Wave 4: chat/schedule/walk | QA | `/schedules`, `/chat`, and `/chat/[id]` are in QA. Remaining work is focused on signed-in runtime verification and evidence capture. |
+| Wave 5: danglog/profile/notice | QA | `/danglog` and `/profile` are in QA. Remaining work is focused on signed-in verification, cleanup, and evidence capture. |
 | Wave 6: B2B partner flow | InProgress | `/care` reservations-first + `/family` ownership/schedule binding implemented, signed-in QA evidence pending |
 
 ## Wave Progress
@@ -46,10 +46,10 @@ Overall parity verification: 1 Verified / 10 active IDs = 10% (7 routes at QA ??
 
 ## Blockers
 
-1. ~~Core table RLS for existing schema is incomplete and must be hardened before production traffic.~~ **[RESOLVED ??DANG-INFRA-001 Done: 65 RLS policies verified]**
-2. ~~Onboarding UX spec has many fields requiring storage + schema support; this is Wave 1 dependency.~~ **[RESOLVED ??Wave 1 Done: schema + storage policies applied]**
-3. ~~MCP connection requires valid `SUPABASE_ACCESS_TOKEN` in runtime environment.~~ **[RESOLVED ??2026-03-04 Access token verified and used for schema audit]**
-4. ~~`match_guardians_v2` 404/?고????ㅽ뙣 媛?μ꽦(?먭꺽 ?⑥닔/?섏〈 ?ㅽ궎留??꾨씫).~~ **[RESOLVED ??2026-03-04 ?먭꺽 ?ъ쟻??+ Phase1 ?섏〈 而щ읆 蹂듦뎄 + ?ㅻえ???몄텧 ?듦낵]**
+1. ~~Core table RLS for existing schema is incomplete and must be hardened before production traffic.~~ **[RESOLVED - DANG-INFRA-001 Done: 65 RLS policies verified]**
+2. ~~Onboarding UX spec has many fields requiring storage + schema support; this is Wave 1 dependency.~~ **[RESOLVED - Wave 1 Done: schema and storage policies applied]**
+3. ~~MCP connection requires valid `SUPABASE_ACCESS_TOKEN` in runtime environment.~~ **[RESOLVED - 2026-03-04 access token verified and used for schema audit]**
+4. ~~`match_guardians_v2` had 404 or wrong-result risk due to matching runtime and seed-data drift.~~ **[RESOLVED - 2026-03-04 matching runtime, seed alignment, and related function verification completed]**
 
 ## 2026-03-05 Execution Update (Codex)
 

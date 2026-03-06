@@ -1,4 +1,4 @@
-﻿# .claude/skills/
+# .claude/skills/
 
 DangApp skill inventory for page, feature, and ops workflows.
 

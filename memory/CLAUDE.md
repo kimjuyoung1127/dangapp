@@ -1,4 +1,4 @@
-﻿# memory/
+# memory/
 
 Reusable working memory for repo-wide workflows.
 

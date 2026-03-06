@@ -1,6 +1,6 @@
 # WSL Codex Encoding Runbook
 
-This runbook prevents encoding corruption by running Codex in WSL and validating UTF-8 on every lint/build.
+This runbook prevents encoding corruption by running Codex in WSL and validating UTF-8 before commit and in CI.
 
 ## Goal
 - Keep all text files UTF-8 (without BOM).
@@ -17,18 +17,21 @@ This runbook prevents encoding corruption by running Codex in WSL and validating
    - `/mnt/c/Users/ezen601/Desktop/Jason/dangapp/dangapp`
 3. Verify repository guard files exist:
    - `.editorconfig` (`charset = utf-8`, `end_of_line = lf`)
-   - `.gitattributes` (`* text=auto eol=lf` and per-extension text rules)
+   - `.gitattributes` (`* text=auto eol=lf` and per-extension UTF-8 rules)
 4. Install dependencies from WSL shell:
    - `npm ci`
    - `cd frontend && npm ci`
+5. Enable repo hooks once per clone:
+   - `git config core.hooksPath .githooks`
 
 ## Daily Workflow (WSL)
 1. Enter repo from WSL terminal.
 2. Before coding:
    - `npm run check:encoding`
+   - optional full scan: `npm run check:encoding:all`
 3. After changes:
    - `npm run lint`
-   - `npm run build`
+    - `npm run build`
 4. If checks pass, update docs:
    - `docs/daily/MM-DD/page-<route>.md`
    - `docs/status/PAGE-UPGRADE-BOARD.md`
@@ -46,5 +49,7 @@ This runbook prevents encoding corruption by running Codex in WSL and validating
 ## Notes
 - `npm run check:encoding` validates changed files by default.
 - Full repository scan:
-  - `node scripts/check-encoding.mjs --all`
+  - `npm run check:encoding:all`
+- Pre-commit hook blocks changed-file encoding issues before commit.
+- CI runs the full encoding scan on push and pull request.
 - Do not bypass this check in CI/CD.

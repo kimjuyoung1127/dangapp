@@ -17,6 +17,16 @@ const skipDirs = new Set([
 
 const decoder = new TextDecoder("utf-8", { fatal: true });
 const failures = [];
+const suspiciousTextChecks = [
+  {
+    label: "Unicode replacement character detected",
+    regex: /\uFFFD/u,
+  },
+  {
+    label: "Suspicious CJK compatibility ideograph detected",
+    regex: /[\uF900-\uFAFF]/u,
+  },
+];
 
 function listFilesAll(dir, out) {
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
@@ -81,10 +91,18 @@ function validateFile(fullPath) {
     return;
   }
 
+  let text = "";
   try {
-    decoder.decode(buf);
+    text = decoder.decode(buf);
   } catch {
     failures.push(`${rel}: Invalid UTF-8 byte sequence`);
+    return;
+  }
+
+  for (const check of suspiciousTextChecks) {
+    if (check.regex.test(text)) {
+      failures.push(`${rel}: ${check.label}`);
+    }
   }
 }
 

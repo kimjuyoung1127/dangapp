@@ -1,4 +1,4 @@
-﻿# features/
+# features/
 
 Shared guidance for `frontend/src/components/features/*`.
 

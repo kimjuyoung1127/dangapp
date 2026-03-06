@@ -1,0 +1,7 @@
+#!/usr/bin/env sh
+# File: Pre-commit hook for changed-file encoding validation.
+
+set -eu
+
+echo "Running encoding check on changed files..."
+npm run check:encoding

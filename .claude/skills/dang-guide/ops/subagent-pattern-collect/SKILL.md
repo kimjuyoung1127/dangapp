@@ -1,4 +1,4 @@
-﻿---
+---
 name: subagent-pattern-collect
 description: Collect DangApp implementation patterns through subagent-style exploration before adding new routes, feature modules, or data-contract changes. Use when Codex needs existing examples, file groups, and constraints across frontend, docs, and supabase before coding.
 ---
