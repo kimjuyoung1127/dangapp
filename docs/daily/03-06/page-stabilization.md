@@ -14,7 +14,7 @@
 
 2. `/care`
 - Added partner place discovery and category filtering.
-- Added reservation creation flow and reservation status/cancel actions.
+- Added reservations-first create/list flow (`partner_places` + `reservations`) with explicit loading/error/empty handling.
 - Kept legacy care request list as secondary tab.
 
 3. `/family`
@@ -73,6 +73,67 @@
 - Confirmed backfill completion (`missing_count: 12 -> 0`) and target message `c9cb4878-...` now has `scheduleId`.
 - Hardened response mutation to be one-shot (`proposal_status='proposed'` precondition) and changed update fetch flow to avoid `406` on already-processed schedules.
 
+14. Local-only regression gate for chat schedule flow
+- Added root verification pipeline: `npm run verify:local` (`check:encoding -> lint -> test:run -> build`).
+- Added Vitest/jsdom/testing-library harness (`frontend/vitest.config.ts`, `frontend/vitest.setup.ts`).
+- Split schedule response parsing/actionability into pure utility for deterministic tests.
+- Standardized schedule response error mapping (`ALREADY_RESPONDED`, `FORBIDDEN`, `UNKNOWN`).
+- Added optimistic pending-lock in `/chat/[id]` to prevent duplicate accept/reject requests.
+- Added regression suites:
+  - `scheduleResponse` utility: 10 tests
+  - `useRespondSchedule` hook: 4 tests
+  - `/chat/[id]` schedule card behavior: 2 tests
+
+15. Auth OAuth gate and callback consent logging hardening
+- Reworked `/login` and `/register` to shared Google OAuth entry UI.
+- Added required consent gate (`terms`, `privacy`) and optional toggles (`location`, `marketing`).
+- Stored consent payload in short-lived cookie before OAuth redirect.
+- Updated `/auth/callback` to:
+  - exchange code for session
+  - validate consent cookie + required flags
+  - insert 4 `consent_logs` rows with metadata
+  - sign out + redirect to login on consent validation/write failure
+- Added local regression suites:
+  - `authConsent` utility: 4 tests
+  - auth entry component: 2 tests
+
+16. Care reservations vertical-slice hardening
+- Added dedicated hooks in `useCare.ts`:
+  - `usePartnerPlaces`, `useMyReservations`, `useCreateReservation`
+- Added reservation utility module:
+  - `PartnerPlaceViewModel`, `ReservationViewModel`, input validation, place-name mapping
+- Added `/care` regression coverage:
+  - `careReservations` utility tests: 5
+  - `useCare` hook tests: 7
+  - `/care` component tests: 3
+
+17. Family ownership + shared-schedule vertical-slice hardening
+- Added dedicated hooks in `useFamily.ts`:
+  - `useDogOwnerships`, `useMyScheduleParticipants`, `useFamilySharedSchedules`
+- Added family utility module:
+  - ownership dog-name mapping
+  - participant metrics summary
+- Upgraded `/family` page:
+  - ownership section (`dog_ownership`) with empty/error/retry
+  - shared schedule section (`schedule_participants` + `schedules`) with empty/error/retry
+  - summary cards from participant metrics
+- Added `/family` regression coverage:
+  - `familyOverview` utility tests: 3
+  - `useFamily` hook tests: 3
+  - `/family` component tests: 3
+
+18. Modes B2B status dashboard hardening
+- Added pure summary helper for mode progress (`modesProgress`):
+  - care/family summary tone + message
+  - tone-to-style mapping utility
+- Upgraded `/modes` page:
+  - care/family execution status cards with live counts
+  - B2B query loading skeletons
+  - combined retry action on summary fetch errors
+- Added `/modes` regression coverage:
+  - `modesProgress` utility tests: 4
+  - `/modes` component tests: 3
+
 ## Validation
 - `npx tsc --noEmit` (frontend): pass.
 - `npx eslint` on changed frontend files: pass.
@@ -90,6 +151,22 @@
 - Legacy schedule metadata backfill verification: `missing scheduleId = 0`.
 - `npm run lint --prefix frontend` (after duplicate-response/406 guard update): pass.
 - `npm run build --prefix frontend` (after duplicate-response/406 guard update): pass.
+- `npm run test:run --prefix frontend` (after local regression suite add): pass (16 tests).
+- `npm run verify:local` (root gate): pass.
+- `npm run test:run --prefix frontend` (after auth update): pass (22 tests).
+- `npm run verify:local` (after auth update): pass.
+- `npm run test:run --prefix frontend` (after care reservations update): pass (37 tests).
+- `npm run lint --prefix frontend` (after care reservations update): pass.
+- `npm run build --prefix frontend` (after care reservations update): pass.
+- `npm run verify:local` (after care reservations update): pass.
+- `npm run test:run --prefix frontend` (after family slice update): pass (46 tests).
+- `npm run lint --prefix frontend` (after family slice update): pass.
+- `npm run build --prefix frontend` (after family slice update): pass.
+- `npm run verify:local` (after family slice update): pass.
+- `npm run test:run --prefix frontend` (after modes dashboard update): pass (53 tests).
+- `npm run lint --prefix frontend` (after modes dashboard update): pass.
+- `npm run build --prefix frontend` (after modes dashboard update): pass.
+- `npm run verify:local` (after modes dashboard update): pass.
 
 ## Known Follow-ups
 1. Capture staging evidence for integrated E2E checklist scenarios.

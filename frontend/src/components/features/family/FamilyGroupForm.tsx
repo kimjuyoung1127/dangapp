@@ -1,18 +1,17 @@
-// FamilyGroupForm.tsx — 패밀리 그룹 생성 BottomSheet
-
+// File: Bottom-sheet form to create a family group.
 "use client";
 
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { X } from "lucide-react";
 import { BottomSheet } from "@/components/ui/MotionWrappers";
 import { Button } from "@/components/ui/Button";
+import { useCreateFamilyGroup } from "@/lib/hooks/useFamily";
 import { cn } from "@/lib/utils";
-import { useCreateFamilyGroup } from "@/lib/hooks/useMode";
-import { X } from "lucide-react";
 
 const groupSchema = z.object({
-    name: z.string().min(1, "그룹 이름을 입력해주세요"),
+    name: z.string().min(1, "그룹 이름을 입력해 주세요."),
 });
 
 type GroupFormData = z.infer<typeof groupSchema>;
@@ -51,46 +50,36 @@ export default function FamilyGroupForm({
 
     return (
         <BottomSheet isOpen={isOpen} onClose={onClose}>
-            <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-5">
-                {/* 상단 바 */}
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-5 p-6">
                 <div className="flex items-center justify-between">
-                    <button type="button" onClick={onClose}>
-                        <X className="w-6 h-6 text-foreground-muted" />
+                    <button type="button" onClick={onClose} aria-label="Close family group form">
+                        <X className="h-6 w-6 text-foreground-muted" />
                     </button>
-                    <h3 className="text-xl font-display font-semibold">
-                        패밀리 그룹 만들기
-                    </h3>
-                    <Button
-                        type="submit"
-                        size="sm"
-                        disabled={createMutation.isPending}
-                    >
+                    <h3 className="text-xl font-display font-semibold">가족 그룹 만들기</h3>
+                    <Button type="submit" size="sm" disabled={createMutation.isPending}>
                         {createMutation.isPending ? "생성 중..." : "만들기"}
                     </Button>
                 </div>
 
-                {/* 그룹 이름 */}
                 <div>
-                    <label className="text-sm font-medium text-foreground-muted mb-2 block">
-                        그룹 이름
-                    </label>
+                    <label className="mb-2 block text-sm font-medium text-foreground-muted">그룹 이름</label>
                     <input
                         {...register("name")}
-                        placeholder="예: 초코네 가족"
+                        placeholder="예: 초코와 우주 가족"
                         className={cn(
-                            "w-full px-4 py-3 rounded-xl border bg-card",
+                            "w-full rounded-xl border bg-card px-4 py-3",
                             "text-foreground placeholder:text-foreground-muted/50",
-                            "focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent",
+                            "focus:border-transparent focus:outline-none focus:ring-2 focus:ring-primary",
                             errors.name ? "border-red-400" : "border-border"
                         )}
                     />
-                    {errors.name && (
-                        <p className="text-xs text-red-500 mt-1">{errors.name.message}</p>
-                    )}
+                    {errors.name ? (
+                        <p className="mt-1 text-xs text-red-500">{errors.name.message}</p>
+                    ) : null}
                 </div>
 
                 <p className="text-xs text-foreground-muted">
-                    그룹을 만들면 자동으로 그룹장이 됩니다. 이후 멤버를 초대할 수 있어요.
+                    그룹을 만들면 생성자가 기본 owner로 등록됩니다.
                 </p>
             </form>
         </BottomSheet>
