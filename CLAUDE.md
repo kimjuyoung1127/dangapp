@@ -1,4 +1,4 @@
-# DangApp Orchestration Index (Slim)
+﻿# DangApp Orchestration Index (Slim)
 
 DangApp execution rules, priorities, and source-of-truth pointers.
 
@@ -53,6 +53,24 @@ Dual-agent handoff: `docs/ref/DUAL-AGENT-HANDOFF.md`
 9. For page implementation, load one `page-*` skill + at most two `feature-*` skills.
 10. At task end, output Completion Format and sync `docs/daily/MM-DD/page-<route>.md` with `docs/status/PAGE-UPGRADE-BOARD.md`.
 
+## Subagent Rules
+- Use subagent-style exploration when work requires:
+  - code vs docs vs `CLAUDE.md` rule-chain comparison
+  - reading three or more file groups before comparing or summarizing
+  - collecting existing implementation patterns before adding a new route, feature module, or data-contract change
+- Keep the split fixed when subagent exploration is used:
+  - `SubA`: code facts
+  - `SubB`: docs/status facts
+  - `SubC`: local `CLAUDE.md` rule-chain facts
+- Keep direct mutation in the main agent. Subagent-style work is for discovery, comparison, and pattern collection.
+- Skip subagent exploration for:
+  - single-file edits
+  - simple Git operations
+  - straightforward code implementation that does not need repo-wide comparison
+- Prefer:
+  - `subagent-doc-check` for consistency and drift checks
+  - `subagent-pattern-collect` for implementation pattern gathering
+
 ## Architecture Snapshot
 
 | Layer | Stack |
@@ -81,8 +99,8 @@ Dual-agent handoff: `docs/ref/DUAL-AGENT-HANDOFF.md`
 | `docs/status/DANGAPP-MASTER-EXECUTION-PLAN.md` | execution master plan |
 | `docs/status/DANGAPP-MASTER-EXECUTION-REVIEW.md` | plan review results |
 | `docs/ref/SCHEMA-CHANGELOG.md` | schema and migration notes |
-| docs/ref/SUPABASE-MCP-RUNBOOK.md | MCP setup and operation runbook |
-| docs/ref/WSL-CODEX-ENCODING-RUNBOOK.md | WSL-first encoding-safe Codex workflow |
+| `docs/ref/SUPABASE-MCP-RUNBOOK.md` | MCP setup and operation runbook |
+| `docs/ref/WSL-CODEX-ENCODING-RUNBOOK.md` | WSL-first encoding-safe Codex workflow |
 
 ## Local Folder Rules
 - `frontend/e2e/claude.md`
@@ -91,7 +109,7 @@ Dual-agent handoff: `docs/ref/DUAL-AGENT-HANDOFF.md`
 
 ## Completion Format
 
-```
+```text
 - Scope: parity IDs
 - Files: changed files
 - Validation: commands/tests and outcomes

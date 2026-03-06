@@ -1,82 +1,92 @@
-# code-doc-align — 코드↔문서 정합성 검사
+﻿# code-doc-align - code and docs integrity check
 
-## 메타
-- **작업명**: DangApp 코드↔문서 정합성 자동 검사
-- **스케줄**: 매일 03:30 (Asia/Seoul)
-- **역할**: 코드 변경 사항과 문서(보드, 매트릭스, daily 로그) 사이의 불일치를 탐지하고 보고
-- **프로젝트 루트**: `C:\Users\gmdqn\dangapp`
+## Meta
+- Task: DangApp code-to-doc integrity scan
+- Schedule: Daily 03:30 (Asia/Seoul)
+- Role: Detect drift between implemented routes/features and status documentation, then report it
+- Project root: `C:\Users\gmdqn\dangapp`
 
-## Source of Truth 정책
-- **코드가 진실**: `frontend/src/app/(main)/**` 라우트가 관리 대상
-- **보드가 계획**: `docs/status/PAGE-UPGRADE-BOARD.md`
-- **매트릭스가 검증**: `docs/status/11-FEATURE-PARITY-MATRIX.md`
-- **daily 로그가 일지**: `docs/daily/MM-DD/page-*.md`
+## Source of Truth
+- Code truth:
+  - `frontend/src/app/**/page.tsx`
+  - `frontend/src/app/**/route.ts`
+  - `frontend/src/components/features/**`
+- Board and status docs:
+  - `docs/status/PAGE-UPGRADE-BOARD.md`
+  - `docs/status/11-FEATURE-PARITY-MATRIX.md`
+  - `docs/status/PROJECT-STATUS.md`
+- Evidence logs:
+  - `docs/daily/MM-DD/page-*.md`
+- Local rule chain:
+  - `CLAUDE.md`
+  - `docs/CLAUDE.md`
+  - `docs/status/CLAUDE.md`
+  - `frontend/CLAUDE.md`
 
-## 잠금
-- 잠금 파일: `docs/status/.code-doc-align.lock`
-- 시작 시: `{"status":"running","started_at":"<ISO>"}`
-- 종료 시: `{"status":"released","released_at":"<ISO>"}`
-- 이미 running이면 즉시 종료 (중복 방지)
+## Lock
+- Lock file: `docs/status/.code-doc-align.lock`
+- On start write `{"status":"running","started_at":"<ISO>"}`
+- On finish write `{"status":"released","released_at":"<ISO>"}`
+- If the lock is already `running`, exit immediately
 
-## 절차
+## Subagent Trigger
+- Call `subagent-doc-check` first when the task requires all three of:
+  - code facts
+  - docs/status facts
+  - local `CLAUDE.md` rule-chain facts
+- Use the fixed split:
+  - `SubA`: collect code facts
+  - `SubB`: collect docs/status facts
+  - `SubC`: collect local rule-chain facts
+- Keep the main automation focused on comparison, drift classification, and report generation
+- Skip subagent-style exploration for simple single-file checks
 
-### Step 0 — Pre-check
-1. 잠금 파일 확인/생성.
-2. `DRY_RUN` 플래그 확인 (true면 보고만 하고 파일 수정 안 함).
+## Procedure
 
-### Step 1 — 라우트 수집
-1. `frontend/src/app/(main)/` 하위 `page.tsx` 파일 목록 → `code_routes` 집합.
-2. `PAGE-UPGRADE-BOARD.md` 테이블 파싱 → `board_routes` 집합.
-3. `11-FEATURE-PARITY-MATRIX.md` 파싱 → `matrix_parity_ids` 집합.
+### Step 0 - Pre-check
+1. Acquire the lock.
+2. Confirm `DRY_RUN` mode.
+3. Decide whether this run crosses the subagent trigger threshold.
 
-### Step 2 — 차이 분석
-1. **board에 없는 라우트**: `code_routes - board_routes` → `UNTRACKED` 리스트.
-2. **코드에 없는 보드 항목**: `board_routes - code_routes` → `ORPHAN_BOARD` 리스트.
-3. **parity ID 미연결**: board에 parity_ids가 있지만 매트릭스에 검증 기록 없는 것 → `UNVERIFIED` 리스트.
+### Step 1 - Collect route and feature facts
+1. Build `code_routes` from `frontend/src/app/**/page.tsx`.
+2. Build `api_routes` from `frontend/src/app/**/route.ts`.
+3. Record feature modules from `frontend/src/components/features/**`.
+4. Parse `PAGE-UPGRADE-BOARD.md` into `board_routes`.
+5. Parse `11-FEATURE-PARITY-MATRIX.md` into `matrix_parity_ids`.
 
-### Step 3 — Daily 로그 상태 집계
-1. 가장 최근 `docs/daily/` 날짜 폴더의 `page-*.md` 파일 읽기.
-2. 각 파일의 `## Status` 섹션에서 상태 추출 (Complete/InProgress/Blocked 등).
-3. Board 상태와 daily 로그 상태 비교 → 불일치 시 `STATUS_MISMATCH` 리스트.
+### Step 2 - Compare
+1. `UNTRACKED_ROUTE = code_routes - board_routes`
+2. `ORPHAN_BOARD = board_routes - code_routes`
+3. `UNVERIFIED_PARITY = board parity ids missing from matrix evidence`
+4. `RULE_DRIFT = local rule-chain guidance that conflicts with current board or code reality`
 
-### Step 4 — Mock 데이터 잔존 검사
-1. 각 `page.tsx`에서 `MOCK_`, `dummy`, `setTimeout.*setIsLoading`, `mock-guardian` 패턴 검색.
-2. Board에서 QA/Done인데 mock 잔존 → `MOCK_RESIDUE` 리스트.
+### Step 3 - Daily evidence drift
+1. Read the latest `docs/daily/` date folder.
+2. Parse `page-*.md` status summaries.
+3. Compare daily status against board status and capture `STATUS_MISMATCH`.
 
-### Step 5 — 보고서 출력 (DRY_RUN=false일 때만)
-1. `docs/status/INTEGRITY-REPORT.md` 덮어쓰기:
-   ```
-   # Integrity Report — {날짜}
+### Step 4 - Mock residue
+1. Search route pages and related feature modules for `MOCK_`, `dummy`, `setTimeout.*setIsLoading`, `mock-guardian`.
+2. If a route is marked QA or Done while mock residue remains, record `MOCK_RESIDUE`.
 
-   ## Summary
-   | Check | Count |
-   |-------|-------|
-   | Untracked routes | N |
-   | Orphan board entries | N |
-   | Unverified parity IDs | N |
-   | Status mismatches | N |
-   | Mock residue | N |
+### Step 5 - Report
+1. If `DRY_RUN=true`, print the report body only.
+2. Otherwise write `docs/status/INTEGRITY-REPORT.md` with:
+   - summary counts
+   - drift item lists
+   - note whether subagent discovery was used
+3. Append `docs/status/INTEGRITY-HISTORY.ndjson` with timestamped counts.
 
-   ## Details
-   (각 리스트 상세)
-   ```
-2. `docs/status/INTEGRITY-HISTORY.ndjson` 끝에 1줄 append:
-   ```json
-   {"ts":"<ISO>","untracked":N,"orphan":N,"unverified":N,"mismatch":N,"mock_residue":N}
-   ```
+### Step 6 - Release
+1. Release the lock file.
 
-### Step 6 — 잠금 해제
-1. 잠금 파일 `docs/status/.code-doc-align.lock`에 아래 JSON을 덮어쓰기 (삭제 금지):
-   ```json
-   {"status":"released","released_at":"<ISO>"}
-   ```
+## Must Not
+- Do not edit `frontend/src/`.
+- Do not auto-change board or matrix entries.
+- Do not auto-change daily logs.
+- Only report drift unless the prompt is explicitly upgraded to a write-capable workflow.
 
 ## DRY_RUN=true
-- Step 5에서 파일 수정 없이 터미널에 보고서 내용만 출력.
-- 최종 출력: `[DRY_RUN] 변경 없음`
-
-## 안전 규칙 (MUST)
-- `frontend/src/` 코드 파일 절대 수정 금지.
-- `docs/status/` 내 보고서·이력 파일만 쓰기 대상.
-- Board 상태를 자동 변경하지 않음 (불일치만 보고).
-- 변경 없으면 최종 출력: `변경 없음`
+- Print report content only.
+- Final line: `[DRY_RUN] no files changed`

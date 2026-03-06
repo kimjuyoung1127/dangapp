@@ -1,111 +1,90 @@
-# skill-doc-integrity — 스킬↔문서↔코드 정합성 검사
+﻿# skill-doc-integrity - skill inventory and structure check
 
-## 메타
-- **작업명**: DangApp 스킬 파일 정합성 자동 검사
-- **스케줄**: 매일 03:00 (Asia/Seoul)
-- **역할**: SKILL-DOC-MATRIX 경로 vs 디스크, Board 스킬 참조 vs 실제 스킬 파일, 스킬 내부 코드 경로 참조 검증
-- **프로젝트 루트**: `C:\Users\gmdqn\dangapp`
+## Meta
+- Task: DangApp skill inventory integrity scan
+- Schedule: Daily 03:00 (Asia/Seoul)
+- Role: Verify that skill files, matrix/index registration, and referenced paths stay aligned
+- Project root: `C:\Users\gmdqn\dangapp`
 
-## 검증 대상
+## Validation Surface
+```text
+docs/status/SKILL-DOC-MATRIX.md
+  -> page skill rows
+  -> ops skill rows
+
+.claude/skills/**/*.md
+  -> actual skill and local guide files
+
+docs/status/PAGE-UPGRADE-BOARD.md
+  -> page_skill and feature/support skill references
 ```
-SKILL-DOC-MATRIX.md (스킬 → 코드/문서 매핑)
-  ↕ 검증
-.claude/skills/**/*.md (실제 스킬 파일)
-  ↕ 검증
-PAGE-UPGRADE-BOARD.md (page_skill + support_skills 컬럼)
-  ↕ 검증
-frontend/src/ (스킬이 참조하는 코드 경로)
-```
 
-## 잠금
-- 잠금 파일: `docs/status/.skill-doc-integrity.lock`
-- 시작 시: `{"status":"running","started_at":"<ISO>"}`
-- 종료 시: `{"status":"released","released_at":"<ISO>"}`
+## Lock
+- Lock file: `docs/status/.skill-doc-integrity.lock`
+- On start write `{"status":"running","started_at":"<ISO>"}`
+- On finish write `{"status":"released","released_at":"<ISO>"}`
 
-## 절차
+## Ops Skills That Must Be Tracked
+- `dang-route-doc-parity`
+- `dang-rpc-diagnosis`
+- `dang-supabase-mcp`
+- `subagent-doc-check`
+- `subagent-pattern-collect`
 
-### Step 0 — Pre-check
-1. 잠금 파일 확인/생성.
-2. `DRY_RUN` 플래그 확인.
+## Procedure
 
-### Step 1 — SKILL-DOC-MATRIX 파싱
-1. `docs/status/SKILL-DOC-MATRIX.md` 테이블 파싱.
-2. 각 행에서 추출:
-   - `skill_name`: 스킬 식별자
-   - `skill_path`: 스킬 파일 경로
-   - `code_paths`: 관련 코드 파일 경로 목록
-   - `doc_paths`: 관련 문서 파일 경로 목록
-3. `matrix_entries` 리스트 생성.
+### Step 0 - Pre-check
+1. Acquire the lock.
+2. Confirm `DRY_RUN`.
 
-### Step 2 — 디스크 스킬 파일 스캔
-1. `.claude/skills/` 하위 모든 `.md` 파일 재귀 수집 → `disk_skills` 집합.
-2. Matrix에 있지만 디스크에 없는 스킬 → `MISSING_SKILL` 리스트.
-3. 디스크에 있지만 Matrix에 없는 스킬 → `UNTRACKED_SKILL` 리스트.
+### Step 1 - Parse the skill matrix
+1. Read `docs/status/SKILL-DOC-MATRIX.md`.
+2. Extract page skill rows and ops skill rows.
+3. Build `matrix_skills` and `matrix_ops_skills`.
 
-### Step 3 — Board 스킬 참조 검증
-1. `PAGE-UPGRADE-BOARD.md` 파싱.
-2. 각 라우트의 `page_skill` + `support_skills` 컬럼에서 스킬명 추출 → `board_skills` 집합.
-3. Board에서 참조하지만 디스크에 없는 스킬 → `BOARD_DANGLING` 리스트.
-4. Board에서 참조하지만 Matrix에 없는 스킬 → `BOARD_UNMATRIX` 리스트.
+### Step 2 - Scan disk skills
+1. Read `.claude/skills/**/SKILL.md`.
+2. Build `disk_skill_names`.
+3. Compute:
+   - `MISSING_SKILL = matrix_skills - disk_skill_names`
+   - `UNTRACKED_SKILL = disk_skill_names - matrix_skills`
+4. Treat `subagent-doc-check` and `subagent-pattern-collect` as required ops skills, not optional extras.
 
-### Step 4 — 스킬 내부 코드 경로 검증
-1. 각 디스크 스킬 파일 (.md) 읽기.
-2. 파일 내에서 코드 경로 패턴 추출:
-   - `frontend/src/...` 패턴의 파일 경로
-   - `Read First`, `Input Context`, `Output` 섹션의 경로
-3. 추출된 각 경로가 실제 디스크에 존재하는지 확인.
-4. 존재하지 않는 경로 → `BROKEN_PATH` 리스트 (스킬 파일명 + 깨진 경로).
+### Step 3 - Validate board references
+1. Parse `docs/status/PAGE-UPGRADE-BOARD.md`.
+2. Extract `page_skill` and `support_skills`.
+3. Record:
+   - `BOARD_DANGLING` for skills referenced by board but missing on disk
+   - `BOARD_UNMATRIX` for skills referenced by board but missing from matrix
 
-### Step 5 — 스킬 콘텐츠 품질 검사
-1. 각 스킬 파일에서 필수 섹션 존재 여부 확인:
-   - page 스킬: `Trigger`, `Input Context`, `Read First`, `Do`, `Validation`, `Output`
-   - feature 스킬: `Trigger`, `Inputs`, `Procedure`, `Validation`, `Output`
-2. 필수 섹션 누락 → `INCOMPLETE_SKILL` 리스트.
+### Step 4 - Validate skill file structure
+1. For every `SKILL.md`, confirm frontmatter contains only:
+   - `name`
+   - `description`
+2. Confirm body structure:
+   - page and feature skills: `Trigger`, `Read First` or `Inputs`, `Do` or `Procedure`, `Validation`
+   - ops and subagent skills: `Trigger`, `Read First` or `Inputs`, `Procedure`, `Validation`, `Output`
+3. Record `INCOMPLETE_SKILL` for missing sections.
 
-### Step 6 — 보고서 출력 (DRY_RUN이 아닐 때만)
-1. `docs/status/SKILL-DOC-INTEGRITY-REPORT.md` 덮어쓰기:
-   ```markdown
-   # Skill-Doc Integrity Report — {날짜}
+### Step 5 - Validate referenced paths
+1. Extract repo-relative file paths from every `SKILL.md`.
+2. Verify that referenced files or directories exist.
+3. Record `BROKEN_PATH` for each missing reference.
+4. Flag any remaining Takdi-specific paths such as `src/components/compose/*` as `STALE_IMPORTED_PATH`.
 
-   ## Summary
-   | Check | Count |
-   |-------|-------|
-   | Missing skills (Matrix → Disk) | N |
-   | Untracked skills (Disk → Matrix) | N |
-   | Board dangling refs | N |
-   | Board unmatrix refs | N |
-   | Broken code paths in skills | N |
-   | Incomplete skills | N |
+### Step 6 - Report
+1. If `DRY_RUN=true`, print the report body only.
+2. Otherwise write `docs/status/SKILL-DOC-INTEGRITY-REPORT.md` with counts and detail tables.
 
-   ## Missing Skills
-   (Matrix에 등록되었지만 디스크에 없는 스킬)
+### Step 7 - Release
+1. Release the lock file.
 
-   ## Untracked Skills
-   (디스크에 있지만 Matrix에 등록되지 않은 스킬)
-
-   ## Board Dangling References
-   (Board에서 참조하지만 실제 파일 없는 스킬)
-
-   ## Broken Code Paths
-   | Skill File | Broken Path |
-   |-----------|-------------|
-   | ... | ... |
-
-   ## Incomplete Skills
-   | Skill File | Missing Sections |
-   |-----------|-----------------|
-   | ... | ... |
-   ```
-
-### Step 7 — 잠금 해제
+## Must Not
+- Do not edit skill files from this automation.
+- Do not edit `SKILL-DOC-MATRIX.md` automatically.
+- Do not edit board rows automatically.
+- Only report drift.
 
 ## DRY_RUN=true
-- Step 6에서 파일 수정 없이 보고서 내용만 출력.
-- 최종 출력: `[DRY_RUN] 변경 없음`
-
-## 안전 규칙 (MUST)
-- `frontend/src/` 코드 파일 절대 수정 금지.
-- 스킬 파일 자동 수정 금지 (보고만).
-- SKILL-DOC-MATRIX 자동 수정 금지 (보고만).
-- Board 자동 수정 금지 (보고만).
-- 변경 없으면 최종 출력: `변경 없음`
+- Print report content only.
+- Final line: `[DRY_RUN] no files changed`
