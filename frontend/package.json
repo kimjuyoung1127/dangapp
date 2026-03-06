@@ -9,6 +9,12 @@
     "lint": "npm run check:encoding && next lint",
     "test": "vitest",
     "test:run": "vitest run",
+    "e2e": "playwright test --grep-invert @manual",
+    "e2e:unauth": "playwright test --grep @unauth --grep-invert @manual",
+    "e2e:signed": "playwright test --grep @signed --grep-invert @manual",
+    "e2e:auth:record": "playwright test --grep @manual --headed --project chromium",
+    "e2e:report": "playwright show-report ../output/playwright/e2e/latest/html-report",
+    "e2e:install": "playwright install chromium",
     "analyze": "ANALYZE=true next build",
     "check:encoding": "node ../scripts/check-encoding.mjs"
   },
@@ -44,6 +50,7 @@
   },
   "devDependencies": {
     "@next/bundle-analyzer": "^16.1.6",
+    "@playwright/test": "^1.58.2",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.0",
     "@testing-library/user-event": "^14.6.1",

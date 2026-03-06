@@ -1,0 +1,339 @@
+{
+  "config": {
+    "configFile": "C:\\Users\\gmdqn\\dangapp\\frontend\\playwright.config.ts",
+    "rootDir": "C:/Users/gmdqn/dangapp/frontend/e2e",
+    "forbidOnly": false,
+    "fullyParallel": true,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 5
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "C:/Users/gmdqn/dangapp/output/playwright/e2e/latest/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 5
+        },
+        "id": "chromium",
+        "name": "chromium",
+        "testDir": "C:/Users/gmdqn/dangapp/frontend/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 60000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "list",
+        null
+      ],
+      [
+        "json",
+        {
+          "outputFile": "../output/playwright/e2e/latest/results.json"
+        }
+      ],
+      [
+        "html",
+        {
+          "outputFolder": "../output/playwright/e2e/latest/html-report",
+          "open": "never"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "runAgents": "none",
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.58.2",
+    "workers": 9,
+    "webServer": {
+      "command": "npm run dev -- --hostname 127.0.0.1 --port 3100",
+      "url": "http://127.0.0.1:3100",
+      "cwd": ".",
+      "reuseExistingServer": true,
+      "timeout": 120000
+    }
+  },
+  "suites": [
+    {
+      "title": "routes.public.spec.ts",
+      "file": "routes.public.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "Public route QA @unauth",
+          "file": "routes.public.spec.ts",
+          "line": 15,
+          "column": 6,
+          "specs": [
+            {
+              "title": "login and register render expected auth entry controls",
+              "ok": true,
+              "tags": [
+                "unauth"
+              ],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 7798,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-03-06T14:11:49.200Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "2870917cd38b3628fa72-34a53c8a33d1178f6945",
+              "file": "routes.public.spec.ts",
+              "line": 16,
+              "column": 9
+            },
+            {
+              "title": "protected routes redirect to /login when unauthenticated",
+              "ok": true,
+              "tags": [
+                "unauth"
+              ],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 13368,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-03-06T14:11:49.301Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "2870917cd38b3628fa72-08cbbcc983875b246053",
+              "file": "routes.public.spec.ts",
+              "line": 24,
+              "column": 9
+            },
+            {
+              "title": "auth callback without code redirects to login error",
+              "ok": true,
+              "tags": [
+                "unauth"
+              ],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 2,
+                      "parallelIndex": 2,
+                      "status": "passed",
+                      "duration": 7974,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-03-06T14:11:49.255Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "2870917cd38b3628fa72-1dc9150837c8b238099b",
+              "file": "routes.public.spec.ts",
+              "line": 31,
+              "column": 9
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "routes.signed.spec.ts",
+      "file": "routes.signed.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "Signed-in route QA @signed",
+          "file": "routes.signed.spec.ts",
+          "line": 12,
+          "column": 6,
+          "specs": [
+            {
+              "title": "core signed-in routes do not bounce to login",
+              "ok": true,
+              "tags": [
+                "signed"
+              ],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [
+                    {
+                      "type": "skip",
+                      "description": "E2E_STORAGE_STATE is missing. Skipping signed-in checks.",
+                      "location": {
+                        "file": "C:\\Users\\gmdqn\\dangapp\\frontend\\e2e\\routes.signed.spec.ts",
+                        "line": 13,
+                        "column": 10
+                      }
+                    }
+                  ],
+                  "expectedStatus": "skipped",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": -1,
+                      "parallelIndex": -1,
+                      "status": "skipped",
+                      "duration": 0,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-03-06T14:11:47.237Z",
+                      "annotations": [
+                        {
+                          "type": "skip",
+                          "description": "E2E_STORAGE_STATE is missing. Skipping signed-in checks.",
+                          "location": {
+                            "file": "C:\\Users\\gmdqn\\dangapp\\frontend\\e2e\\routes.signed.spec.ts",
+                            "line": 13,
+                            "column": 10
+                          }
+                        }
+                      ],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "skipped"
+                }
+              ],
+              "id": "66ca7d43512c087861b2-15547010571c9168e859",
+              "file": "routes.signed.spec.ts",
+              "line": 15,
+              "column": 9
+            },
+            {
+              "title": "chat detail route opens when a room exists",
+              "ok": true,
+              "tags": [
+                "signed"
+              ],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [
+                    {
+                      "type": "skip",
+                      "description": "E2E_STORAGE_STATE is missing. Skipping signed-in checks.",
+                      "location": {
+                        "file": "C:\\Users\\gmdqn\\dangapp\\frontend\\e2e\\routes.signed.spec.ts",
+                        "line": 13,
+                        "column": 10
+                      }
+                    }
+                  ],
+                  "expectedStatus": "skipped",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": -1,
+                      "parallelIndex": -1,
+                      "status": "skipped",
+                      "duration": 0,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-03-06T14:11:47.239Z",
+                      "annotations": [
+                        {
+                          "type": "skip",
+                          "description": "E2E_STORAGE_STATE is missing. Skipping signed-in checks.",
+                          "location": {
+                            "file": "C:\\Users\\gmdqn\\dangapp\\frontend\\e2e\\routes.signed.spec.ts",
+                            "line": 13,
+                            "column": 10
+                          }
+                        }
+                      ],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "skipped"
+                }
+              ],
+              "id": "66ca7d43512c087861b2-971a23303124fb760744",
+              "file": "routes.signed.spec.ts",
+              "line": 22,
+              "column": 9
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-03-06T14:11:33.567Z",
+    "duration": 30665.221999999998,
+    "expected": 3,
+    "skipped": 2,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

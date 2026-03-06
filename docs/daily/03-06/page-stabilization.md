@@ -134,6 +134,18 @@
   - `modesProgress` utility tests: 4
   - `/modes` component tests: 3
 
+19. Playwright route E2E harness hardening
+- Added Playwright config and route suites:
+  - `frontend/playwright.config.ts`
+  - `frontend/e2e/routes.public.spec.ts` (`@unauth`)
+  - `frontend/e2e/routes.signed.spec.ts` (`@signed`, storageState-gated)
+- Added manual signed-session recorder:
+  - `frontend/e2e/auth-record.spec.ts` (`@manual`)
+- Added scripts at root/frontend:
+  - `e2e`, `e2e:unauth`, `e2e:signed`, `e2e:auth:record`, `e2e:report`, `e2e:install`
+- Added folder-local guide:
+  - `frontend/e2e/claude.md`
+
 ## Validation
 - `npx tsc --noEmit` (frontend): pass.
 - `npx eslint` on changed frontend files: pass.
@@ -167,6 +179,10 @@
 - `npm run lint --prefix frontend` (after modes dashboard update): pass.
 - `npm run build --prefix frontend` (after modes dashboard update): pass.
 - `npm run verify:local` (after modes dashboard update): pass.
+- `npm run e2e:install --prefix frontend`: pass.
+- `npm run e2e:unauth --prefix frontend`: pass (3/3).
+- `npm run e2e:signed --prefix frontend`: skip (2 skipped, `E2E_STORAGE_STATE` not set).
+- `npm run e2e --prefix frontend`: pass (3 passed / 2 skipped).
 
 ## Known Follow-ups
 1. Capture staging evidence for integrated E2E checklist scenarios.

@@ -1,6 +1,6 @@
 # DangApp Project Status
 
-Last Updated: 2026-03-06 (KST) manual update (chat/auth/family/modes stabilization)
+Last Updated: 2026-03-06 (KST) manual update (chat/auth/family/modes + e2e harness)
 Owner Doc: `CLAUDE.md`
 
 ## Execution Phases
@@ -35,9 +35,9 @@ Overall parity verification: 1 Verified / 10 active IDs = 10% (7 routes at QA ??
 |---|---|---|---|
 | DANG-INFRA-001 | Schema/MCP/Storage/RLS | Done | ??|
 | DANG-DES-001 | Toss-like design system | QA | route-level verification pending |
-| DANG-AUTH-001 | auth + consent | InProgress | Google OAuth entry + callback consent logging implemented; signed-in/manual OAuth QA evidence pending |
+| DANG-AUTH-001 | auth + consent | InProgress | Google OAuth entry + callback consent logging implemented; Playwright unauth auth-route checks PASS, signed-in OAuth evidence pending |
 | DANG-ONB-001 | guardian/dog onboarding | QA | end-to-end verification + edge-case testing |
-| DANG-MAT-001 | matching + filters | InProgress | `/modes` B2B status summary added (care/family live counts + retry), integrated signed-in E2E evidence pending |
+| DANG-MAT-001 | matching + filters | InProgress | `/modes` B2B status summary added + Playwright route harness added (`@unauth` pass, `@signed` gated by storageState), signed-in evidence pending |
 | DANG-CHT-001 | realtime chat + schedule | QA | chat RLS recursion hotfix + legacy scheduleId backfill + one-shot response guard + local regression tests completed; final signed-in E2E evidence |
 | DANG-WLK-001 | walk records + review | QA | end-to-end verification pending |
 | DANG-DLG-001 | collaborative danglog | QA | end-to-end verification pending |
@@ -245,3 +245,18 @@ Overall parity verification: 1 Verified / 10 active IDs = 10% (7 routes at QA ??
   - `npm run lint --prefix frontend` PASS
   - `npm run build --prefix frontend` PASS
   - `npm run verify:local` PASS
+
+## 2026-03-06 Playwright Route E2E Harness Update (Codex)
+
+- Added Playwright runner/config for route QA:
+  - config: `frontend/playwright.config.ts`
+  - tests: `frontend/e2e/routes.public.spec.ts`, `frontend/e2e/routes.signed.spec.ts`
+  - manual storage-state recorder: `frontend/e2e/auth-record.spec.ts`
+  - local folder guide: `frontend/e2e/claude.md`
+- Added scripts:
+  - root: `e2e`, `e2e:unauth`, `e2e:signed`, `e2e:auth:record`, `e2e:report`, `e2e:install`
+  - frontend: same commands
+- Execution result (2026-03-06 KST):
+  - `npm run e2e:unauth --prefix frontend` PASS (3/3)
+  - `npm run e2e:signed --prefix frontend` SKIP (2 skipped, `E2E_STORAGE_STATE` missing)
+  - `npm run e2e --prefix frontend` PASS (3 passed / 2 skipped)

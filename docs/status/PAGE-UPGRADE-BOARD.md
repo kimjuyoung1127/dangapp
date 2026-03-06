@@ -95,3 +95,13 @@
 - Added local tests:
   - `modesProgress` utility
   - `/modes` component rendering + retry behavior
+
+## 2026-03-06 Playwright E2E Harness Sync
+
+- Added route-level Playwright suites:
+  - `@unauth`: auth/public/protected redirect checks
+  - `@signed`: signed-in flow checks (storageState required)
+- Added manual storage-state capture flow (`e2e:auth:record`) for Google OAuth sessions.
+- Current result:
+  - `e2e:unauth` PASS
+  - `e2e:signed` is gated/skip without `E2E_STORAGE_STATE`

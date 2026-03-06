@@ -84,6 +84,11 @@ Dual-agent handoff: `docs/ref/DUAL-AGENT-HANDOFF.md`
 | docs/ref/SUPABASE-MCP-RUNBOOK.md | MCP setup and operation runbook |
 | docs/ref/WSL-CODEX-ENCODING-RUNBOOK.md | WSL-first encoding-safe Codex workflow |
 
+## Local Folder Rules
+- `frontend/e2e/claude.md`
+  - Owns browser E2E route QA scope (`@unauth`, optional `@signed`, manual auth-state recording).
+  - Keeps tests route-centric and skippable when signed-in storage state is unavailable.
+
 ## Completion Format
 
 ```
