@@ -1,45 +1,27 @@
-// File: Family page with ownership/participant data and family-group management flow.
+// File: Family page styled with the family organizer direction.
 "use client";
 
 import { useMemo, useState } from "react";
-import Link from "next/link";
-import { ArrowLeft, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 import { AppShell } from "@/components/shared/AppShell";
+import { FamilyEmptyPanel, FamilyPageIntro, FamilySectionTitle, FamilyStatusChip, FamilySurface } from "@/components/shared/FamilyUi";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { StaggerItem, StaggerList, TapScale } from "@/components/ui/MotionWrappers";
 import FamilyGroupCard from "@/components/features/family/FamilyGroupCard";
 import FamilyGroupForm from "@/components/features/family/FamilyGroupForm";
-import {
-    useDogOwnerships,
-    useFamilyGroups,
-    useFamilyMembers,
-    useFamilySharedSchedules,
-    useMyScheduleParticipants,
-} from "@/lib/hooks/useFamily";
-import {
-    mapDogOwnershipsWithDogName,
-    summarizeFamilyParticipants,
-} from "@/lib/familyOverview";
+import { useDogOwnerships, useFamilyGroups, useFamilyMembers, useFamilySharedSchedules, useMyScheduleParticipants } from "@/lib/hooks/useFamily";
+import { mapDogOwnershipsWithDogName, summarizeFamilyParticipants } from "@/lib/familyOverview";
 import { useCurrentGuardian } from "@/lib/hooks/useCurrentGuardian";
-import { cn } from "@/lib/utils";
 import type { Database } from "@/types/database.types";
 
 type FamilyGroup = Database["public"]["Tables"]["family_groups"]["Row"];
+type ParticipantStatus = Database["public"]["Tables"]["schedule_participants"]["Row"]["status"];
 type ScheduleStatus = Database["public"]["Tables"]["schedules"]["Row"]["status"];
-
-type ParticipantStatus =
-    Database["public"]["Tables"]["schedule_participants"]["Row"]["status"];
 
 const PARTICIPANT_STATUS_LABELS: Record<ParticipantStatus, string> = {
     invited: "초대됨",
-    accepted: "수락",
-    declined: "거절",
-};
-
-const PARTICIPANT_STATUS_COLORS: Record<ParticipantStatus, string> = {
-    invited: "text-amber-700 bg-amber-50",
-    accepted: "text-green-700 bg-green-50",
-    declined: "text-red-700 bg-red-50",
+    accepted: "수락됨",
+    declined: "거절됨",
 };
 
 const SCHEDULE_STATUS_LABELS: Record<ScheduleStatus, string> = {
@@ -51,246 +33,107 @@ const SCHEDULE_STATUS_LABELS: Record<ScheduleStatus, string> = {
 
 export default function FamilyPage() {
     const [isFormOpen, setIsFormOpen] = useState(false);
-
     const { data: guardian } = useCurrentGuardian();
     const guardianId = guardian?.id ?? "";
 
     const guardianDogs = useMemo(() => {
         const rawDogs = (guardian as { dogs?: Array<{ id: string; name?: string | null }> } | null)?.dogs;
-        if (!Array.isArray(rawDogs)) return [] as Array<{ id: string; name: string }>;
-
-        return rawDogs.map((dog) => ({
-            id: dog.id,
-            name: dog.name ?? dog.id,
-        }));
+        return Array.isArray(rawDogs) ? rawDogs.map((dog) => ({ id: dog.id, name: dog.name ?? dog.id })) : [];
     }, [guardian]);
 
-    const {
-        data: groups = [],
-        isLoading: isGroupsLoading,
-        isError: isGroupsError,
-        refetch: refetchGroups,
-    } = useFamilyGroups(guardianId);
+    const { data: groups = [], isLoading: isGroupsLoading, isError: isGroupsError, refetch: refetchGroups } = useFamilyGroups(guardianId);
+    const { data: ownerships = [], isLoading: isOwnershipsLoading, isError: isOwnershipsError, refetch: refetchOwnerships } = useDogOwnerships(guardianId);
+    const { data: participants = [], isLoading: isParticipantsLoading, isError: isParticipantsError, refetch: refetchParticipants } = useMyScheduleParticipants(guardianId);
+    const { data: sharedSchedules = [], isLoading: isSharedSchedulesLoading, isError: isSharedSchedulesError, refetch: refetchSharedSchedules } = useFamilySharedSchedules(guardianId);
 
-    const {
-        data: ownerships = [],
-        isLoading: isOwnershipsLoading,
-        isError: isOwnershipsError,
-        refetch: refetchOwnerships,
-    } = useDogOwnerships(guardianId);
-
-    const {
-        data: participants = [],
-        isLoading: isParticipantsLoading,
-        isError: isParticipantsError,
-        refetch: refetchParticipants,
-    } = useMyScheduleParticipants(guardianId);
-
-    const {
-        data: sharedSchedules = [],
-        isLoading: isSharedSchedulesLoading,
-        isError: isSharedSchedulesError,
-        refetch: refetchSharedSchedules,
-    } = useFamilySharedSchedules(guardianId);
-
-    const ownershipViewModels = useMemo(
-        () => mapDogOwnershipsWithDogName(ownerships, guardianDogs),
-        [ownerships, guardianDogs]
-    );
-
-    const participantMetrics = useMemo(
-        () => summarizeFamilyParticipants(participants),
-        [participants]
-    );
+    const ownershipViewModels = useMemo(() => mapDogOwnershipsWithDogName(ownerships, guardianDogs), [ownerships, guardianDogs]);
+    const participantMetrics = useMemo(() => summarizeFamilyParticipants(participants), [participants]);
 
     return (
         <AppShell>
-            <div className="space-y-8 px-4 py-6">
-                <div className="flex items-center gap-3">
-                    <Link href="/modes">
-                        <ArrowLeft className="h-5 w-5 text-foreground-muted" />
-                    </Link>
-                    <h1 className="text-2xl font-display font-bold text-foreground">Family mode</h1>
-                </div>
-
-                <section className="space-y-3">
-                    <h2 className="text-lg font-semibold text-foreground">가족 공유 요약</h2>
-                    <div className="grid grid-cols-3 gap-2">
-                        <SummaryCard label="공동양육" value={ownerships.length} />
-                        <SummaryCard label="일정수락" value={participantMetrics.accepted} />
-                        <SummaryCard label="일정초대" value={participantMetrics.invited} />
-                    </div>
-                </section>
-
-                <section className="space-y-3">
-                    <div className="flex items-center justify-between">
-                        <h2 className="text-lg font-semibold text-foreground">공동 양육 반려견</h2>
-                        {isOwnershipsError ? (
-                            <button
-                                type="button"
-                                className="text-xs font-medium text-primary"
-                                onClick={() => {
-                                    void refetchOwnerships();
-                                }}
-                            >
-                                다시 불러오기
-                            </button>
-                        ) : null}
-                    </div>
-
-                    {isOwnershipsLoading ? (
-                        <div className="space-y-2">
-                            <Skeleton className="h-16 w-full rounded-2xl" />
-                            <Skeleton className="h-16 w-full rounded-2xl" />
-                        </div>
-                    ) : null}
-
-                    {isOwnershipsError && !isOwnershipsLoading ? (
-                        <InlineError
-                            message="공동 양육 정보를 불러오지 못했습니다."
-                            actionLabel="소유권 다시 불러오기"
-                            onRetry={() => {
-                                void refetchOwnerships();
-                            }}
-                        />
-                    ) : null}
-
-                    {!isOwnershipsLoading && !isOwnershipsError && ownershipViewModels.length === 0 ? (
-                        <p className="rounded-2xl border border-border bg-card p-4 text-sm text-foreground-muted">
-                            연결된 공동 양육 반려견이 없습니다.
-                        </p>
-                    ) : null}
-
-                    {ownershipViewModels.length > 0 ? (
-                        <div className="space-y-2">
-                            {ownershipViewModels.map((ownership) => (
-                                <article
-                                    key={`${ownership.dogId}-${ownership.role}`}
-                                    className="rounded-2xl border border-border bg-card p-4"
-                                >
-                                    <div className="flex items-center justify-between gap-2">
-                                        <p className="font-medium text-foreground">{ownership.dogName}</p>
-                                        <span className="rounded-full bg-primary/10 px-2 py-1 text-xs font-medium text-primary">
-                                            {ownership.role}
-                                        </span>
-                                    </div>
-                                    <p className="mt-1 text-xs text-foreground-muted">
-                                        {ownership.isPrimary ? "대표 보호자" : "공동 보호자"}
-                                    </p>
-                                </article>
-                            ))}
-                        </div>
-                    ) : null}
-                </section>
-
-                <section className="space-y-3">
-                    <div className="flex items-center justify-between">
-                        <h2 className="text-lg font-semibold text-foreground">공유 일정 참여</h2>
-                        {(isParticipantsError || isSharedSchedulesError) && (
-                            <button
-                                type="button"
-                                className="text-xs font-medium text-primary"
-                                onClick={() => {
-                                    void refetchParticipants();
-                                    void refetchSharedSchedules();
-                                }}
-                            >
-                                다시 불러오기
-                            </button>
-                        )}
-                    </div>
-
-                    {isParticipantsLoading || isSharedSchedulesLoading ? (
-                        <div className="space-y-2">
-                            <Skeleton className="h-20 w-full rounded-2xl" />
-                            <Skeleton className="h-20 w-full rounded-2xl" />
-                        </div>
-                    ) : null}
-
-                    {(isParticipantsError || isSharedSchedulesError) &&
-                    !isParticipantsLoading &&
-                    !isSharedSchedulesLoading ? (
-                        <InlineError
-                            message="공유 일정 참여 내역을 불러오지 못했습니다."
-                            actionLabel="참여 일정 다시 불러오기"
-                            onRetry={() => {
-                                void refetchParticipants();
-                                void refetchSharedSchedules();
-                            }}
-                        />
-                    ) : null}
-
-                    {!isParticipantsLoading &&
-                    !isSharedSchedulesLoading &&
-                    !isParticipantsError &&
-                    !isSharedSchedulesError &&
-                    sharedSchedules.length === 0 ? (
-                        <p className="rounded-2xl border border-border bg-card p-4 text-sm text-foreground-muted">
-                            아직 참여한 공유 일정이 없습니다.
-                        </p>
-                    ) : null}
-
-                    {sharedSchedules.length > 0 ? (
-                        <div className="space-y-2">
-                            {sharedSchedules.map((schedule) => (
-                                <article
-                                    key={`${schedule.schedule_id}-${schedule.joined_at}`}
-                                    className="rounded-2xl border border-border bg-card p-4"
-                                >
-                                    <div className="flex items-center justify-between gap-2">
-                                        <p className="font-medium text-foreground">{schedule.title}</p>
-                                        <span
-                                            className={cn(
-                                                "rounded-full px-2 py-1 text-xs font-medium",
-                                                PARTICIPANT_STATUS_COLORS[schedule.participant_status]
-                                            )}
-                                        >
-                                            {PARTICIPANT_STATUS_LABELS[schedule.participant_status]}
-                                        </span>
-                                    </div>
-                                    <p className="mt-1 text-xs text-foreground-muted">
-                                        일정 상태: {SCHEDULE_STATUS_LABELS[schedule.schedule_status]}
-                                    </p>
-                                    <p className="text-xs text-foreground-muted">
-                                        일정 시간: {new Date(schedule.datetime).toLocaleString("ko-KR")}
-                                    </p>
-                                </article>
-                            ))}
-                        </div>
-                    ) : null}
-                </section>
-
-                <section className="space-y-3">
-                    <div className="flex items-center justify-between">
-                        <h2 className="text-lg font-semibold text-foreground">가족 그룹</h2>
+            <div className="space-y-5 px-4 py-6">
+                <FamilyPageIntro
+                    eyebrow="family collaboration hub"
+                    title="Family mode"
+                    description="공동 양육, 공유 일정, 가족 그룹을 한 방향의 카드 시스템으로 정리했습니다."
+                    backHref="/modes"
+                    action={
                         <TapScale>
-                            <button
-                                type="button"
-                                onClick={() => setIsFormOpen(true)}
-                                className="text-sm font-medium text-primary"
-                            >
-                                그룹 만들기
+                            <button type="button" onClick={() => setIsFormOpen(true)} className="inline-flex items-center gap-1.5 rounded-full bg-sky-100 px-3 py-1.5 text-sm font-medium text-sky-700">
+                                <Plus className="h-4 w-4" />그룹 만들기
                             </button>
                         </TapScale>
-                    </div>
+                    }
+                />
 
-                    {isGroupsLoading ? (
-                        <div className="space-y-4">
-                            <FamilyGroupSkeleton />
-                            <FamilyGroupSkeleton />
+                <section className="grid grid-cols-3 gap-3">
+                    <SummaryCard label="공동양육" value={ownerships.length} />
+                    <SummaryCard label="일정 수락" value={participantMetrics.accepted} />
+                    <SummaryCard label="일정 초대" value={participantMetrics.invited} />
+                </section>
+
+                <section className="space-y-3">
+                    <FamilySectionTitle title="공동 양육 반려견" meta="현재 연결된 반려견과 역할을 확인합니다." />
+                    {isOwnershipsLoading ? (
+                        <div className="space-y-3"><Skeleton className="h-20 w-full rounded-[1.75rem]" /><Skeleton className="h-20 w-full rounded-[1.75rem]" /></div>
+                    ) : isOwnershipsError ? (
+                        <FamilyEmptyPanel message="공동 양육 정보를 불러오지 못했어요." action={<button className="text-sm font-medium text-sky-700 underline" onClick={() => void refetchOwnerships()}>다시 불러오기</button>} />
+                    ) : ownershipViewModels.length === 0 ? (
+                        <FamilyEmptyPanel message="연결된 공동 양육 반려견이 없습니다." />
+                    ) : (
+                        <div className="space-y-3">
+                            {ownershipViewModels.map((ownership) => (
+                                <FamilySurface key={`${ownership.dogId}-${ownership.role}`}> 
+                                    <div className="flex items-center justify-between gap-3">
+                                        <div>
+                                            <h3 className="font-semibold text-foreground">{ownership.dogName}</h3>
+                                            <p className="mt-1 text-sm text-foreground-muted">{ownership.isPrimary ? "대표 보호자" : "공동 보호자"}</p>
+                                        </div>
+                                        <FamilyStatusChip label={ownership.role} />
+                                    </div>
+                                </FamilySurface>
+                            ))}
                         </div>
+                    )}
+                </section>
+
+                <section className="space-y-3">
+                    <FamilySectionTitle title="공유 일정 참여" meta="수락 여부와 일정 상태를 함께 보여줍니다." />
+                    {isParticipantsLoading || isSharedSchedulesLoading ? (
+                        <div className="space-y-3"><Skeleton className="h-24 w-full rounded-[1.75rem]" /><Skeleton className="h-24 w-full rounded-[1.75rem]" /></div>
+                    ) : isParticipantsError || isSharedSchedulesError ? (
+                        <FamilyEmptyPanel message="공유 일정 참여 내역을 불러오지 못했어요." action={<button className="text-sm font-medium text-sky-700 underline" onClick={() => { void refetchParticipants(); void refetchSharedSchedules(); }}>다시 불러오기</button>} />
+                    ) : sharedSchedules.length === 0 ? (
+                        <FamilyEmptyPanel message="아직 참여 중인 공유 일정이 없습니다." />
+                    ) : (
+                        <div className="space-y-3">
+                            {sharedSchedules.map((schedule) => (
+                                <FamilySurface key={`${schedule.schedule_id}-${schedule.joined_at}`}> 
+                                    <div className="flex items-start justify-between gap-3">
+                                        <div>
+                                            <h3 className="font-semibold text-foreground">{schedule.title}</h3>
+                                            <p className="mt-1 text-sm text-foreground-muted">{new Date(schedule.datetime).toLocaleString("ko-KR")}</p>
+                                            <p className="mt-1 text-xs text-foreground-muted">일정 상태: {SCHEDULE_STATUS_LABELS[schedule.schedule_status]}</p>
+                                        </div>
+                                        <FamilyStatusChip
+                                            label={PARTICIPANT_STATUS_LABELS[schedule.participant_status]}
+                                            tone={schedule.participant_status === "accepted" ? "success" : schedule.participant_status === "declined" ? "danger" : "warning"}
+                                        />
+                                    </div>
+                                </FamilySurface>
+                            ))}
+                        </div>
+                    )}
+                </section>
+
+                <section className="space-y-3">
+                    <FamilySectionTitle title="가족 그룹" meta="기존 그룹과 멤버 수를 같은 카드 계열로 보여줍니다." action={isGroupsError ? <button className="text-sm font-medium text-sky-700 underline" onClick={() => void refetchGroups()}>다시 불러오기</button> : undefined} />
+                    {isGroupsLoading ? (
+                        <div className="space-y-4"><FamilyGroupSkeleton /><FamilyGroupSkeleton /></div>
                     ) : isGroupsError ? (
-                        <InlineError
-                            message="가족 그룹을 불러오지 못했습니다."
-                            actionLabel="그룹 다시 불러오기"
-                            onRetry={() => {
-                                void refetchGroups();
-                            }}
-                        />
+                        <FamilyEmptyPanel message="가족 그룹을 불러오지 못했어요." />
                     ) : groups.length === 0 ? (
-                        <p className="rounded-2xl border border-border bg-card p-4 text-sm text-foreground-muted">
-                            아직 가족 그룹이 없습니다.
-                        </p>
+                        <FamilyEmptyPanel message="아직 가족 그룹이 없습니다." />
                     ) : (
                         <StaggerList className="space-y-4" animateOnMount={false}>
                             {groups.map((group) => (
@@ -301,85 +144,29 @@ export default function FamilyPage() {
                 </section>
             </div>
 
-            <TapScale className="fixed bottom-24 right-6 z-20">
-                <button
-                    type="button"
-                    onClick={() => setIsFormOpen(true)}
-                    aria-label="Create family group"
-                    className="flex h-14 w-14 items-center justify-center rounded-full bg-primary text-white shadow-lg"
-                >
-                    <Plus className="h-6 w-6" />
-                </button>
-            </TapScale>
-
-            {guardian ? (
-                <FamilyGroupForm
-                    isOpen={isFormOpen}
-                    onClose={() => setIsFormOpen(false)}
-                    creatorId={guardian.id}
-                />
-            ) : null}
+            {guardian ? <FamilyGroupForm isOpen={isFormOpen} onClose={() => setIsFormOpen(false)} creatorId={guardian.id} /> : null}
         </AppShell>
     );
 }
 
 function FamilyGroupCardWithCount({ group }: { group: FamilyGroup }) {
     const { data: members = [], isError } = useFamilyMembers(group.id);
-
     return (
         <StaggerItem>
-            <FamilyGroupCard
-                group={group}
-                memberCount={isError ? 0 : members.length}
-                memberCountError={isError}
-            />
+            <FamilyGroupCard group={group} memberCount={isError ? 0 : members.length} memberCountError={isError} />
         </StaggerItem>
-    );
-}
-
-function FamilyGroupSkeleton() {
-    return (
-        <div className="flex items-center justify-between rounded-3xl border border-border bg-card p-5">
-            <div className="flex items-center gap-4">
-                <Skeleton className="h-14 w-14 rounded-xl" />
-                <div className="space-y-2">
-                    <Skeleton className="h-5 w-32 rounded-xl" />
-                    <Skeleton className="h-4 w-20 rounded-xl" />
-                </div>
-            </div>
-            <Skeleton className="h-8 w-8 rounded-full" />
-        </div>
     );
 }
 
 function SummaryCard({ label, value }: { label: string; value: number }) {
     return (
-        <article className="rounded-2xl border border-border bg-card px-3 py-3">
+        <FamilySurface className="px-3 py-3 text-center">
             <p className="text-xs text-foreground-muted">{label}</p>
             <p className="mt-1 text-lg font-semibold text-foreground">{value}</p>
-        </article>
+        </FamilySurface>
     );
 }
 
-function InlineError({
-    message,
-    actionLabel,
-    onRetry,
-}: {
-    message: string;
-    actionLabel: string;
-    onRetry: () => void;
-}) {
-    return (
-        <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-            <p>{message}</p>
-            <button
-                type="button"
-                className="mt-2 font-medium underline"
-                onClick={onRetry}
-            >
-                {actionLabel}
-            </button>
-        </div>
-    );
+function FamilyGroupSkeleton() {
+    return <Skeleton className="h-32 w-full rounded-[1.75rem]" />;
 }

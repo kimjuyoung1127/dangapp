@@ -30,6 +30,7 @@ docs/status/PAGE-UPGRADE-BOARD.md
 - `dang-supabase-mcp`
 - `subagent-doc-check`
 - `subagent-pattern-collect`
+- `dang-ui-redesign-orchestrator`
 
 ## Procedure
 

@@ -1,3 +1,168 @@
+## 2026-03-07 — Auto-Documented: consent_logs
+
+Dawn Sweep S1 자동 등록. 상세 변경 이력은 추후 보완 필요.
+
+### 테이블 구조
+- 테이블: `consent_logs`
+- 주요 컬럼: `user_id`, `consent_type`, `consented`, `policy_version`, `metadata`, `created_at`
+- 상태: types에 정의됨, used (auth consent tracking)
+
+---
+
+## 2026-03-07 — Auto-Documented: danglog_collaborators
+
+Dawn Sweep S1 자동 등록. 상세 변경 이력은 추후 보완 필요.
+
+### 테이블 구조
+- 테이블: `danglog_collaborators`
+- 주요 컬럼: `danglog_id`, `guardian_id`, `role`, `invited_by`, `joined_at`
+- 상태: types에 정의됨, used (co-author mapping)
+
+---
+
+## 2026-03-07 — Auto-Documented: danglogs
+
+Dawn Sweep S1 자동 등록. 상세 변경 이력은 추후 보완 필요.
+
+### 테이블 구조
+- 테이블: `danglogs`
+- 주요 컬럼: `author_id`, `dog_id`, `title`, `content`, `image_urls`, `activity_type`, `shared_with`, `co_authors`, `created_at`, `updated_at`
+- 상태: types에 정의됨, used (walk/activity log entries)
+
+---
+
+## 2026-03-07 — Auto-Documented: dog_ownership
+
+Dawn Sweep S1 자동 등록. 상세 변경 이력은 추후 보완 필요.
+
+### 테이블 구조
+- 테이블: `dog_ownership`
+- 주요 컬럼: `dog_id`, `guardian_id`, `role`, `is_primary`, `created_at`
+- 상태: types에 정의됨, used (dog-guardian N:M relationship)
+
+---
+
+## 2026-03-07 — Auto-Documented: dogs
+
+Dawn Sweep S1 자동 등록. 상세 변경 이력은 추후 보완 필요.
+
+### 테이블 구조
+- 테이블: `dogs`
+- 주요 컬럼: `guardian_id`, `name`, `breed`, `age`, `birth_date`, `weight_kg`, `temperament`, `weekday_walk_slots`, `weekend_walk_slots`, `gender`, `neutered`, `photo_urls`, `documents`, `created_at`, `updated_at`
+- 상태: types에 정의됨, used (dog profile core table)
+
+---
+
+## 2026-03-07 — Auto-Documented: guardians
+
+Dawn Sweep S1 자동 등록. 상세 변경 이력은 추후 보완 필요.
+
+### 테이블 구조
+- 테이블: `guardians`
+- 주요 컬럼: `user_id`, `nickname`, `full_name`, `birth_date`, `gender`, `avatar_url`, `bio`, `address_name`, `location`, `verified_region`, `usage_purpose`, `onboarding_progress`, `activity_times`, `preferred_radius_km`, `created_at`, `updated_at`
+- 상태: types에 정의됨, used (guardian/user profile enrichment)
+
+---
+
+## 2026-03-07 — Auto-Documented: matches
+
+Dawn Sweep S1 자동 등록. 상세 변경 이력은 추후 보완 필요.
+
+### 테이블 구조
+- 테이블: `matches`
+- 주요 컬럼: `from_guardian_id`, `to_guardian_id`, `status`, `relation_purpose`, `liked_section`, `comment`, `intro_message`, `compatibility_score`, `created_at`, `updated_at`
+- 상태: types에 정의됨, used (matching result snapshots)
+
+---
+
+## 2026-03-07 — Auto-Documented: notification_settings
+
+Dawn Sweep S1 자동 등록. 상세 변경 이력은 추후 보완 필요.
+
+### 테이블 구조
+- 테이블: `notification_settings`
+- 주요 컬럼: `user_id`, `marketing_opt_in`, `chat_opt_in`, `schedule_opt_in`, `danglog_opt_in`, `push_opt_in`, `updated_at`
+- 상태: types에 정의됨, used (user notification preferences)
+
+---
+
+## 2026-03-07 — Auto-Documented: partner_places
+
+Dawn Sweep S1 자동 등록. 상세 변경 이력은 추후 보완 필요.
+
+### 테이블 구조
+- 테이블: `partner_places`
+- 주요 컬럼: `name`, `category`, `address_name`, `location`, `description`, `photo_urls`, `business_hours`, `is_verified`, `amenities`, `created_at`, `updated_at`
+- 상태: types에 정의됨, used (B2B location registry)
+
+---
+
+## 2026-03-07 — Auto-Documented: reports
+
+Dawn Sweep S1 자동 등록. 상세 변경 이력은 추후 보완 필요.
+
+### 테이블 구조
+- 테이블: `reports`
+- 주요 컬럼: `reporter_id`, `target_guardian_id`, `reason_category`, `content`, `evidence_urls`, `status`, `admin_memo`, `created_at`
+- 상태: types에 정의됨, unused (user report/moderation table)
+
+---
+
+## 2026-03-07 — Auto-Documented: reservations
+
+Dawn Sweep S1 자동 등록. 상세 변경 이력은 추후 보완 필요.
+
+### 테이블 구조
+- 테이블: `reservations`
+- 주요 컬럼: `place_id`, `guardian_id`, `dog_id`, `reserved_at`, `status`, `guest_count`, `request_memo`, `created_at`
+- 상태: types에 정의됨, used (B2B reservation pipeline)
+
+---
+
+## 2026-03-07 — Auto-Documented: reviews
+
+Dawn Sweep S1 자동 등록. 상세 변경 이력은 추후 보완 필요.
+
+### 테이블 구조
+- 테이블: `reviews`
+- 주요 컬럼: `author_id`, `target_id`, `schedule_id`, `rating`, `content`, `tags`, `created_at`
+- 상태: types에 정의됨, used (peer review records)
+
+---
+
+## 2026-03-07 — Auto-Documented: schedule_participants
+
+Dawn Sweep S1 자동 등록. 상세 변경 이력은 추후 보완 필요.
+
+### 테이블 구조
+- 테이블: `schedule_participants`
+- 주요 컬럼: `schedule_id`, `guardian_id`, `dog_id`, `status`, `joined_at`
+- 상태: types에 정의됨, used (multi-user schedule mapping)
+
+---
+
+## 2026-03-07 — Auto-Documented: users
+
+Dawn Sweep S1 자동 등록. 상세 변경 이력은 추후 보완 필요.
+
+### 테이블 구조
+- 테이블: `users`
+- 주요 컬럼: `id`, `email`, `phone`, `role`, `trust_score`, `trust_level`, `created_at`, `updated_at`
+- 상태: types에 정의됨, used (core user/auth table)
+
+---
+
+## 2026-03-07 — Auto-Documented: walk_records
+
+Dawn Sweep S1 자동 등록. 상세 변경 이력은 추후 보완 필요.
+
+### 테이블 구조
+- 테이블: `walk_records`
+- 주요 컬럼: `schedule_id`, `author_id`, `partner_guardian_id`, `walk_date`, `walk_time`, `place_name`, `memo`, `photo_urls`, `visibility`, `created_at`, `updated_at`
+- 상태: types에 정의됨, used (walk session records)
+
+---
+
 # Schema Changelog
 
 ## 2026-03-04 — Remote Supabase Apply & Runtime Fix (MCP)

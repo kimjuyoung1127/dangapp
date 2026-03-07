@@ -1,3 +1,4 @@
 {"run_at":"2026-03-02T19:37:12Z","board_updates":0,"routes_scanned":7,"wave_status":{"wave0":"Done","wave1":"Done","wave2":"QA","wave3":"InProgress","wave4":"QA","wave5":"Ready"},"warnings":["modes dual-parity overlap (MAT-001 + B2B-001)"],"project_status_updated":true}
 {"run_at":"2026-03-03T00:00:00Z","board_updates":0,"routes_scanned":7,"qa_routes":7,"ready_routes":5,"in_progress_routes":0,"done_routes":0,"wave_status":{"wave0":"Done","wave1":"Done","wave2":"QA","wave3":"InProgress","wave4":"QA","wave5":"Ready"},"overall_progress":"0% Done | 58% QA","warnings":[],"project_status_updated":true}
 {"ts":"2026-03-03T17:07:47Z","board_updates":0,"regression_warn":1,"wave2_pct":100,"wave3_pct":75,"wave4_pct":75,"wave5_pct":0,"overall_pct":45}
+{"date":"2026-03-07","board_updates":0,"regression_warn":0,"overall_pct":85.4}

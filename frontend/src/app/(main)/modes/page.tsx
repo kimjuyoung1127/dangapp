@@ -3,22 +3,26 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { AppShell } from "@/components/shared/AppShell";
 import ModeCard from "@/components/features/modes/ModeCard";
 import ModeUnlockDialog from "@/components/features/modes/ModeUnlockDialog";
+import { AppShell } from "@/components/shared/AppShell";
+import {
+    FamilyPageIntro,
+    FamilySectionTitle,
+    FamilyStatusChip,
+    FamilySurface,
+} from "@/components/shared/FamilyUi";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { MODE_CONFIG, type ModeConfig } from "@/lib/constants/modes";
-import { useModeUnlocks } from "@/lib/hooks/useMode";
 import { useCurrentGuardian } from "@/lib/hooks/useCurrentGuardian";
-import { useMyReservations, usePartnerPlaces } from "@/lib/hooks/useCare";
 import { useDogOwnerships, useMyScheduleParticipants } from "@/lib/hooks/useFamily";
+import { useMyReservations, usePartnerPlaces } from "@/lib/hooks/useCare";
+import { useModeUnlocks } from "@/lib/hooks/useMode";
 import {
-    getProgressToneClasses,
     summarizeCareProgress,
     summarizeFamilyProgress,
     type ModeProgressSummary,
 } from "@/lib/modesProgress";
-import { cn } from "@/lib/utils";
 
 export default function ModesPage() {
     const router = useRouter();
@@ -61,6 +65,7 @@ export default function ModesPage() {
         set.add("basic");
         return set;
     }, [unlocks]);
+
     const pendingReservationCount = useMemo(
         () => myReservations.filter((reservation) => reservation.status === "pending").length,
         [myReservations]
@@ -69,6 +74,7 @@ export default function ModesPage() {
         () => scheduleParticipants.filter((participant) => participant.status === "accepted").length,
         [scheduleParticipants]
     );
+
     const careSummary = useMemo(
         () =>
             summarizeCareProgress({
@@ -80,8 +86,8 @@ export default function ModesPage() {
         [
             isPartnerPlacesError,
             isReservationsError,
-            partnerPlaces.length,
             myReservations.length,
+            partnerPlaces.length,
             pendingReservationCount,
         ]
     );
@@ -94,13 +100,14 @@ export default function ModesPage() {
                 acceptedParticipantsCount: acceptedParticipantCount,
             }),
         [
+            acceptedParticipantCount,
+            dogOwnerships.length,
             isOwnershipsError,
             isParticipantsError,
-            dogOwnerships.length,
             scheduleParticipants.length,
-            acceptedParticipantCount,
         ]
     );
+
     const isB2BSummaryLoading =
         isPartnerPlacesLoading || isReservationsLoading || isOwnershipsLoading || isParticipantsLoading;
     const hasB2BSummaryError =
@@ -112,9 +119,7 @@ export default function ModesPage() {
     };
 
     const handleSelect = (config: ModeConfig) => {
-        const unlocked = isModeUnlocked(config);
-
-        if (!unlocked) {
+        if (!isModeUnlocked(config)) {
             setLockedMode(config);
             return;
         }
@@ -133,27 +138,34 @@ export default function ModesPage() {
 
     return (
         <AppShell>
-            <div className="px-4 py-6 space-y-6">
-                <h1 className="text-2xl font-display font-bold text-foreground">Mode selection</h1>
+            <div className="space-y-5 px-4 py-6">
+                <FamilyPageIntro
+                    eyebrow="mode center"
+                    title="모드 선택"
+                    description="신뢰도와 준비 상태를 확인한 뒤, 상황에 맞는 운영 모드로 이동하세요."
+                />
 
-                <section className="space-y-3 rounded-3xl border border-border bg-card p-4">
-                    <div className="flex items-center justify-between">
-                        <h2 className="text-sm font-semibold text-foreground">B2B execution status</h2>
-                        {hasB2BSummaryError ? (
-                            <button
-                                type="button"
-                                className="text-xs font-medium text-primary"
-                                onClick={() => {
-                                    void refetchPartnerPlaces();
-                                    void refetchReservations();
-                                    void refetchOwnerships();
-                                    void refetchParticipants();
-                                }}
-                            >
-                                Retry
-                            </button>
-                        ) : null}
-                    </div>
+                <FamilySurface tone="soft" className="space-y-4">
+                    <FamilySectionTitle
+                        title="운영 준비 상태"
+                        meta="care와 family 모드의 실행 준비도를 요약했습니다."
+                        action={
+                            hasB2BSummaryError ? (
+                                <button
+                                    type="button"
+                                    className="text-sm font-semibold text-sky-700"
+                                    onClick={() => {
+                                        void refetchPartnerPlaces();
+                                        void refetchReservations();
+                                        void refetchOwnerships();
+                                        void refetchParticipants();
+                                    }}
+                                >
+                                    다시 확인
+                                </button>
+                            ) : null
+                        }
+                    />
 
                     {isB2BSummaryLoading ? (
                         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -167,8 +179,8 @@ export default function ModesPage() {
                                 summary={careSummary}
                                 route="/care"
                                 metrics={[
-                                    `Partner places ${partnerPlaces.length}`,
-                                    `Reservations ${myReservations.length}`,
+                                    `파트너 장소 ${partnerPlaces.length}곳`,
+                                    `예약 ${myReservations.length}건`,
                                 ]}
                             />
                             <ModeStatusCard
@@ -176,13 +188,13 @@ export default function ModesPage() {
                                 summary={familySummary}
                                 route="/family"
                                 metrics={[
-                                    `Ownership links ${dogOwnerships.length}`,
-                                    `Shared participants ${scheduleParticipants.length}`,
+                                    `소유 연결 ${dogOwnerships.length}건`,
+                                    `공유 일정 참여 ${scheduleParticipants.length}건`,
                                 ]}
                             />
                         </div>
                     )}
-                </section>
+                </FamilySurface>
 
                 <div className="space-y-4">
                     {MODE_CONFIG.map((config) => (
@@ -198,7 +210,7 @@ export default function ModesPage() {
                 </div>
             </div>
 
-            {lockedMode && (
+            {lockedMode ? (
                 <ModeUnlockDialog
                     isOpen={!!lockedMode}
                     onClose={() => setLockedMode(null)}
@@ -206,7 +218,7 @@ export default function ModesPage() {
                     currentLevel={trustLevel}
                     currentScore={trustScore}
                 />
-            )}
+            ) : null}
         </AppShell>
     );
 }
@@ -223,42 +235,36 @@ function ModeStatusCard({
     metrics: string[];
 }) {
     return (
-        <article className="rounded-2xl border border-border bg-background p-3">
+        <FamilySurface className="space-y-3">
             <div className="flex items-center justify-between gap-2">
-                <h3 className="text-sm font-semibold text-foreground">{title}</h3>
-                <span
-                    className={cn(
-                        "rounded-full px-2 py-1 text-[11px] font-semibold",
-                        getProgressToneClasses(summary.tone)
-                    )}
-                >
-                    {summary.title}
-                </span>
+                <h3 className="text-base font-semibold text-foreground">{title}</h3>
+                <FamilyStatusChip
+                    label={summary.title}
+                    tone={summary.tone === "good" ? "success" : summary.tone === "warning" ? "warning" : "default"}
+                />
             </div>
-            <p className="mt-2 text-xs text-foreground-muted">{summary.message}</p>
-            <div className="mt-2 space-y-1">
+            <p className="text-sm leading-6 text-foreground-muted">{summary.message}</p>
+            <div className="space-y-1">
                 {metrics.map((metric) => (
-                    <p key={metric} className="text-[11px] text-foreground-muted">
+                    <p key={metric} className="text-xs text-foreground-muted">
                         {metric}
                     </p>
                 ))}
             </div>
-            <div className="mt-3">
-                <Link href={route} className="text-xs font-medium text-primary underline">
-                    Open {title}
-                </Link>
-            </div>
-        </article>
+            <Link href={route} className="inline-flex text-sm font-semibold text-sky-700">
+                {title} 열기
+            </Link>
+        </FamilySurface>
     );
 }
 
 function StatusCardSkeleton() {
     return (
-        <div className="rounded-2xl border border-border bg-background p-3 space-y-2">
+        <div className="rounded-[1.5rem] border border-sky-100 bg-white p-4 shadow-sm">
             <Skeleton className="h-4 w-20 rounded-lg" />
-            <Skeleton className="h-4 w-full rounded-lg" />
-            <Skeleton className="h-3 w-24 rounded-lg" />
-            <Skeleton className="h-3 w-28 rounded-lg" />
+            <Skeleton className="mt-3 h-4 w-full rounded-lg" />
+            <Skeleton className="mt-2 h-3 w-32 rounded-lg" />
+            <Skeleton className="mt-1 h-3 w-28 rounded-lg" />
         </div>
     );
 }

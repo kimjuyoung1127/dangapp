@@ -70,6 +70,7 @@ Dual-agent handoff: `docs/ref/DUAL-AGENT-HANDOFF.md`
 - Prefer:
   - `subagent-doc-check` for consistency and drift checks
   - `subagent-pattern-collect` for implementation pattern gathering
+  - `dang-ui-redesign-orchestrator` for research-driven multi-route UI redesign planning
 
 ## Architecture Snapshot
 

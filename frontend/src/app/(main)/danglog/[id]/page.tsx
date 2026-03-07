@@ -1,18 +1,22 @@
-// danglog/[id]/page.tsx — 댕로그 상세 페이지 (실데이터 바인딩, DANG-DLG-001)
-
 "use client";
 
 import { useState } from "react";
-import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
-import { useCurrentGuardian } from "@/lib/hooks/useCurrentGuardian";
-import { useDangLog, useDangLogLikes, useToggleLike, useDangLogCollaborators } from "@/lib/hooks/useDangLog";
+import { useParams, useRouter } from "next/navigation";
+import { Heart, Share2, Users } from "lucide-react";
 import CommentSection from "@/components/features/danglog/CommentSection";
 import ShareModal from "@/components/features/danglog/ShareModal";
+import {
+    FamilyPageIntro,
+    FamilySectionTitle,
+    FamilyStatusChip,
+    FamilySurface,
+} from "@/components/shared/FamilyUi";
 import { Skeleton } from "@/components/ui/Skeleton";
-import { TapScale, ScrollReveal } from "@/components/ui/MotionWrappers";
+import { ScrollReveal, TapScale } from "@/components/ui/MotionWrappers";
+import { useCurrentGuardian } from "@/lib/hooks/useCurrentGuardian";
+import { useDangLog, useDangLogCollaborators, useDangLogLikes, useToggleLike } from "@/lib/hooks/useDangLog";
 import { cn } from "@/lib/utils";
-import { ArrowLeft, Heart, Share2, Users } from "lucide-react";
 
 const ACTIVITY_LABELS: Record<string, string> = {
     walk: "산책",
@@ -37,10 +41,9 @@ export default function DangLogDetailPage() {
     const { data: collaborators } = useDangLogCollaborators(danglogId);
     const toggleLike = useToggleLike();
 
-    const [activeImageIndex, setActiveImageIndex] = useState(0);
     const [isShareOpen, setIsShareOpen] = useState(false);
 
-    const isLiked = likes?.some((l) => l.guardian_id === guardianId) ?? false;
+    const isLiked = likes?.some((like) => like.guardian_id === guardianId) ?? false;
     const likeCount = likes?.length ?? 0;
 
     if (isLoading || !danglog) {
@@ -53,164 +56,114 @@ export default function DangLogDetailPage() {
         : null;
 
     return (
-        <div className="min-h-screen bg-background pb-24">
-            {/* 상단 내비 */}
-            <header className="fixed top-0 inset-x-0 z-30 bg-card/80 backdrop-blur-md border-b border-border h-14 flex items-center px-4 justify-between">
-                <TapScale>
-                    <button onClick={() => router.back()}>
-                        <ArrowLeft className="w-6 h-6 text-foreground" />
-                    </button>
-                </TapScale>
-                <h2 className="text-lg font-display font-semibold">댕로그</h2>
-                <TapScale>
-                    <button onClick={() => setIsShareOpen(true)}>
-                        <Share2 className="w-5 h-5 text-foreground-muted" />
-                    </button>
-                </TapScale>
-            </header>
+        <div className="min-h-screen bg-sky-50/60 pb-24">
+            <div className="mx-auto flex w-full max-w-md flex-col gap-4 px-4 py-6">
+                <FamilyPageIntro
+                    eyebrow="danglog detail"
+                    title={danglog.title || "기록 상세"}
+                    description={`${dogName}의 기록을 가족 단위 맥락으로 정리해 보세요.`}
+                    backHref="/danglog"
+                    action={
+                        <TapScale>
+                            <button
+                                type="button"
+                                onClick={() => setIsShareOpen(true)}
+                                className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-white text-sky-700 shadow-sm"
+                            >
+                                <Share2 className="h-4 w-4" />
+                            </button>
+                        </TapScale>
+                    }
+                />
 
-            <div className="pt-14 max-w-md mx-auto">
-                {/* 이미지 슬라이더 */}
-                {images.length > 0 && (
-                    <div className="relative">
-                        <div className="overflow-x-auto snap-x snap-mandatory flex scrollbar-hide">
-                            {images.map((url, idx) => (
-                                <div
-                                    key={idx}
-                                    className="w-full flex-shrink-0 snap-center"
-                                >
-                                    <div className="relative aspect-[4/3] bg-muted">
-                                        <Image
-                                            src={url}
-                                            alt={`사진 ${idx + 1}`}
-                                            fill
-                                            className="object-cover"
-                                            sizes="100vw"
-                                            priority={idx === 0}
-                                        />
-                                    </div>
+                {images.length > 0 ? (
+                    <FamilySurface className="overflow-hidden p-0">
+                        <div className="grid gap-2">
+                            {images.map((url, index) => (
+                                <div key={url} className="relative aspect-[4/3] bg-sky-50">
+                                    <Image
+                                        src={url}
+                                        alt={`댕로그 사진 ${index + 1}`}
+                                        fill
+                                        className="object-cover"
+                                        sizes="100vw"
+                                        priority={index === 0}
+                                    />
                                 </div>
                             ))}
                         </div>
+                    </FamilySurface>
+                ) : null}
 
-                        {/* 도트 인디케이터 */}
-                        {images.length > 1 && (
-                            <div className="flex justify-center gap-1.5 py-3">
-                                {images.map((_, idx) => (
-                                    <button
-                                        key={idx}
-                                        onClick={() => setActiveImageIndex(idx)}
-                                        className={cn(
-                                            "w-2 h-2 rounded-full transition-colors",
-                                            idx === activeImageIndex
-                                                ? "bg-primary"
-                                                : "bg-muted"
-                                        )}
-                                    />
-                                ))}
-                            </div>
-                        )}
-                    </div>
-                )}
-
-                {/* 메타 정보 */}
                 <ScrollReveal>
-                    <div className="px-4 py-4">
-                        <div className="flex items-center gap-2 mb-3">
-                            <span className="text-sm font-semibold text-foreground">
-                                {dogName}
-                            </span>
-                            {activityLabel && (
-                                <span className="text-xs bg-primary-light/20 text-primary px-2 py-0.5 rounded-full">
-                                    {activityLabel}
-                                </span>
-                            )}
-                            <span className="text-xs text-foreground-muted ml-auto">
+                    <FamilySurface className="space-y-4">
+                        <div className="flex flex-wrap items-center gap-2">
+                            <FamilyStatusChip label={dogName} />
+                            {activityLabel ? <FamilyStatusChip label={activityLabel} tone="success" /> : null}
+                            <span className="text-xs text-foreground-muted">
                                 {getTimeAgo(danglog.created_at)}
                             </span>
                         </div>
-
-                        {/* 제목 */}
-                        {danglog.title && (
-                            <h1 className="text-xl font-display font-bold text-foreground mb-2">
-                                {danglog.title}
-                            </h1>
-                        )}
-
-                        {/* 본문 */}
-                        <p className="text-foreground leading-relaxed whitespace-pre-wrap">
-                            {danglog.content}
-                        </p>
-                    </div>
+                        <p className="text-base leading-7 text-foreground">{danglog.content}</p>
+                    </FamilySurface>
                 </ScrollReveal>
 
-                {/* 협업자 표시 */}
-                {collaborators && collaborators.length > 0 && (
-                    <div className="px-4 pb-3 flex items-center gap-2">
-                        <Users className="w-4 h-4 text-foreground-muted" />
-                        <div className="flex -space-x-2">
-                            {collaborators.slice(0, 5).map((c) => (
-                                <div
-                                    key={c.guardian_id}
-                                    className="w-6 h-6 rounded-full bg-primary-light/30 border-2 border-background flex items-center justify-center"
-                                >
-                                    <span className="text-[8px] font-bold text-primary">
-                                        {c.guardian_id.slice(0, 2).toUpperCase()}
-                                    </span>
-                                </div>
-                            ))}
+                {collaborators && collaborators.length > 0 ? (
+                    <FamilySurface tone="soft" className="space-y-3">
+                        <FamilySectionTitle
+                            title="함께 보는 사람"
+                            meta="공동 보호자와 돌봄 파트너가 같은 기록 맥락을 공유합니다."
+                        />
+                        <div className="flex items-center gap-3">
+                            <div className="flex -space-x-2">
+                                {collaborators.slice(0, 5).map((collaborator) => (
+                                    <div
+                                        key={collaborator.guardian_id}
+                                        className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-white bg-sky-100 text-[10px] font-bold text-sky-700"
+                                    >
+                                        {collaborator.guardian_id.slice(0, 2).toUpperCase()}
+                                    </div>
+                                ))}
+                            </div>
+                            <div className="flex items-center gap-2 text-sm text-foreground-muted">
+                                <Users className="h-4 w-4" />
+                                {collaborators.length}명이 함께 보고 있어요.
+                            </div>
                         </div>
-                        <span className="text-xs text-foreground-muted">
-                            {collaborators.length}명 참여 중
-                        </span>
-                    </div>
-                )}
+                    </FamilySurface>
+                ) : null}
 
-                {/* 좋아요 */}
-                <div className="px-4 py-3 border-t border-b border-border">
-                    <TapScale>
-                        <button
-                            onClick={() =>
-                                toggleLike.mutate({
-                                    danglog_id: danglogId,
-                                    guardian_id: guardianId,
-                                })
-                            }
-                            className="flex items-center gap-2"
-                        >
-                            <Heart
-                                className={cn(
-                                    "w-5 h-5 transition-colors",
-                                    isLiked
-                                        ? "fill-red-500 text-red-500"
-                                        : "text-foreground-muted"
-                                )}
-                            />
-                            <span
-                                className={cn(
-                                    "text-sm font-medium",
-                                    isLiked ? "text-red-500" : "text-foreground-muted"
-                                )}
+                <FamilySurface className="space-y-4">
+                    <div className="flex items-center justify-between gap-3">
+                        <FamilySectionTitle
+                            title="반응"
+                            meta="좋아요와 댓글 흐름을 같은 카드 시스템 안에서 확인합니다."
+                        />
+                        <TapScale>
+                            <button
+                                type="button"
+                                onClick={() =>
+                                    toggleLike.mutate({
+                                        danglog_id: danglogId,
+                                        guardian_id: guardianId,
+                                    })
+                                }
+                                className="inline-flex items-center gap-2 rounded-full bg-sky-50 px-3 py-2 text-sm font-semibold text-sky-700"
                             >
+                                <Heart
+                                    className={cn(
+                                        "h-4.5 w-4.5",
+                                        isLiked ? "fill-rose-500 text-rose-500" : "text-sky-700"
+                                    )}
+                                />
                                 좋아요 {likeCount}
-                            </span>
-                        </button>
-                    </TapScale>
-                </div>
-
-                {/* 댓글 섹션 */}
-                <div className="px-4 py-4">
-                    <h3 className="text-sm font-semibold text-foreground mb-4">
-                        댓글
-                    </h3>
-                    <CommentSection
-                        danglogId={danglogId}
-                        currentGuardianId={guardianId}
-                    />
-                </div>
+                            </button>
+                        </TapScale>
+                    </div>
+                    <CommentSection danglogId={danglogId} currentGuardianId={guardianId} />
+                </FamilySurface>
             </div>
 
-            {/* 공유 모달 */}
             <ShareModal
                 isOpen={isShareOpen}
                 onClose={() => setIsShareOpen(false)}
@@ -223,25 +176,32 @@ export default function DangLogDetailPage() {
 
 function DetailSkeleton({ onBack }: { onBack: () => void }) {
     return (
-        <div className="min-h-screen bg-background">
-            <header className="fixed top-0 inset-x-0 z-30 bg-card/80 backdrop-blur-md border-b border-border h-14 flex items-center px-4 justify-between">
-                <button onClick={onBack}>
-                    <ArrowLeft className="w-6 h-6 text-foreground" />
-                </button>
-                <span className="text-lg font-display font-semibold">댕로그</span>
-                <div className="w-6" />
-            </header>
-            <div className="pt-14 max-w-md mx-auto">
-                <Skeleton className="h-72 w-full" />
-                <div className="px-4 py-4 space-y-3">
-                    <div className="flex gap-2">
-                        <Skeleton className="h-4 w-16 rounded-xl" />
-                        <Skeleton className="h-4 w-12 rounded-full" />
+        <div className="min-h-screen bg-sky-50/60 px-4 py-6">
+            <div className="mx-auto flex w-full max-w-md flex-col gap-4">
+                <FamilyPageIntro
+                    eyebrow="danglog detail"
+                    title="기록 상세"
+                    description="기록을 불러오는 중입니다."
+                    action={<div className="h-10 w-10 rounded-full bg-white" />}
+                />
+                <FamilySurface className="overflow-hidden p-0">
+                    <Skeleton className="h-72 w-full" />
+                </FamilySurface>
+                <FamilySurface className="space-y-3">
+                    <div className="flex items-center justify-between">
+                        <button
+                            type="button"
+                            onClick={onBack}
+                            className="inline-flex rounded-full bg-sky-50 px-3 py-2 text-sm font-semibold text-sky-700"
+                        >
+                            뒤로
+                        </button>
                     </div>
-                    <Skeleton className="h-6 w-2/3 rounded-xl" />
-                    <Skeleton className="h-4 w-full rounded-xl" />
-                    <Skeleton className="h-4 w-4/5 rounded-xl" />
-                </div>
+                    <Skeleton className="h-4 w-24 rounded-full" />
+                    <Skeleton className="h-5 w-2/3 rounded-full" />
+                    <Skeleton className="h-4 w-full rounded-full" />
+                    <Skeleton className="h-4 w-4/5 rounded-full" />
+                </FamilySurface>
             </div>
         </div>
     );

@@ -21,7 +21,7 @@
 | DANG-WLK-001 | walk record/review | `/chat/[id]`, post-schedule flow | new | QA | integration/e2e | High | `/chat/[id]` + `/schedules` at QA, record + rating + visibility |
 | DANG-DLG-001 | danglog collaboration | `/danglog`, `/danglog/[id]` | adapt | QA | integration/e2e | Medium | feed + detail route tracked, invite link + collaborators |
 | DANG-PRF-001 | profile/settings | `/profile` | adapt | QA | unit/integration | Medium | guardian/dog edit + notification settings |
-| DANG-B2B-001 | b2b partner model | `/modes`, `/care`, `/family` + ops surfaces | new | In Progress | integration/manual | Medium | `/care` reservations-first flow completed + `/family` ownership/schedule real-data binding completed (`dog_ownership`, `schedule_participants`, `schedules`), local regression tests added; signed-in integration evidence pending |
+| DANG-B2B-001 | b2b partner model | `/modes`, `/care`, `/family` + ops surfaces | new | QA | integration/local-e2e | Medium | `/care` reservations-first flow (hooks + utilities) + `/family` ownership/schedule binding (hooks + utilities) + `/modes` B2B status dashboard completed; local regression test suites added (37 tests); signed-in E2E evidence packaging pending |
 
 ## Operating Rules
 

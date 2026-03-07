@@ -27,9 +27,11 @@ DangApp skill inventory for page, feature, and ops workflows.
   - `dang-supabase-mcp`
   - `subagent-doc-check`
   - `subagent-pattern-collect`
+  - `dang-ui-redesign-orchestrator`
 
 ## Rules
 - Every skill must include concise trigger and validation guidance.
 - Route implementation tasks should load one page skill and at most two feature skills.
 - Ops skills should be used for drift detection, diagnostics, or repo-wide pattern collection.
 - Subagent skills are for exploration and comparison workflows, not direct code mutation by delegation.
+- Use `dang-ui-redesign-orchestrator` before multi-route UI redesign, design-system refresh, or research-driven visual planning.

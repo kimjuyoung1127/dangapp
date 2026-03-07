@@ -1,13 +1,21 @@
-// File: Care page with reservations-first flow and legacy care-request fallback tab.
+// File: Family-direction care page with reservations-first flow and legacy request fallback.
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import Link from "next/link";
-import { ArrowLeft, CheckCircle2, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 import { AppShell } from "@/components/shared/AppShell";
+import {
+    FamilyEmptyPanel,
+    FamilyPageIntro,
+    FamilySectionTitle,
+    FamilyStatusChip,
+    FamilySurface,
+} from "@/components/shared/FamilyUi";
 import { BottomSheet, TapScale } from "@/components/ui/MotionWrappers";
 import { Button } from "@/components/ui/Button";
 import { Skeleton } from "@/components/ui/Skeleton";
+import CareRequestForm from "@/components/features/care/CareRequestForm";
+import CareRequestList from "@/components/features/care/CareRequestList";
 import {
     mapReservationsWithPlaceName,
     toPartnerPlaceViewModels,
@@ -22,8 +30,6 @@ import {
     useMyReservations,
     usePartnerPlaces,
 } from "@/lib/hooks/useCare";
-import CareRequestForm from "@/components/features/care/CareRequestForm";
-import CareRequestList from "@/components/features/care/CareRequestList";
 import { cn } from "@/lib/utils";
 import type { Database } from "@/types/database.types";
 
@@ -38,11 +44,14 @@ const RESERVATION_STATUS_LABELS: Record<Reservation["status"], string> = {
     cancelled: "취소",
 };
 
-const RESERVATION_STATUS_COLORS: Record<Reservation["status"], string> = {
-    pending: "text-amber-600 bg-amber-50",
-    confirmed: "text-green-700 bg-green-50",
-    completed: "text-primary bg-primary-light/20",
-    cancelled: "text-foreground-muted bg-muted",
+const RESERVATION_STATUS_TONES: Record<
+    Reservation["status"],
+    "warning" | "success" | "default" | "danger"
+> = {
+    pending: "warning",
+    confirmed: "success",
+    completed: "default",
+    cancelled: "danger",
 };
 
 export default function CarePage() {
@@ -157,315 +166,318 @@ export default function CarePage() {
             setReservedAtInput("");
             setGuestCountInput(1);
             setRequestMemo("");
-            setFlashMessage("예약이 생성되었습니다.");
+            setFlashMessage("예약을 생성했어요.");
         } catch {
             setFlashMessage("예약 생성에 실패했습니다. 잠시 후 다시 시도해 주세요.");
         }
     };
 
-    const tabs: Array<{ key: CareTab; label: string }> = [
-        { key: "reservations", label: "Reservations" },
-        { key: "legacy", label: "Legacy requests" },
-    ];
-
     return (
         <AppShell>
-            <div className="space-y-6 px-4 py-6">
-                <div className="flex items-center gap-3">
-                    <Link href="/modes">
-                        <ArrowLeft className="h-5 w-5 text-foreground-muted" />
-                    </Link>
-                    <h1 className="text-2xl font-display font-bold text-foreground">Care mode</h1>
-                </div>
+            <div className="space-y-5 px-4 py-6">
+                <FamilyPageIntro
+                    eyebrow="care mode"
+                    title="돌봄 예약"
+                    description="장소 신뢰도, 예약 상태, 다음 행동을 한 화면에서 정리해 보세요."
+                    action={
+                        <Button
+                            type="button"
+                            size="sm"
+                            onClick={() => setIsReservationFormOpen(true)}
+                            disabled={!guardianId || placeViewModels.length === 0}
+                        >
+                            <Plus className="mr-1 h-4 w-4" />
+                            예약 추가
+                        </Button>
+                    }
+                />
 
-                <div role="tablist" className="flex items-center gap-2">
-                    {tabs.map((tab) => (
-                        <TapScale key={tab.key}>
-                            <button
-                                type="button"
-                                role="tab"
-                                aria-selected={activeTab === tab.key}
-                                onClick={() => setActiveTab(tab.key)}
-                                className={cn(
-                                    "rounded-full px-4 py-2 text-sm font-medium transition-colors",
-                                    activeTab === tab.key
-                                        ? "bg-foreground text-background"
-                                        : "bg-muted text-foreground-muted hover:bg-muted/80"
-                                )}
-                            >
-                                {tab.label}
-                            </button>
-                        </TapScale>
-                    ))}
+                <div className="flex flex-wrap items-center gap-2">
+                    <TabButton
+                        active={activeTab === "reservations"}
+                        label="예약"
+                        onClick={() => setActiveTab("reservations")}
+                    />
+                    <TabButton
+                        active={activeTab === "legacy"}
+                        label="기존 요청"
+                        onClick={() => setActiveTab("legacy")}
+                    />
                     {(isReservationsFetching && activeTab === "reservations") ||
                     (isLegacyFetching && activeTab === "legacy") ? (
-                        <span className="text-xs text-foreground-muted">refreshing...</span>
+                        <span className="text-xs text-foreground-muted">동기화 중...</span>
                     ) : null}
                 </div>
 
                 {activeTab === "reservations" ? (
-                    <div className="space-y-6">
-                        <section className="space-y-3">
-                            <div className="flex items-center justify-between">
-                                <h2 className="text-lg font-semibold text-foreground">파트너 장소</h2>
-                                <Button
-                                    type="button"
-                                    size="sm"
-                                    onClick={() => setIsReservationFormOpen(true)}
-                                    disabled={!guardianId || placeViewModels.length === 0}
-                                >
-                                    <Plus className="mr-1 h-4 w-4" />
-                                    예약 추가
-                                </Button>
-                            </div>
+                    <div className="space-y-5">
+                        <FamilySurface tone="soft" className="space-y-4">
+                            <FamilySectionTitle
+                                title="파트너 장소"
+                                meta="검증된 장소와 편의 시설을 먼저 확인한 뒤 예약을 생성하세요."
+                            />
 
                             {isPlacesLoading ? (
-                                <div className="space-y-2">
-                                    <Skeleton className="h-20 w-full rounded-2xl" />
-                                    <Skeleton className="h-20 w-full rounded-2xl" />
+                                <div className="space-y-3">
+                                    <Skeleton className="h-24 w-full rounded-[1.5rem]" />
+                                    <Skeleton className="h-24 w-full rounded-[1.5rem]" />
                                 </div>
                             ) : null}
 
                             {isPlacesError && !isPlacesLoading ? (
-                                <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-                                    파트너 장소를 불러오지 못했습니다.
-                                    <div className="mt-2">
+                                <FamilyEmptyPanel
+                                    message="파트너 장소를 불러오지 못했습니다."
+                                    action={
                                         <button
                                             type="button"
-                                            className="font-medium underline"
+                                            className="text-sm font-semibold text-sky-700"
                                             onClick={() => {
                                                 void refetchPlaces();
                                             }}
                                         >
                                             장소 다시 불러오기
                                         </button>
-                                    </div>
-                                </div>
+                                    }
+                                />
                             ) : null}
 
                             {!isPlacesLoading && !isPlacesError && placeViewModels.length === 0 ? (
-                                <p className="rounded-2xl border border-border bg-card p-4 text-sm text-foreground-muted">
-                                    등록된 파트너 장소가 없습니다.
-                                </p>
+                                <FamilyEmptyPanel message="등록된 파트너 장소가 아직 없습니다." />
                             ) : null}
 
                             {!isPlacesLoading && !isPlacesError && placeViewModels.length > 0 ? (
                                 <div className="space-y-3">
                                     {placeViewModels.map((place) => (
-                                        <article
-                                            key={place.id}
-                                            className="rounded-2xl border border-border bg-card p-4"
-                                        >
+                                        <FamilySurface key={place.id} className="space-y-3">
                                             <div className="flex items-start justify-between gap-3">
                                                 <div>
-                                                    <p className="font-semibold text-foreground">{place.name}</p>
-                                                    <p className="text-xs text-foreground-muted">
-                                                        {place.category} {place.addressName ? `· ${place.addressName}` : ""}
+                                                    <p className="text-base font-semibold text-foreground">
+                                                        {place.name}
+                                                    </p>
+                                                    <p className="mt-1 text-xs text-foreground-muted">
+                                                        {place.category}
+                                                        {place.addressName ? ` · ${place.addressName}` : ""}
                                                     </p>
                                                 </div>
                                                 {place.isVerified ? (
-                                                    <span className="inline-flex items-center gap-1 rounded-full bg-green-50 px-2 py-1 text-xs text-green-700">
-                                                        <CheckCircle2 className="h-3 w-3" />
-                                                        verified
-                                                    </span>
+                                                    <FamilyStatusChip label="검증됨" tone="success" />
                                                 ) : null}
                                             </div>
+
                                             {place.amenities.length > 0 ? (
-                                                <p className="mt-2 text-xs text-foreground-muted">
-                                                    편의시설: {place.amenities.join(", ")}
+                                                <div className="flex flex-wrap gap-2">
+                                                    {place.amenities.map((amenity) => (
+                                                        <span
+                                                            key={amenity}
+                                                            className="rounded-full bg-sky-50 px-2.5 py-1 text-xs font-medium text-sky-700"
+                                                        >
+                                                            {amenity}
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                            ) : null}
+
+                                            {place.description ? (
+                                                <p className="text-sm leading-6 text-foreground-muted">
+                                                    {place.description}
                                                 </p>
                                             ) : null}
-                                            {place.description ? (
-                                                <p className="mt-2 text-sm text-foreground-muted">{place.description}</p>
-                                            ) : null}
-                                        </article>
+                                        </FamilySurface>
                                     ))}
                                 </div>
                             ) : null}
-                        </section>
+                        </FamilySurface>
 
-                        <section className="space-y-3">
-                            <h2 className="text-lg font-semibold text-foreground">내 예약</h2>
+                        <FamilySurface className="space-y-4">
+                            <FamilySectionTitle
+                                title="나의 예약"
+                                meta="날짜, 상태, 메모 순서로 확인할 수 있게 정리했습니다."
+                            />
 
                             {isReservationsLoading && reservationViewModels.length === 0 ? (
-                                <div className="space-y-2">
-                                    <Skeleton className="h-20 w-full rounded-2xl" />
-                                    <Skeleton className="h-20 w-full rounded-2xl" />
+                                <div className="space-y-3">
+                                    <Skeleton className="h-24 w-full rounded-[1.5rem]" />
+                                    <Skeleton className="h-24 w-full rounded-[1.5rem]" />
                                 </div>
                             ) : null}
 
                             {isReservationsError && reservationViewModels.length === 0 ? (
-                                <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-                                    예약 목록을 불러오지 못했습니다.
-                                    <div className="mt-2">
+                                <FamilyEmptyPanel
+                                    message="예약 목록을 불러오지 못했습니다."
+                                    action={
                                         <button
                                             type="button"
-                                            className="font-medium underline"
+                                            className="text-sm font-semibold text-sky-700"
                                             onClick={() => {
                                                 void refetchReservations();
                                             }}
                                         >
                                             예약 다시 불러오기
                                         </button>
-                                    </div>
-                                </div>
+                                    }
+                                />
                             ) : null}
 
                             {!isReservationsLoading &&
                             !isReservationsError &&
                             reservationViewModels.length === 0 ? (
-                                <p className="rounded-2xl border border-border bg-card p-4 text-sm text-foreground-muted">
-                                    아직 예약이 없습니다.
-                                </p>
+                                <FamilyEmptyPanel message="아직 생성한 예약이 없습니다." />
                             ) : null}
 
                             {reservationViewModels.length > 0 ? (
                                 <div className="space-y-3">
                                     {reservationViewModels.map((reservation) => (
-                                        <article
-                                            key={reservation.id}
-                                            className="rounded-2xl border border-border bg-card p-4"
-                                        >
+                                        <FamilySurface key={reservation.id} className="space-y-3" tone="soft">
                                             <div className="flex items-center justify-between gap-3">
-                                                <p className="font-semibold text-foreground">
-                                                    {reservation.placeName}
-                                                </p>
-                                                <span
-                                                    className={cn(
-                                                        "rounded-full px-2.5 py-1 text-xs font-medium",
-                                                        RESERVATION_STATUS_COLORS[reservation.status]
-                                                    )}
-                                                >
-                                                    {RESERVATION_STATUS_LABELS[reservation.status]}
-                                                </span>
+                                                <div>
+                                                    <p className="text-base font-semibold text-foreground">
+                                                        {reservation.placeName}
+                                                    </p>
+                                                    <p className="mt-1 text-xs text-foreground-muted">
+                                                        생성일 {new Date(reservation.created_at).toLocaleString("ko-KR")}
+                                                    </p>
+                                                </div>
+                                                <FamilyStatusChip
+                                                    label={RESERVATION_STATUS_LABELS[reservation.status]}
+                                                    tone={RESERVATION_STATUS_TONES[reservation.status]}
+                                                />
                                             </div>
-                                            <div className="mt-2 text-sm text-foreground-muted">
-                                                <p>
-                                                    예약일:{" "}
-                                                    {new Date(reservation.reserved_at).toLocaleString("ko-KR")}
-                                                </p>
-                                                <p>
-                                                    생성일:{" "}
-                                                    {new Date(reservation.created_at).toLocaleString("ko-KR")}
-                                                </p>
-                                                <p>인원: {reservation.guest_count}명</p>
-                                                {reservation.request_memo ? (
-                                                    <p className="mt-1 line-clamp-2">{reservation.request_memo}</p>
-                                                ) : null}
+
+                                            <div className="grid gap-3 sm:grid-cols-2">
+                                                <div className="rounded-[1.25rem] bg-white px-3 py-3">
+                                                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sky-700">
+                                                        예약 일시
+                                                    </p>
+                                                    <p className="mt-2 text-sm font-medium text-foreground">
+                                                        {new Date(reservation.reserved_at).toLocaleString("ko-KR")}
+                                                    </p>
+                                                </div>
+                                                <div className="rounded-[1.25rem] bg-white px-3 py-3">
+                                                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sky-700">
+                                                        인원
+                                                    </p>
+                                                    <p className="mt-2 text-sm font-medium text-foreground">
+                                                        {reservation.guest_count}명
+                                                    </p>
+                                                </div>
                                             </div>
-                                        </article>
+
+                                            {reservation.request_memo ? (
+                                                <div className="rounded-[1.25rem] bg-white px-3 py-3">
+                                                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sky-700">
+                                                        요청 메모
+                                                    </p>
+                                                    <p className="mt-2 text-sm leading-6 text-foreground-muted">
+                                                        {reservation.request_memo}
+                                                    </p>
+                                                </div>
+                                            ) : null}
+                                        </FamilySurface>
                                     ))}
                                 </div>
                             ) : null}
-                        </section>
+                        </FamilySurface>
                     </div>
                 ) : (
                     <div className="space-y-4">
-                        <div className="flex items-center gap-2">
-                            {(["sent", "received"] as LegacyTab[]).map((tab) => (
-                                <TapScale key={tab}>
-                                    <button
-                                        type="button"
-                                        onClick={() => setLegacyTab(tab)}
-                                        className={cn(
-                                            "rounded-full px-4 py-2 text-sm font-medium transition-colors",
-                                            legacyTab === tab
-                                                ? "bg-foreground text-background"
-                                                : "bg-muted text-foreground-muted hover:bg-muted/80"
-                                        )}
-                                    >
-                                        {tab === "sent" ? "Sent" : "Received"}
-                                    </button>
-                                </TapScale>
-                            ))}
-                            <Button
-                                type="button"
-                                size="sm"
-                                onClick={() => setIsLegacyFormOpen(true)}
-                                disabled={!guardianId}
-                            >
-                                <Plus className="mr-1 h-4 w-4" />
-                                요청 작성
-                            </Button>
-                        </div>
-
-                        <CareRequestList
-                            requests={legacyRequests}
-                            isLoading={isLegacyLoading}
-                            isError={isLegacyError}
-                            onRetry={() => {
-                                void refetchLegacy();
-                            }}
-                        />
+                        <FamilySurface tone="soft" className="space-y-4">
+                            <div className="flex flex-wrap items-center gap-2">
+                                <TabButton
+                                    active={legacyTab === "sent"}
+                                    label="보낸 요청"
+                                    onClick={() => setLegacyTab("sent")}
+                                />
+                                <TabButton
+                                    active={legacyTab === "received"}
+                                    label="받은 요청"
+                                    onClick={() => setLegacyTab("received")}
+                                />
+                                <Button
+                                    type="button"
+                                    size="sm"
+                                    onClick={() => setIsLegacyFormOpen(true)}
+                                    disabled={!guardianId}
+                                >
+                                    <Plus className="mr-1 h-4 w-4" />
+                                    요청 작성
+                                </Button>
+                            </div>
+                            <CareRequestList
+                                requests={legacyRequests}
+                                isLoading={isLegacyLoading}
+                                isError={isLegacyError}
+                                onRetry={() => {
+                                    void refetchLegacy();
+                                }}
+                            />
+                        </FamilySurface>
                     </div>
                 )}
             </div>
 
-            {guardian && (
-                <BottomSheet
-                    isOpen={isReservationFormOpen}
-                    onClose={() => setIsReservationFormOpen(false)}
-                >
+            {guardian ? (
+                <BottomSheet isOpen={isReservationFormOpen} onClose={() => setIsReservationFormOpen(false)}>
                     <div className="space-y-4 p-6">
-                        <div className="flex items-center justify-between">
-                            <h3 className="text-lg font-semibold text-foreground">예약 생성</h3>
+                        <div className="flex items-center justify-between gap-3">
+                            <div>
+                                <h3 className="text-lg font-semibold text-foreground">예약 생성</h3>
+                                <p className="mt-1 text-sm text-foreground-muted">
+                                    일정과 동행 정보를 함께 남겨 두세요.
+                                </p>
+                            </div>
                             <Button
                                 type="button"
                                 size="sm"
                                 onClick={handleCreateReservation}
                                 disabled={createReservation.isPending}
                             >
-                                {createReservation.isPending ? "생성 중..." : "저장"}
+                                {createReservation.isPending ? "생성 중" : "저장"}
                             </Button>
                         </div>
 
-                        <div className="space-y-2">
-                            <label className="text-sm font-medium text-foreground">장소</label>
+                        <FormField label="장소">
                             <select
                                 value={selectedPlaceId}
                                 onChange={(event) => setSelectedPlaceId(event.target.value)}
                                 aria-label="예약 장소"
-                                className="w-full rounded-xl border border-border bg-card px-3 py-2 text-sm text-foreground"
+                                className="w-full rounded-[1rem] border border-sky-100 bg-sky-50/70 px-3 py-3 text-sm text-foreground outline-none"
                             >
-                                <option value="">장소를 선택해 주세요</option>
+                                <option value="">장소를 선택해 주세요.</option>
                                 {placeViewModels.map((place) => (
                                     <option key={place.id} value={place.id}>
                                         {place.name}
                                     </option>
                                 ))}
                             </select>
-                        </div>
+                        </FormField>
 
-                        <div className="space-y-2">
-                            <label className="text-sm font-medium text-foreground">예약 일시</label>
+                        <FormField label="예약 일시">
                             <input
                                 value={reservedAtInput}
                                 onChange={(event) => setReservedAtInput(event.target.value)}
                                 type="datetime-local"
                                 aria-label="예약 일시"
-                                className="w-full rounded-xl border border-border bg-card px-3 py-2 text-sm text-foreground"
+                                className="w-full rounded-[1rem] border border-sky-100 bg-sky-50/70 px-3 py-3 text-sm text-foreground outline-none"
                             />
-                        </div>
+                        </FormField>
 
-                        <div className="space-y-2">
-                            <label className="text-sm font-medium text-foreground">인원</label>
+                        <FormField label="인원">
                             <input
                                 value={guestCountInput}
                                 onChange={(event) => setGuestCountInput(Number(event.target.value))}
                                 type="number"
                                 min={1}
                                 aria-label="예약 인원"
-                                className="w-full rounded-xl border border-border bg-card px-3 py-2 text-sm text-foreground"
+                                className="w-full rounded-[1rem] border border-sky-100 bg-sky-50/70 px-3 py-3 text-sm text-foreground outline-none"
                             />
-                        </div>
+                        </FormField>
 
-                        <div className="space-y-2">
-                            <label className="text-sm font-medium text-foreground">반려견 선택</label>
+                        <FormField label="반려견 선택">
                             <select
                                 value={selectedDogId}
                                 onChange={(event) => setSelectedDogId(event.target.value)}
                                 aria-label="반려견 선택"
-                                className="w-full rounded-xl border border-border bg-card px-3 py-2 text-sm text-foreground"
+                                className="w-full rounded-[1rem] border border-sky-100 bg-sky-50/70 px-3 py-3 text-sm text-foreground outline-none"
                             >
                                 <option value="">선택 안 함</option>
                                 {guardianDogs.map((dog) => (
@@ -474,21 +486,20 @@ export default function CarePage() {
                                     </option>
                                 ))}
                             </select>
-                        </div>
+                        </FormField>
 
-                        <div className="space-y-2">
-                            <label className="text-sm font-medium text-foreground">메모 (선택)</label>
+                        <FormField label="메모">
                             <textarea
                                 value={requestMemo}
                                 onChange={(event) => setRequestMemo(event.target.value)}
                                 rows={3}
                                 aria-label="예약 메모"
-                                className="w-full resize-none rounded-xl border border-border bg-card px-3 py-2 text-sm text-foreground"
+                                className="w-full resize-none rounded-[1rem] border border-sky-100 bg-sky-50/70 px-3 py-3 text-sm text-foreground outline-none"
                             />
-                        </div>
+                        </FormField>
                     </div>
                 </BottomSheet>
-            )}
+            ) : null}
 
             {guardian && activeTab === "legacy" ? (
                 <CareRequestForm
@@ -505,7 +516,7 @@ export default function CarePage() {
 
             {flashMessage ? (
                 <div
-                    className="fixed bottom-24 left-4 right-4 z-40 rounded-xl border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700"
+                    className="fixed bottom-24 left-4 right-4 z-40 rounded-[1.25rem] border border-sky-200 bg-white px-4 py-3 text-sm text-foreground shadow-lg"
                     role="status"
                     aria-live="polite"
                 >
@@ -513,5 +524,45 @@ export default function CarePage() {
                 </div>
             ) : null}
         </AppShell>
+    );
+}
+
+function TabButton({
+    active,
+    label,
+    onClick,
+}: {
+    active: boolean;
+    label: string;
+    onClick: () => void;
+}) {
+    return (
+        <TapScale>
+            <button
+                type="button"
+                onClick={onClick}
+                className={cn(
+                    "rounded-full px-4 py-2 text-sm font-semibold transition-colors",
+                    active ? "bg-sky-600 text-white" : "bg-white text-foreground-muted"
+                )}
+            >
+                {label}
+            </button>
+        </TapScale>
+    );
+}
+
+function FormField({
+    label,
+    children,
+}: {
+    label: string;
+    children: React.ReactNode;
+}) {
+    return (
+        <div className="space-y-2">
+            <label className="text-sm font-medium text-foreground">{label}</label>
+            {children}
+        </div>
     );
 }

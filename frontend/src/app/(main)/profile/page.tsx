@@ -1,9 +1,10 @@
-// profile/page.tsx — 내 프로필 페이지 (실데이터 바인딩, DANG-PRF-001)
-
+// File: Profile page reframed as a family trust dashboard.
 "use client";
 
 import { useState } from "react";
+import { Settings } from "lucide-react";
 import { AppShell } from "@/components/shared/AppShell";
+import { FamilyPageIntro, FamilySectionTitle, FamilySurface } from "@/components/shared/FamilyUi";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { Button } from "@/components/ui/Button";
 import { useCurrentGuardian } from "@/lib/hooks/useCurrentGuardian";
@@ -15,7 +16,6 @@ import ProfileStats from "@/components/features/profile/ProfileStats";
 import ReviewList from "@/components/features/review/ReviewList";
 import EditProfileSheet from "@/components/features/profile/EditProfileSheet";
 import NotificationSettings from "@/components/features/profile/NotificationSettings";
-import { Settings } from "lucide-react";
 
 export default function ProfilePage() {
     const [isEditOpen, setIsEditOpen] = useState(false);
@@ -37,7 +37,7 @@ export default function ProfilePage() {
     if (isLoading) {
         return (
             <AppShell>
-                <div className="px-4 py-6 space-y-6">
+                <div className="space-y-5 px-4 py-6">
                     <ProfileSkeleton />
                 </div>
             </AppShell>
@@ -46,117 +46,79 @@ export default function ProfilePage() {
 
     return (
         <AppShell>
-            <div className="px-4 py-6 space-y-6">
-                {/* 페이지 타이틀 + 편집 버튼 */}
-                <div className="flex items-center justify-between">
-                    <h1 className="text-2xl font-display font-bold text-foreground">
-                        내 프로필
-                    </h1>
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => setIsEditOpen(true)}
-                    >
-                        <Settings className="w-5 h-5 text-foreground-muted" />
-                    </Button>
-                </div>
-
-                {/* 프로필 헤더 */}
-                <ProfileHeader
-                    nickname={guardian.nickname}
-                    dogName={dog?.name}
-                    trustLevel={trustLevel}
+            <div className="space-y-5 px-4 py-6">
+                <FamilyPageIntro
+                    eyebrow="family trust dashboard"
+                    title="프로필"
+                    description="신뢰도, 후기, 반려 정보와 알림 설정을 한 곳에서 관리합니다."
+                    action={
+                        <Button variant="ghost" size="icon" className="bg-white text-sky-700 hover:bg-sky-50" onClick={() => setIsEditOpen(true)}>
+                            <Settings className="h-5 w-5" />
+                        </Button>
+                    }
                 />
 
-                {/* 신뢰 점수 게이지 */}
-                <TrustScoreDisplay
-                    score={trustScore}
-                    level={trustLevel}
-                />
+                <ProfileHeader nickname={guardian.nickname} dogName={dog?.name} trustLevel={trustLevel} />
+                <TrustScoreDisplay score={trustScore} level={trustLevel} />
 
-                {/* 뱃지 */}
-                <TrustBadgeList earnedBadges={badges ?? []} />
+                <FamilySurface>
+                    <FamilySectionTitle title="신뢰 배지" meta="가족처럼 안심하고 연결될 수 있는 근거를 정리합니다." />
+                    <div className="mt-4">
+                        <TrustBadgeList earnedBadges={badges ?? []} />
+                    </div>
+                </FamilySurface>
 
-                {/* 통계 */}
-                <ProfileStats
-                    reviewCount={stats?.reviewCount ?? 0}
-                    avgRating={stats?.avgRating ?? 0}
-                    completedSchedules={stats?.completedSchedules ?? 0}
-                />
+                <FamilySurface>
+                    <FamilySectionTitle title="활동 요약" meta="후기, 평점, 완료된 일정 현황입니다." />
+                    <div className="mt-4">
+                        <ProfileStats
+                            reviewCount={stats?.reviewCount ?? 0}
+                            avgRating={stats?.avgRating ?? 0}
+                            completedSchedules={stats?.completedSchedules ?? 0}
+                        />
+                    </div>
+                </FamilySurface>
 
-                {/* 알림 설정 */}
-                {userId && <NotificationSettings userId={userId} />}
+                {userId ? (
+                    <FamilySurface tone="soft">
+                        <FamilySectionTitle title="알림 설정" meta="대화, 일정, 협업 관련 알림을 조정합니다." />
+                        <div className="mt-4">
+                            <NotificationSettings userId={userId} />
+                        </div>
+                    </FamilySurface>
+                ) : null}
 
-                {/* 받은 후기 */}
-                <div>
-                    <h2 className="text-lg font-display font-semibold text-foreground mb-4">
-                        받은 후기
-                    </h2>
-                    <ReviewList targetId={guardianId ?? ""} />
-                </div>
+                <FamilySurface>
+                    <FamilySectionTitle title="받은 후기" meta="최근 연결에서 쌓인 신뢰를 확인하세요." />
+                    <div className="mt-4">
+                        <ReviewList targetId={guardianId ?? ""} />
+                    </div>
+                </FamilySurface>
             </div>
 
-            {/* 프로필 편집 BottomSheet */}
-            {guardian && (
+            {guardian ? (
                 <EditProfileSheet
                     isOpen={isEditOpen}
                     onClose={() => setIsEditOpen(false)}
                     guardian={guardian}
                     dog={dog}
                 />
-            )}
+            ) : null}
         </AppShell>
     );
 }
 
 function ProfileSkeleton() {
     return (
-        <div className="space-y-6">
-            {/* 타이틀 */}
-            <Skeleton className="h-8 w-28 rounded-xl" />
-
-            {/* 프로필 헤더 */}
-            <div className="bg-card rounded-3xl border border-border p-6 flex flex-col items-center gap-3">
-                <Skeleton className="w-20 h-20 rounded-full" />
-                <Skeleton className="h-6 w-24 rounded-xl" />
-                <Skeleton className="h-4 w-32 rounded-xl" />
-                <Skeleton className="h-6 w-20 rounded-full" />
-            </div>
-
-            {/* 신뢰 점수 */}
-            <div className="bg-card rounded-3xl border border-border p-6">
-                <Skeleton className="h-4 w-16 rounded-xl mb-4" />
-                <div className="flex items-center gap-6">
-                    <Skeleton className="w-28 h-28 rounded-full" />
-                    <div className="space-y-2">
-                        <Skeleton className="h-6 w-20 rounded-xl" />
-                        <Skeleton className="h-4 w-28 rounded-xl" />
-                    </div>
-                </div>
-            </div>
-
-            {/* 뱃지 */}
-            <div className="bg-card rounded-3xl border border-border p-5">
-                <Skeleton className="h-4 w-12 rounded-xl mb-4" />
-                <div className="flex gap-3">
-                    {[1, 2, 3, 4].map((i) => (
-                        <Skeleton key={i} className="w-[72px] h-24 rounded-xl" />
-                    ))}
-                </div>
-            </div>
-
-            {/* 통계 */}
-            <div className="grid grid-cols-3 gap-3">
-                {[1, 2, 3].map((i) => (
-                    <div
-                        key={i}
-                        className="bg-card rounded-3xl border border-border p-4 flex flex-col items-center gap-1"
-                    >
-                        <Skeleton className="h-8 w-10 rounded-xl" />
-                        <Skeleton className="h-3 w-8 rounded-xl" />
-                    </div>
-                ))}
-            </div>
+        <div className="space-y-5">
+            <FamilySurface tone="soft" className="space-y-3">
+                <Skeleton className="h-3 w-32 rounded-full" />
+                <Skeleton className="h-8 w-32 rounded-2xl" />
+                <Skeleton className="h-12 w-full rounded-2xl" />
+            </FamilySurface>
+            <Skeleton className="h-56 w-full rounded-[1.75rem]" />
+            <Skeleton className="h-56 w-full rounded-[1.75rem]" />
+            <Skeleton className="h-48 w-full rounded-[1.75rem]" />
         </div>
     );
 }

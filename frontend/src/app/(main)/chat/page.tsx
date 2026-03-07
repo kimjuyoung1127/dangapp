@@ -1,16 +1,17 @@
-// page.tsx — /chat 채팅 목록 페이지 (DANG-CHT-001)
+// File: Chat list page styled with the family organizer direction.
 "use client";
 
 import Image from "next/image";
 import Link from "next/link";
+import { MessageSquareText } from "lucide-react";
 import { AppShell } from "@/components/shared/AppShell";
+import { FamilyEmptyPanel, FamilyPageIntro, FamilySectionTitle, FamilyStatusChip, FamilySurface } from "@/components/shared/FamilyUi";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { Button } from "@/components/ui/Button";
 import { ScrollReveal, TapScale } from "@/components/ui/MotionWrappers";
 import ChatEmptyState from "@/components/features/chat/ChatEmptyState";
 import { useCurrentGuardian } from "@/lib/hooks/useCurrentGuardian";
 import { useChatRooms } from "@/lib/hooks/useChat";
-import { MessageSquareText } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 function formatLastTime(dateStr: string | null): string {
@@ -21,21 +22,15 @@ function formatLastTime(dateStr: string | null): string {
     const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
     if (diffDays === 0) {
-        return date.toLocaleTimeString("ko-KR", {
-            hour: "numeric",
-            minute: "2-digit",
-        });
+        return date.toLocaleTimeString("ko-KR", { hour: "numeric", minute: "2-digit" });
     }
     if (diffDays === 1) return "어제";
     if (diffDays < 7) return `${diffDays}일 전`;
     return date.toLocaleDateString("ko-KR", { month: "short", day: "numeric" });
 }
 
-function getLastMessagePreview(
-    content: string | null,
-    type: string
-): string {
-    if (type === "schedule") return "약속 제안";
+function getLastMessagePreview(content: string | null, type: string): string {
+    if (type === "schedule") return "일정 제안";
     if (type === "image") return "사진";
     if (type === "system") return "시스템 메시지";
     return content || "";
@@ -45,17 +40,24 @@ export default function ChatListPage() {
     const { data: guardian, isLoading: guardianLoading } = useCurrentGuardian();
     const guardianId = guardian?.id ?? "";
 
-    const { data: rooms = [], isLoading: roomsLoading, error: roomsError, refetch: refetchRooms } =
-        useChatRooms(guardianId);
+    const { data: rooms = [], isLoading: roomsLoading, error: roomsError, refetch: refetchRooms } = useChatRooms(guardianId);
 
     const isLoading = guardianLoading || (!!guardianId && roomsLoading);
+    const unreadCount = rooms.reduce((sum, room) => sum + room.unreadCount, 0);
 
     return (
         <AppShell>
-            <div className="w-full max-w-md mx-auto px-4 pb-24">
-                <h2 className="text-2xl font-display font-semibold mb-6 flex items-center gap-2">
-                    채팅 <MessageSquareText className="w-5 h-5 text-primary" />
-                </h2>
+            <div className="mx-auto w-full max-w-md space-y-5 px-4 pb-24 pt-6">
+                <FamilyPageIntro
+                    eyebrow="family organizer inbox"
+                    title="채팅"
+                    description="읽지 않은 대화와 일정 제안을 한 눈에 정리해서 보여줍니다."
+                    action={<div className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1.5 text-sm font-medium text-sky-700 shadow-sm"><MessageSquareText className="h-4 w-4" /> {unreadCount}</div>}
+                />
+
+                <FamilySurface tone="soft">
+                    <FamilySectionTitle title="대화 정리" meta="최근 액션, 읽지 않음, 일정 제안 여부를 우선해서 보여줍니다." />
+                </FamilySurface>
 
                 {isLoading ? (
                     <div className="space-y-4">
@@ -64,71 +66,49 @@ export default function ChatListPage() {
                         <ChatListSkeleton />
                     </div>
                 ) : roomsError ? (
-                    <div className="rounded-3xl border border-red-200 bg-red-50 p-4 text-sm text-red-700 space-y-3">
-                        <p>채팅 목록을 불러오지 못했어요.</p>
-                        <Button size="sm" variant="outline" onClick={() => refetchRooms()}>
-                            다시 시도
-                        </Button>
-                    </div>
+                    <FamilyEmptyPanel
+                        message="채팅 목록을 불러오지 못했어요. 다시 시도해서 최신 대화를 확인해 주세요."
+                        action={<Button size="sm" variant="outline" onClick={() => refetchRooms()}>다시 시도</Button>}
+                    />
                 ) : rooms.length === 0 ? (
                     <ChatEmptyState />
                 ) : (
                     <div className="space-y-3">
                         {rooms.map((room, idx) => {
-                            const partnerImg =
-                                room.partner.avatar_url ||
-                                room.partner.dogs[0]?.photo_urls?.[0] ||
-                                "/placeholder-dog.svg";
+                            const partnerImg = room.partner.avatar_url || room.partner.dogs[0]?.photo_urls?.[0] || "/placeholder-dog.svg";
+                            const hasScheduleSignal = room.lastMessageType === "schedule";
 
                             return (
-                                <ScrollReveal
-                                    key={room.id}
-                                    style={{ transitionDelay: `${idx * 80}ms` }}
-                                >
+                                <ScrollReveal key={room.id} style={{ transitionDelay: `${idx * 70}ms` }}>
                                     <Link href={`/chat/${room.id}`}>
-                                        <TapScale className="block p-3 rounded-3xl hover:bg-muted transition-colors border border-transparent hover:border-border cursor-pointer">
-                                            <div className="flex items-center gap-4">
-                                                <div className="relative w-14 h-14 flex-shrink-0">
-                                                    <Image
-                                                        src={partnerImg}
-                                                        alt={room.partner.nickname}
-                                                        fill
-                                                        className="object-cover rounded-full"
-                                                    />
-                                                    {room.unreadCount > 0 && (
-                                                        <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white border-2 border-white">
-                                                            {room.unreadCount > 9
-                                                                ? "9+"
-                                                                : room.unreadCount}
-                                                        </span>
-                                                    )}
-                                                </div>
-                                                <div className="flex-1 min-w-0">
-                                                    <div className="flex justify-between items-baseline mb-1">
-                                                        <h3 className="font-semibold text-foreground truncate">
-                                                            {room.partner.nickname}
-                                                        </h3>
-                                                        <span className="text-xs text-foreground-muted flex-shrink-0 ml-2">
-                                                            {formatLastTime(
-                                                                room.last_message_at
-                                                            )}
-                                                        </span>
+                                        <TapScale className="block">
+                                            <FamilySurface className="p-3 transition-colors hover:border-sky-200 hover:bg-sky-50/40">
+                                                <div className="flex items-center gap-4">
+                                                    <div className="relative h-14 w-14 shrink-0">
+                                                        <Image src={partnerImg} alt={room.partner.nickname} fill className="rounded-full object-cover" />
+                                                        {room.unreadCount > 0 ? (
+                                                            <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-sky-600 px-1 text-[10px] font-bold text-white border-2 border-white">
+                                                                {room.unreadCount > 9 ? "9+" : room.unreadCount}
+                                                            </span>
+                                                        ) : null}
                                                     </div>
-                                                    <p
-                                                        className={cn(
-                                                            "text-sm truncate",
-                                                            room.unreadCount > 0
-                                                                ? "text-foreground font-medium"
-                                                                : "text-foreground-muted"
-                                                        )}
-                                                    >
-                                                        {getLastMessagePreview(
-                                                            room.lastMessage,
-                                                            room.lastMessageType
-                                                        )}
-                                                    </p>
+                                                    <div className="min-w-0 flex-1">
+                                                        <div className="mb-1 flex items-start justify-between gap-3">
+                                                            <div className="min-w-0">
+                                                                <h3 className="truncate font-semibold text-foreground">{room.partner.nickname}</h3>
+                                                                <div className="mt-1 flex flex-wrap gap-2">
+                                                                    {room.unreadCount > 0 ? <FamilyStatusChip label="읽지 않음" /> : null}
+                                                                    {hasScheduleSignal ? <FamilyStatusChip label="일정 제안" tone="success" /> : null}
+                                                                </div>
+                                                            </div>
+                                                            <span className="shrink-0 text-xs text-foreground-muted">{formatLastTime(room.last_message_at)}</span>
+                                                        </div>
+                                                        <p className={cn("truncate text-sm", room.unreadCount > 0 ? "font-medium text-foreground" : "text-foreground-muted")}>
+                                                            {getLastMessagePreview(room.lastMessage, room.lastMessageType)}
+                                                        </p>
+                                                    </div>
                                                 </div>
-                                            </div>
+                                            </FamilySurface>
                                         </TapScale>
                                     </Link>
                                 </ScrollReveal>
@@ -141,15 +121,16 @@ export default function ChatListPage() {
     );
 }
 
-// 스켈레톤 팩토리 패턴 (SKILL-06)
 function ChatListSkeleton() {
     return (
-        <div className="flex items-center gap-4 p-3 bg-card rounded-3xl border border-border/50">
-            <Skeleton className="w-14 h-14 rounded-full flex-shrink-0" />
-            <div className="flex-1 space-y-2">
-                <Skeleton className="h-4 w-1/3 rounded-xl" />
-                <Skeleton className="h-3 w-3/4 rounded-xl" />
+        <FamilySurface className="p-3">
+            <div className="flex items-center gap-4">
+                <Skeleton className="h-14 w-14 rounded-full" />
+                <div className="flex-1 space-y-2">
+                    <Skeleton className="h-4 w-1/3 rounded-xl" />
+                    <Skeleton className="h-4 w-2/3 rounded-xl" />
+                </div>
             </div>
-        </div>
+        </FamilySurface>
     );
 }

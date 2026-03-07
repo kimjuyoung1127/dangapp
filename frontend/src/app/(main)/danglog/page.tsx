@@ -1,19 +1,22 @@
-// danglog/page.tsx — 댕로그 피드 페이지 (실데이터 바인딩, DANG-DLG-001)
-
 "use client";
 
 import { useState } from "react";
-import { AppShell } from "@/components/shared/AppShell";
-import { Skeleton } from "@/components/ui/Skeleton";
-import { StaggerList, StaggerItem, TapScale } from "@/components/ui/MotionWrappers";
-import { Button } from "@/components/ui/Button";
-import { useCurrentGuardian } from "@/lib/hooks/useCurrentGuardian";
-import { useDangLogs, useToggleLike, useDangLogCounts, useDangLogLikes } from "@/lib/hooks/useDangLog";
+import { BookOpen, Plus } from "lucide-react";
 import DangLogCard from "@/components/features/danglog/DangLogCard";
 import DangLogEditor from "@/components/features/danglog/DangLogEditor";
 import DangLogEmptyState from "@/components/features/danglog/DangLogEmptyState";
+import { AppShell } from "@/components/shared/AppShell";
+import {
+    FamilyPageIntro,
+    FamilySectionTitle,
+    FamilySurface,
+} from "@/components/shared/FamilyUi";
+import { Button } from "@/components/ui/Button";
+import { Skeleton } from "@/components/ui/Skeleton";
+import { StaggerItem, StaggerList, TapScale } from "@/components/ui/MotionWrappers";
+import { useCurrentGuardian } from "@/lib/hooks/useCurrentGuardian";
+import { useDangLogCounts, useDangLogLikes, useDangLogs, useToggleLike } from "@/lib/hooks/useDangLog";
 import { cn } from "@/lib/utils";
-import { BookOpen, Plus } from "lucide-react";
 import type { Database } from "@/types/database.types";
 
 type FeedTab = "mine" | "shared";
@@ -30,50 +33,55 @@ export default function DangLogFeedPage() {
     const { data: danglogs, isLoading: danglogsLoading } = useDangLogs(
         activeTab === "mine" ? guardianId : undefined
     );
-
     const toggleLike = useToggleLike();
 
     const isLoading = guardianLoading || danglogsLoading;
 
-    const TABS: { value: FeedTab; label: string }[] = [
-        { value: "mine", label: "내 기록" },
-        { value: "shared", label: "공유받은" },
-    ];
-
     return (
         <AppShell>
-            <div className="w-full max-w-md mx-auto px-4 pb-24">
-                {/* 페이지 헤더 */}
-                <h2 className="text-2xl font-display font-semibold mb-4 flex items-center gap-2">
-                    댕로그 <BookOpen className="w-5 h-5 text-primary" />
-                </h2>
-
-                {/* 탭 */}
-                <div role="tablist" className="flex gap-2 mb-6">
-                    {TABS.map((tab) => (
-                        <Button
-                            key={tab.value}
-                            role="tab"
-                            aria-selected={activeTab === tab.value}
-                            variant={activeTab === tab.value ? "primary" : "ghost"}
-                            size="sm"
-                            onClick={() => setActiveTab(tab.value)}
-                        >
-                            {tab.label}
+            <div className="space-y-5 px-4 pb-28 pt-6">
+                <FamilyPageIntro
+                    eyebrow="danglog"
+                    title="댕로그"
+                    description="기억을 남기고, 함께 돌보는 사람들과 맥락을 공유하세요."
+                    action={
+                        <Button type="button" size="sm" onClick={() => setIsEditorOpen(true)}>
+                            <Plus className="mr-1 h-4 w-4" />
+                            기록하기
                         </Button>
-                    ))}
-                </div>
+                    }
+                />
 
-                {/* 피드 */}
+                <FamilySurface tone="soft" className="space-y-4">
+                    <FamilySectionTitle
+                        title="피드 보기"
+                        meta="내 기록과 공유 받은 기록을 같은 카드 시스템으로 비교할 수 있습니다."
+                    />
+                    <div role="tablist" className="flex flex-wrap gap-2">
+                        <FeedTabButton
+                            active={activeTab === "mine"}
+                            label="내 기록"
+                            onClick={() => setActiveTab("mine")}
+                        />
+                        <FeedTabButton
+                            active={activeTab === "shared"}
+                            label="공유 받은 기록"
+                            onClick={() => setActiveTab("shared")}
+                        />
+                    </div>
+                </FamilySurface>
+
                 {isLoading ? (
-                    <div className="space-y-6">
+                    <div className="space-y-4">
                         <DangLogCardSkeleton />
                         <DangLogCardSkeleton />
                     </div>
                 ) : !danglogs || danglogs.length === 0 ? (
-                    <DangLogEmptyState onCreateClick={() => setIsEditorOpen(true)} />
+                    <FamilySurface tone="soft">
+                        <DangLogEmptyState onCreateClick={() => setIsEditorOpen(true)} />
+                    </FamilySurface>
                 ) : (
-                    <StaggerList className="space-y-6">
+                    <StaggerList className="space-y-4">
                         {danglogs.map((log) => (
                             <StaggerItem key={log.id}>
                                 <DangLogCardWithCounts
@@ -95,35 +103,31 @@ export default function DangLogFeedPage() {
                 )}
             </div>
 
-            {/* FAB (새 댕로그 작성) */}
             <TapScale className="fixed bottom-24 right-6 z-20">
                 <button
+                    type="button"
                     onClick={() => setIsEditorOpen(true)}
-                    aria-label="새 댕로그 작성"
+                    aria-label="댕로그 작성"
                     className={cn(
-                        "w-14 h-14 rounded-full bg-primary text-white",
-                        "flex items-center justify-center shadow-lg shadow-primary/30",
-                        "hover:bg-primary/90 transition-colors"
+                        "flex h-14 w-14 items-center justify-center rounded-full bg-sky-600 text-white shadow-lg shadow-sky-200"
                     )}
                 >
-                    <Plus className="w-6 h-6" />
+                    <BookOpen className="h-5 w-5" />
                 </button>
             </TapScale>
 
-            {/* 작성 에디터 */}
-            {guardianId && (
+            {guardianId ? (
                 <DangLogEditor
                     isOpen={isEditorOpen}
                     onClose={() => setIsEditorOpen(false)}
                     authorId={guardianId}
                     dogId={guardian?.dogs?.[0]?.id}
                 />
-            )}
+            ) : null}
         </AppShell>
     );
 }
 
-/** 개별 카드 + 좋아요/댓글 카운트 쿼리 래퍼 */
 function DangLogCardWithCounts({
     danglog,
     guardianId,
@@ -137,7 +141,7 @@ function DangLogCardWithCounts({
 }) {
     const { data: counts } = useDangLogCounts(danglog.id);
     const { data: likes } = useDangLogLikes(danglog.id);
-    const isLiked = likes?.some((l) => l.guardian_id === guardianId) ?? false;
+    const isLiked = likes?.some((like) => like.guardian_id === guardianId) ?? false;
 
     return (
         <DangLogCard
@@ -151,21 +155,37 @@ function DangLogCardWithCounts({
     );
 }
 
+function FeedTabButton({
+    active,
+    label,
+    onClick,
+}: {
+    active: boolean;
+    label: string;
+    onClick: () => void;
+}) {
+    return (
+        <Button type="button" variant={active ? "primary" : "ghost"} size="sm" onClick={onClick}>
+            {label}
+        </Button>
+    );
+}
+
 function DangLogCardSkeleton() {
     return (
-        <div className="bg-card rounded-3xl border border-border/50 overflow-hidden">
-            <div className="px-4 pt-4 pb-2 flex items-center gap-2">
-                <Skeleton className="h-4 w-16 rounded-xl" />
-                <Skeleton className="h-4 w-12 rounded-full" />
+        <div className="overflow-hidden rounded-[2rem] border border-sky-100 bg-white shadow-sm">
+            <div className="flex items-center justify-between gap-3 px-4 pb-3 pt-4">
+                <div className="space-y-2">
+                    <Skeleton className="h-3 w-20 rounded-full" />
+                    <Skeleton className="h-4 w-24 rounded-full" />
+                </div>
+                <Skeleton className="h-4 w-14 rounded-full" />
             </div>
             <Skeleton className="h-56 w-full" />
-            <div className="px-4 py-3 space-y-2">
-                <Skeleton className="h-4 w-3/4 rounded-xl" />
-                <Skeleton className="h-3 w-full rounded-xl" />
-            </div>
-            <div className="px-4 pb-4 flex gap-4">
-                <Skeleton className="h-4 w-10 rounded-xl" />
-                <Skeleton className="h-4 w-10 rounded-xl" />
+            <div className="space-y-2 px-4 py-4">
+                <Skeleton className="h-5 w-2/3 rounded-full" />
+                <Skeleton className="h-4 w-full rounded-full" />
+                <Skeleton className="h-4 w-4/5 rounded-full" />
             </div>
         </div>
     );

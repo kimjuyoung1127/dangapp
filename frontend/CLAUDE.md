@@ -18,6 +18,7 @@ Detailed instructions live in `.claude/skills/{name}/SKILL.md`.
 - Add a brief top-of-file comment to newly created code files when the role is not obvious.
 - When creating a new folder, add a local `CLAUDE.md` describing its role and conventions.
 - Before adding a new route or feature module, use `subagent-pattern-collect` to gather the closest existing pattern.
+- Before multi-route UI redesign or design-system changes, use `dang-ui-redesign-orchestrator` to rank the direction and lock the rollout order.
 
 ## Avoid
 - Branching `className` manually when a CVA variant should handle it.

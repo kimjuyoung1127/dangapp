@@ -1,6 +1,6 @@
 # DangApp Project Status
 
-Last Updated: 2026-03-06 (KST) manual update (chat/auth/family/modes + signed e2e)
+Last Updated: 2026-03-07 (KST) manual update (family direction rollout + regression fixes)
 Owner Doc: `CLAUDE.md`
 
 ## Execution Phases
@@ -43,6 +43,26 @@ Overall parity verification: 1 Verified / 10 active IDs = 10% (7 routes at QA ??
 | DANG-DLG-001 | collaborative danglog | QA | end-to-end verification pending |
 | DANG-PRF-001 | profile/notification settings | QA | end-to-end verification pending |
 | DANG-B2B-001 | partner-place model | InProgress | `/care` reservations-first flow completed + `/family` ownership/schedule binding completed; signed-in integration QA evidence pending |
+
+## 2026-03-07 Family Direction Rollout Update (Codex)
+
+- Applied the selected `family` direction across current route surfaces:
+  - auth/onboarding: `/login`, `/register`, `/onboarding`
+  - main/utility: `/home`, `/chat`, `/chat/[id]`, `/profile`, `/schedules`, `/family`, `/care`, `/modes`, `/danglog`, `/danglog/[id]`
+- Added shared family UI primitives for page intro, section framing, empty panels, and status chips:
+  - `frontend/src/components/shared/FamilyUi.tsx`
+- Preserved runtime/data behavior:
+  - existing hooks, query keys, realtime chat, mutations, and modal flows remain unchanged
+- Closed post-rollout regression findings:
+  - `/schedules` cancelled items now render a cancelled status instead of completed
+  - `/chat/[id]` Enter key send behavior restored while keeping Shift+Enter multiline input
+- Static quality gates after rollout and fixes:
+  - `cd frontend && npx tsc --noEmit` PASS
+  - `cd frontend && npm run lint` PASS
+- Remaining work:
+  - mobile manual route QA
+  - spacing/safe-area polish
+  - evidence capture for the refreshed family-direction UI
 
 ## Blockers
 

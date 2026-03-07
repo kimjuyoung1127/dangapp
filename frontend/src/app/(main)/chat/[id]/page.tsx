@@ -1,10 +1,11 @@
-// File: Chat room page with realtime messaging and schedule proposal creation.
+// File: Family-style chat room with realtime messaging and schedule proposal actions.
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { CalendarClock, ChevronLeft, Send } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { ScheduleModal } from "@/components/features/chat/ScheduleModal";
+import { FamilyStatusChip } from "@/components/shared/FamilyUi";
 import { TapScale } from "@/components/ui/MotionWrappers";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { useCurrentGuardian } from "@/lib/hooks/useCurrentGuardian";
@@ -42,9 +43,7 @@ export default function ChatRoomPage({ params }: { params: { id: string } }) {
 
     const { data: partner } = useChatPartner(roomId, myGuardianId);
 
-    const scheduleResponseById = useMemo(() => {
-        return buildScheduleResponseMap(messages ?? []);
-    }, [messages]);
+    const scheduleResponseById = useMemo(() => buildScheduleResponseMap(messages ?? []), [messages]);
 
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -76,17 +75,38 @@ export default function ChatRoomPage({ params }: { params: { id: string } }) {
         [inputText, isSending, myGuardianId, roomId, sendMessage]
     );
 
+    const handleComposerKeyDown = useCallback(
+        (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
+            if (event.key === "Enter" && !event.shiftKey) {
+                event.preventDefault();
+                if (!inputText.trim() || isSending || !myGuardianId) return;
+                sendMessage(
+                    {
+                        room_id: roomId,
+                        sender_id: myGuardianId,
+                        content: inputText,
+                        type: "text",
+                    },
+                    {
+                        onSuccess: () => setInputText(""),
+                    }
+                );
+            }
+        },
+        [inputText, isSending, myGuardianId, roomId, sendMessage]
+    );
+
     const handleProposeSchedule = useCallback(
         async (scheduleData: { date: string; time: string; location: string }) => {
             if (!myGuardianId || !partner?.guardianId) return;
 
             const rawDateTime = new Date(`${scheduleData.date}T${scheduleData.time}:00`);
             if (Number.isNaN(rawDateTime.getTime())) {
-                throw new Error("날짜/시간 형식이 올바르지 않습니다.");
+                throw new Error("날짜와 시간을 다시 확인해 주세요.");
             }
 
             const datetime = rawDateTime.toISOString();
-            const title = `${partner.nickname}와 산책 약속`;
+            const title = `${partner.nickname}님과의 산책 약속`;
 
             try {
                 const created = await createScheduleAsync({
@@ -104,7 +124,7 @@ export default function ChatRoomPage({ params }: { params: { id: string } }) {
                 await sendMessageAsync({
                     room_id: roomId,
                     sender_id: myGuardianId,
-                    content: "새로운 산책 약속을 제안했습니다.",
+                    content: "새 산책 일정을 제안했어요.",
                     type: "schedule",
                     metadata: {
                         ...scheduleData,
@@ -122,7 +142,7 @@ export default function ChatRoomPage({ params }: { params: { id: string } }) {
                 });
                 throw error instanceof Error
                     ? error
-                    : new Error("약속 제안 저장에 실패했습니다. 잠시 후 다시 시도해주세요.");
+                    : new Error("일정 제안에 실패했습니다. 잠시 후 다시 시도해 주세요.");
             }
         },
         [createScheduleAsync, myGuardianId, partner?.guardianId, partner?.nickname, roomId, sendMessageAsync]
@@ -148,8 +168,8 @@ export default function ChatRoomPage({ params }: { params: { id: string } }) {
                             sender_id: myGuardianId,
                             content:
                                 response === "accepted"
-                                    ? "약속 제안을 수락했습니다."
-                                    : "약속 제안을 거절했습니다.",
+                                    ? "일정 제안을 수락했어요."
+                                    : "일정 제안을 거절했어요.",
                             type: "system",
                             metadata: {
                                 scheduleId: updated.id,
@@ -163,7 +183,7 @@ export default function ChatRoomPage({ params }: { params: { id: string } }) {
                             alert(error.message);
                             return;
                         }
-                        alert(error instanceof Error ? error.message : "약속 응답 처리에 실패했습니다.");
+                        alert(error instanceof Error ? error.message : "일정 응답 처리에 실패했습니다.");
                     },
                     onSettled: () => {
                         if (pendingResponseScheduleIdRef.current === scheduleId) {
@@ -178,169 +198,170 @@ export default function ChatRoomPage({ params }: { params: { id: string } }) {
     );
 
     return (
-        <div className="flex flex-col h-[100dvh] bg-background">
-            <header className="sticky top-0 z-50 flex items-center justify-between px-4 h-14 bg-background/80 backdrop-blur-md border-b border-border">
-                <div className="flex items-center gap-3">
-                    <TapScale>
-                        <button onClick={() => router.back()} className="p-1 -ml-1 text-foreground">
-                            <ChevronLeft className="w-6 h-6" />
-                        </button>
-                    </TapScale>
-                    <div className="font-semibold text-foreground">{partner?.nickname ?? "채팅"}</div>
-                </div>
-
-                <TapScale>
-                    <button
-                        onClick={() => setIsScheduleOpen(true)}
-                        disabled={!myGuardianId || !partner?.guardianId || isCreatingSchedule}
-                        className="flex items-center gap-1.5 px-3 py-1.5 bg-primary-light/20 text-primary rounded-full text-sm font-medium disabled:opacity-50"
-                    >
-                        <CalendarClock className="w-4 h-4" />
-                        {isCreatingSchedule ? "약속 생성 중..." : "약속잡기"}
-                    </button>
-                </TapScale>
-            </header>
-
-            <main className="flex-1 overflow-y-auto p-4 space-y-4 pb-20">
-                {messagesError ? (
-                    <div className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
-                        채팅 메시지 조회 실패:{" "}
-                        {messagesError instanceof Error ? messagesError.message : "알 수 없는 오류"}
-                    </div>
-                ) : null}
-
-                {isLoading && (
-                    <div className="space-y-4">
-                        <ChatMessageSkeleton isMe={false} />
-                        <ChatMessageSkeleton isMe />
-                        <ChatMessageSkeleton isMe={false} />
-                    </div>
-                )}
-
-                {messages?.map((message) => {
-                    const isMe = message.sender_id === myGuardianId;
-                    const timeString = new Date(message.created_at).toLocaleTimeString("ko-KR", {
-                        hour: "numeric",
-                        minute: "2-digit",
-                    });
-
-                    const metadata = (message.metadata as Record<string, unknown>) || {};
-                    const scheduleId =
-                        typeof metadata.scheduleId === "string" ? metadata.scheduleId : null;
-                    const scheduleDate = typeof metadata.date === "string" ? metadata.date : "";
-                    const scheduleTime = typeof metadata.time === "string" ? metadata.time : "";
-                    const scheduleLocation =
-                        typeof metadata.location === "string" ? metadata.location : "";
-                    const scheduleResponse = scheduleId
-                        ? getScheduleResponseState(scheduleResponseById, scheduleId)
-                        : "none";
-                    const isActionPending = pendingResponseScheduleId === scheduleId;
-                    const canRespond = isScheduleResponseActionable({
-                        isMyMessage: isMe,
-                        scheduleId,
-                        responseState: scheduleResponse,
-                        pendingScheduleId: pendingResponseScheduleId,
-                    });
-
-                    return (
-                        <div
-                            key={message.id}
-                            className={cn(
-                                "flex flex-col max-w-[75%]",
-                                isMe ? "ml-auto items-end" : "mr-auto items-start"
-                            )}
-                        >
-                            <div
-                                className={cn(
-                                    "px-4 py-2.5 rounded-3xl text-[15px] leading-relaxed",
-                                    isMe
-                                        ? "bg-primary text-white rounded-br-sm"
-                                        : "bg-card border border-border text-foreground rounded-bl-sm"
-                                )}
-                            >
-                                {message.type === "schedule" ? (
-                                    <div className="space-y-2">
-                                        <p className="font-semibold pb-1 border-b border-black/10">약속 제안</p>
-                                        <div className="text-sm space-y-1">
-                                            <p>
-                                                {scheduleDate} {scheduleTime}
-                                            </p>
-                                            <p>{scheduleLocation}</p>
-                                        </div>
-                                        {canRespond && (
-                                            <div className="flex gap-2 mt-3">
-                                                <button
-                                                    type="button"
-                                                    onClick={() => {
-                                                        if (scheduleId) {
-                                                            handleRespondSchedule(scheduleId, "rejected");
-                                                        } else {
-                                                            alert("연결된 약속 ID가 없어 처리할 수 없습니다. 새 약속을 다시 제안해 주세요.");
-                                                        }
-                                                    }}
-                                                    disabled={isRespondingSchedule || isActionPending}
-                                                    className="flex-1 py-1.5 bg-black/5 text-foreground rounded-xl text-sm font-medium hover:bg-black/10 transition-colors disabled:opacity-50"
-                                                >
-                                                    거절
-                                                </button>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => {
-                                                        if (scheduleId) {
-                                                            handleRespondSchedule(scheduleId, "accepted");
-                                                        } else {
-                                                            alert("연결된 약속 ID가 없어 처리할 수 없습니다. 새 약속을 다시 제안해 주세요.");
-                                                        }
-                                                    }}
-                                                    disabled={isRespondingSchedule || isActionPending}
-                                                    className="flex-1 py-1.5 bg-primary text-white rounded-xl text-sm font-medium shadow-sm hover:brightness-110 transition-all disabled:opacity-50"
-                                                >
-                                                    수락하기
-                                                </button>
-                                            </div>
-                                        )}
-                                        {!isMe && isActionPending ? (
-                                            <p className="mt-2 text-xs text-foreground-muted">응답 처리 중...</p>
-                                        ) : null}
-                                        {!isMe && !isActionPending && scheduleResponse !== "none" ? (
-                                            <p className="mt-2 text-xs text-foreground-muted">
-                                                {scheduleResponse === "accepted"
-                                                    ? "이미 수락 처리된 약속입니다."
-                                                    : "이미 거절 처리된 약속입니다."}
-                                            </p>
-                                        ) : null}
-                                    </div>
-                                ) : (
-                                    message.content
-                                )}
+        <div className="flex h-[100dvh] flex-col bg-sky-50/60">
+            <header className="sticky top-0 z-40 border-b border-sky-100 bg-white/95 backdrop-blur">
+                <div className="mx-auto flex w-full max-w-md items-start justify-between gap-3 px-4 pb-4 pt-4">
+                    <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                            <TapScale>
+                                <button
+                                    type="button"
+                                    onClick={() => router.back()}
+                                    className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-sky-50 text-sky-700"
+                                >
+                                    <ChevronLeft className="h-5 w-5" />
+                                </button>
+                            </TapScale>
+                            <div>
+                                <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-sky-700">
+                                    family organizer chat
+                                </p>
+                                <h1 className="truncate text-lg font-semibold text-foreground">
+                                    {partner?.nickname ?? "채팅"}
+                                </h1>
                             </div>
-                            <span className="text-[11px] text-foreground-muted mt-1 px-1">{timeString}</span>
                         </div>
-                    );
-                })}
+                        <p className="mt-2 text-sm leading-6 text-foreground-muted">
+                            대화와 일정 제안을 같은 흐름에서 정리해 두세요.
+                        </p>
+                    </div>
 
-                <div ref={messagesEndRef} />
-            </main>
-
-            <footer className="fixed bottom-0 left-0 right-0 bg-background border-t border-border p-3 pb-safe">
-                <form onSubmit={handleSend} className="container mx-auto max-w-md flex items-center gap-2">
-                    <input
-                        type="text"
-                        value={inputText}
-                        onChange={(event) => setInputText(event.target.value)}
-                        placeholder="메시지를 입력하세요..."
-                        className="flex-1 bg-muted rounded-full px-4 py-2.5 outline-none text-[15px] text-foreground placeholder-foreground-muted focus:ring-2 focus:ring-primary/20 transition-all"
-                    />
                     <TapScale>
                         <button
-                            type="submit"
-                            disabled={!inputText.trim() || isSending}
-                            className="p-2.5 bg-primary text-white rounded-full disabled:opacity-50 disabled:bg-muted transition-colors"
+                            type="button"
+                            onClick={() => setIsScheduleOpen(true)}
+                            disabled={!myGuardianId || !partner?.guardianId || isCreatingSchedule}
+                            className="inline-flex items-center gap-2 rounded-full bg-sky-600 px-3 py-2 text-sm font-semibold text-white shadow-sm disabled:opacity-50"
                         >
-                            <Send className="w-5 h-5 ml-0.5" />
+                            <CalendarClock className="h-4 w-4" />
+                            {isCreatingSchedule ? "생성 중" : "일정 제안"}
                         </button>
                     </TapScale>
-                </form>
+                </div>
+            </header>
+
+            <main className="flex-1 overflow-y-auto pb-28">
+                <div className="mx-auto flex w-full max-w-md flex-col gap-4 px-4 py-5">
+                    {messagesError ? (
+                        <div className="rounded-[1.5rem] border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                            채팅 메시지를 불러오지 못했습니다.
+                            <div className="mt-1 text-xs">
+                                {messagesError instanceof Error ? messagesError.message : "알 수 없는 오류"}
+                            </div>
+                        </div>
+                    ) : null}
+
+                    {isLoading ? (
+                        <div className="space-y-4">
+                            <ChatMessageSkeleton isMe={false} />
+                            <ChatMessageSkeleton isMe />
+                            <ChatMessageSkeleton isMe={false} />
+                        </div>
+                    ) : null}
+
+                    {!isLoading && !messages?.length ? (
+                        <div className="rounded-[1.75rem] border border-sky-100 bg-white p-5 text-center shadow-sm">
+                            <p className="text-sm text-foreground-muted">
+                                아직 대화가 없어요. 첫 인사를 보내고 함께 걸을 시간을 잡아보세요.
+                            </p>
+                        </div>
+                    ) : null}
+
+                    {messages?.map((message) => {
+                        const isMe = message.sender_id === myGuardianId;
+                        const timeString = new Date(message.created_at).toLocaleTimeString("ko-KR", {
+                            hour: "numeric",
+                            minute: "2-digit",
+                        });
+
+                        const metadata = (message.metadata as Record<string, unknown>) || {};
+                        const scheduleId = typeof metadata.scheduleId === "string" ? metadata.scheduleId : null;
+                        const scheduleDate = typeof metadata.date === "string" ? metadata.date : "";
+                        const scheduleTime = typeof metadata.time === "string" ? metadata.time : "";
+                        const scheduleLocation = typeof metadata.location === "string" ? metadata.location : "";
+                        const scheduleResponse = scheduleId
+                            ? getScheduleResponseState(scheduleResponseById, scheduleId)
+                            : "none";
+                        const isActionPending = pendingResponseScheduleId === scheduleId;
+                        const canRespond = isScheduleResponseActionable({
+                            isMyMessage: isMe,
+                            scheduleId,
+                            responseState: scheduleResponse,
+                            pendingScheduleId: pendingResponseScheduleId,
+                        });
+
+                        return (
+                            <div key={message.id} className={cn("flex flex-col gap-1", isMe ? "items-end" : "items-start")}>
+                                <div
+                                    className={cn(
+                                        "max-w-[86%] rounded-[1.5rem] border px-4 py-3 shadow-sm",
+                                        isMe
+                                            ? "border-sky-200 bg-sky-600 text-white"
+                                            : "border-sky-100 bg-white text-foreground"
+                                    )}
+                                >
+                                    {message.type === "schedule" ? (
+                                        <ScheduleMessageCard
+                                            isMe={isMe}
+                                            scheduleDate={scheduleDate}
+                                            scheduleTime={scheduleTime}
+                                            scheduleLocation={scheduleLocation}
+                                            responseState={scheduleResponse}
+                                            isActionPending={isActionPending}
+                                            isRespondingSchedule={isRespondingSchedule}
+                                            canRespond={canRespond}
+                                            onReject={() => {
+                                                if (scheduleId) {
+                                                    handleRespondSchedule(scheduleId, "rejected");
+                                                    return;
+                                                }
+                                                alert("연결된 일정 정보가 없어 처리할 수 없습니다.");
+                                            }}
+                                            onAccept={() => {
+                                                if (scheduleId) {
+                                                    handleRespondSchedule(scheduleId, "accepted");
+                                                    return;
+                                                }
+                                                alert("연결된 일정 정보가 없어 처리할 수 없습니다.");
+                                            }}
+                                        />
+                                    ) : (
+                                        <p className="text-[15px] leading-7">{message.content}</p>
+                                    )}
+                                </div>
+                                <span className="px-1 text-[11px] text-foreground-muted">{timeString}</span>
+                            </div>
+                        );
+                    })}
+
+                    <div ref={messagesEndRef} />
+                </div>
+            </main>
+
+            <footer className="fixed bottom-0 left-0 right-0 z-40 border-t border-sky-100 bg-white/95 backdrop-blur">
+                <div className="mx-auto w-full max-w-md px-4 pb-[calc(env(safe-area-inset-bottom)+12px)] pt-3">
+                    <form onSubmit={handleSend} className="flex items-end gap-3">
+                        <div className="flex-1 rounded-[1.5rem] border border-sky-100 bg-sky-50/70 px-4 py-3 shadow-sm">
+                            <textarea
+                                value={inputText}
+                                onChange={(event) => setInputText(event.target.value)}
+                                onKeyDown={handleComposerKeyDown}
+                                placeholder="메시지를 입력해 주세요."
+                                rows={1}
+                                className="max-h-28 min-h-[28px] w-full resize-none bg-transparent text-[15px] text-foreground outline-none placeholder:text-foreground-muted"
+                            />
+                        </div>
+                        <TapScale>
+                            <button
+                                type="submit"
+                                disabled={!inputText.trim() || isSending}
+                                className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-sky-600 text-white shadow-sm disabled:bg-sky-200"
+                            >
+                                <Send className="h-5 w-5" />
+                            </button>
+                        </TapScale>
+                    </form>
+                </div>
             </footer>
 
             <ScheduleModal
@@ -353,11 +374,91 @@ export default function ChatRoomPage({ params }: { params: { id: string } }) {
     );
 }
 
+function ScheduleMessageCard({
+    isMe,
+    scheduleDate,
+    scheduleTime,
+    scheduleLocation,
+    responseState,
+    isActionPending,
+    isRespondingSchedule,
+    canRespond,
+    onReject,
+    onAccept,
+}: {
+    isMe: boolean;
+    scheduleDate: string;
+    scheduleTime: string;
+    scheduleLocation: string;
+    responseState: "none" | "accepted" | "rejected";
+    isActionPending: boolean;
+    isRespondingSchedule: boolean;
+    canRespond: boolean;
+    onReject: () => void;
+    onAccept: () => void;
+}) {
+    return (
+        <div className="space-y-3">
+            <div className="flex items-center justify-between gap-3">
+                <p className={cn("text-sm font-semibold", isMe ? "text-white" : "text-foreground")}>
+                    산책 일정 제안
+                </p>
+                {responseState !== "none" ? (
+                    <FamilyStatusChip
+                        label={responseState === "accepted" ? "수락됨" : "거절됨"}
+                        tone={responseState === "accepted" ? "success" : "danger"}
+                    />
+                ) : null}
+            </div>
+
+            <div className={cn("rounded-[1.25rem] px-3 py-3", isMe ? "bg-white/10 text-white" : "bg-sky-50 text-foreground")}>
+                <p className="text-sm font-medium">
+                    {scheduleDate} {scheduleTime}
+                </p>
+                <p className={cn("mt-1 text-sm", isMe ? "text-white/90" : "text-foreground-muted")}>
+                    {scheduleLocation}
+                </p>
+            </div>
+
+            {canRespond ? (
+                <div className="grid grid-cols-2 gap-2">
+                    <button
+                        type="button"
+                        onClick={onReject}
+                        disabled={isRespondingSchedule || isActionPending}
+                        className={cn(
+                            "rounded-[1rem] px-3 py-2 text-sm font-semibold",
+                            isMe ? "bg-white/15 text-white" : "border border-sky-200 bg-white text-foreground"
+                        )}
+                    >
+                        거절
+                    </button>
+                    <button
+                        type="button"
+                        onClick={onAccept}
+                        disabled={isRespondingSchedule || isActionPending}
+                        className={cn(
+                            "rounded-[1rem] px-3 py-2 text-sm font-semibold",
+                            isMe ? "bg-white text-sky-700" : "bg-sky-600 text-white"
+                        )}
+                    >
+                        수락
+                    </button>
+                </div>
+            ) : null}
+
+            {!isMe && isActionPending ? (
+                <p className="text-xs text-foreground-muted">응답을 처리하고 있어요.</p>
+            ) : null}
+        </div>
+    );
+}
+
 function ChatMessageSkeleton({ isMe }: { isMe: boolean }) {
     return (
-        <div className={cn("flex flex-col max-w-[75%]", isMe ? "ml-auto items-end" : "mr-auto items-start")}>
-            <Skeleton className={cn("h-10 rounded-3xl", isMe ? "w-40 rounded-br-sm" : "w-52 rounded-bl-sm")} />
-            <Skeleton className="h-3 w-12 rounded-xl mt-1" />
+        <div className={cn("flex flex-col gap-1", isMe ? "items-end" : "items-start")}>
+            <Skeleton className={cn("h-16 w-[72%] rounded-[1.5rem]", isMe ? "bg-sky-200/80" : "bg-white")} />
+            <Skeleton className="h-3 w-12 rounded-xl" />
         </div>
     );
 }
