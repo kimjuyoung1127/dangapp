@@ -1,0 +1,7 @@
+#!/usr/bin/env sh
+
+# 1. 인코딩 검증
+node scripts/check-encoding.mjs
+
+# 2. 코딩 패턴 드리프트 검증
+bash scripts/pre-commit-check.sh

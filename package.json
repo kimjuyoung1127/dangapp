@@ -20,7 +20,8 @@
     "check:encoding": "node scripts/check-encoding.mjs",
     "seed:debug": "node scripts/seed-chat-danglog-debug.mjs",
     "seed:cleanup": "node scripts/cleanup-chat-danglog-debug.mjs",
-    "seed:check": "node scripts/check-chat-danglog-debug.mjs"
+    "seed:check": "node scripts/check-chat-danglog-debug.mjs",
+    "prepare": "husky"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.98.0"

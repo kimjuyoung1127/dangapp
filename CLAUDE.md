@@ -5,7 +5,7 @@ DangApp execution rules, priorities, and source-of-truth pointers.
 ## Session Handoff (Read First)
 
 If this file is shown in a new session, continue work in this exact order:
-1. Read `docs/status/PROJECT-STATUS.md` and `docs/status/PAGE-UPGRADE-BOARD.md`.
+1. Read `docs/status/PROJECT-STATUS.md`, `docs/status/PAGE-UPGRADE-BOARD.md`, and `docs/ref/code-patterns.md`.
 2. Run preflight checks:
    - `git status --short`
    - `cd frontend && npx tsc --noEmit -p ./tsconfig.json`
@@ -99,6 +99,7 @@ Dual-agent handoff: `docs/ref/DUAL-AGENT-HANDOFF.md`
 | `docs/status/SKILL-DOC-MATRIX.md` | page skill to code/doc mapping |
 | `docs/status/DANGAPP-MASTER-EXECUTION-PLAN.md` | execution master plan |
 | `docs/status/DANGAPP-MASTER-EXECUTION-REVIEW.md` | plan review results |
+| `docs/ref/code-patterns.md` | core coding rules (design tokens, imports, patterns) |
 | `docs/ref/SCHEMA-CHANGELOG.md` | schema and migration notes |
 | `docs/ref/SUPABASE-MCP-RUNBOOK.md` | MCP setup and operation runbook |
 | `docs/ref/WSL-CODEX-ENCODING-RUNBOOK.md` | WSL-first encoding-safe Codex workflow |
