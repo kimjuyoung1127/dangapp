@@ -48,18 +48,44 @@ export default function SchedulesPage() {
     const { data: schedules, isLoading } = useMySchedules(guardianId);
 
     const filteredSchedules = (schedules ?? []).filter((schedule) => TAB_MAP[activeTab].includes(schedule.status));
+    const completedCount = (schedules ?? []).filter((schedule) => schedule.status === "completed").length;
+    const upcomingCount = (schedules ?? []).filter((schedule) =>
+        TAB_MAP.upcoming.includes(schedule.status)
+    ).length;
+    const cancelledCount = (schedules ?? []).filter((schedule) => schedule.status === "cancelled").length;
 
     return (
         <AppShell>
-            <div className="space-y-5 px-4 py-6">
+            <div className="mx-auto w-full max-w-md space-y-5 px-4 pb-24 pt-3">
                 <FamilyPageIntro
                     eyebrow="산책 캘린더"
                     title="산책 일정"
-                    description="날짜, 상태, 다음 액션을 먼저 보여주도록 정리했습니다."
+                    description="다가오는 약속과 완료 후 정리까지 한 흐름으로 확인할 수 있어요."
                 />
 
-                <FamilySurface tone="soft">
-                    <div role="tablist" className="flex gap-2 overflow-x-auto no-scrollbar">
+                <FamilySurface tone="accent" className="overflow-hidden">
+                    <FamilySectionTitle
+                        title="일정 요약"
+                        meta="가장 먼저 확인해야 할 상태와 다음 액션을 짧게 보여드립니다."
+                    />
+                    <div className="mt-4 grid grid-cols-3 gap-2">
+                        <div className="rounded-[1.2rem] border border-white/80 bg-white/80 px-3 py-2.5">
+                            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-sky-700/80">예정</p>
+                            <p className="mt-1 text-sm font-semibold text-foreground">{upcomingCount}건</p>
+                        </div>
+                        <div className="rounded-[1.2rem] border border-white/80 bg-white/80 px-3 py-2.5">
+                            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-sky-700/80">완료</p>
+                            <p className="mt-1 text-sm font-semibold text-foreground">{completedCount}건</p>
+                        </div>
+                        <div className="rounded-[1.2rem] border border-white/80 bg-white/80 px-3 py-2.5">
+                            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-sky-700/80">변경</p>
+                            <p className="mt-1 text-sm font-semibold text-foreground">{cancelledCount}건</p>
+                        </div>
+                    </div>
+                </FamilySurface>
+
+                <FamilySurface tone="soft" className="p-2">
+                    <div role="tablist" className="grid grid-cols-3 gap-2">
                         {(["upcoming", "completed", "cancelled"] as TabType[]).map((tab) => (
                             <TapScale key={tab}>
                                 <button
@@ -69,8 +95,8 @@ export default function SchedulesPage() {
                                     onClick={() => setActiveTab(tab)}
                                     className={
                                         activeTab === tab
-                                            ? "rounded-full bg-sky-600 px-4 py-2 text-sm font-medium text-white"
-                                            : "rounded-full border border-sky-100 bg-white px-4 py-2 text-sm font-medium text-foreground-muted"
+                                            ? "rounded-[1.2rem] bg-sky-600 px-4 py-3 text-sm font-semibold text-white shadow-[0_18px_32px_-24px_rgba(14,79,149,0.66)]"
+                                            : "rounded-[1.2rem] border border-white/80 bg-white/90 px-4 py-3 text-sm font-medium text-foreground-muted"
                                     }
                                 >
                                     {tab === "upcoming" ? "예정된 일정" : tab === "completed" ? "완료" : "취소됨"}
@@ -146,25 +172,24 @@ function ScheduleCard({
     const daysUntil = isUpcoming ? Math.max(0, Math.ceil((dateObj.getTime() - Date.now()) / (1000 * 60 * 60 * 24))) : 0;
 
     return (
-        <FamilySurface>
+        <FamilySurface className="overflow-hidden">
             <div className="flex items-start justify-between gap-3">
                 <div>
                     <p className="text-xs font-semibold uppercase tracking-[0.2em] text-sky-700">함께 걷는 일정</p>
-                    <h3 className="mt-1 font-semibold text-foreground">{schedule.partnerName}</h3>
+                    <h3 className="mt-1 text-lg font-semibold tracking-[-0.02em] text-foreground">{schedule.partnerName}</h3>
                     <p className="mt-1 text-sm text-foreground-muted">{schedule.title}</p>
                 </div>
-                {isUpcoming ? (
-                    <FamilyStatusChip label={daysUntil === 0 ? "D-Day" : 'D-' + daysUntil} />
-                ) : (
+                <div className="flex flex-col items-end gap-2">
                     <FamilyStatusChip
                         label={STATUS_CHIP[schedule.status].label}
                         tone={STATUS_CHIP[schedule.status].tone}
                     />
-                )}
+                    {isUpcoming ? <FamilyStatusChip label={daysUntil === 0 ? "오늘" : `D-${daysUntil}`} /> : null}
+                </div>
             </div>
 
             <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                <FamilySurface tone="soft" className="p-3">
+                <FamilySurface tone="soft" className="p-3.5">
                     <FamilySectionTitle title="일정 정보" />
                     <div className="mt-3 space-y-2 text-sm text-foreground-muted">
                         <div className="flex items-center gap-2"><Calendar className="h-4 w-4 text-sky-700" />{dateStr}</div>
@@ -174,11 +199,11 @@ function ScheduleCard({
                         ) : null}
                     </div>
                 </FamilySurface>
-                <FamilySurface tone="soft" className="p-3">
+                <FamilySurface tone={schedule.status === "completed" ? "accent" : "soft"} className="p-3.5">
                     <FamilySectionTitle title="상태 메모" />
                     <p className="mt-3 text-sm leading-6 text-foreground-muted">
                         {isUpcoming
-                            ? "일정 전에 시간과 장소를 다시 확인해 두면 좋아요."
+                            ? "일정 전에는 시간과 장소를 다시 한 번 확인해 두면 바로 만나기 쉬워요."
                             : schedule.status === "cancelled"
                               ? "취소된 일정입니다. 사유를 확인하고 다음 산책 제안을 다시 정리해 보세요."
                               : "완료된 일정은 산책 기록과 후기로 바로 정리할 수 있어요."}
@@ -205,7 +230,10 @@ function ScheduleSkeleton() {
         <FamilySurface className="space-y-4">
             <Skeleton className="h-5 w-28 rounded-xl" />
             <Skeleton className="h-24 w-full rounded-[1.5rem]" />
-            <Skeleton className="h-12 w-full rounded-full" />
+            <div className="grid grid-cols-2 gap-3">
+                <Skeleton className="h-12 w-full rounded-full" />
+                <Skeleton className="h-12 w-full rounded-full" />
+            </div>
         </FamilySurface>
     );
 }

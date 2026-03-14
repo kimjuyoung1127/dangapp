@@ -57,14 +57,14 @@ export default function MatchCard({
     return (
         <div className="relative mx-auto w-full max-w-md pb-10">
             <ScrollReveal>
-                <div className="space-y-5 rounded-[2rem] border border-sky-100 bg-white p-4 shadow-[0_20px_60px_-28px_rgba(14,165,233,0.28)]">
+                <div className="space-y-5 overflow-hidden rounded-[2.1rem] border border-white/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.96)_0%,rgba(250,252,255,0.92)_100%)] p-4 shadow-[0_24px_64px_-34px_rgba(17,49,85,0.28)]">
                     <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0">
-                            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-sky-700">
+                            <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-sky-700">
                                 추천 산책 상대
                             </p>
                             <div className="mt-2 flex flex-wrap items-center gap-2">
-                                <h2 className="text-[28px] font-display font-bold text-foreground">
+                                <h2 className="text-[30px] font-display font-bold tracking-[-0.04em] text-foreground">
                                     {profile.nickname}
                                 </h2>
                                 <TrustBadge trustLevel={trustLevel} trustLabel={trustInfo.label} />
@@ -77,7 +77,7 @@ export default function MatchCard({
                                     </span>
                                 ) : null}
                                 {hasTimeOverlap ? (
-                                    <span className="rounded-full bg-sky-100 px-2.5 py-1 text-xs font-medium text-sky-700">
+                                    <span className="rounded-full border border-sky-200/70 bg-white px-2.5 py-1 text-xs font-medium text-sky-700 shadow-[0_10px_24px_-22px_rgba(17,49,85,0.24)]">
                                         일정 맞추기 쉬움
                                     </span>
                                 ) : null}
@@ -112,7 +112,7 @@ export default function MatchCard({
                             {temperamentLabels.map((tag) => (
                                 <span
                                     key={tag}
-                                    className="rounded-full bg-sky-100 px-3 py-1.5 text-sm font-medium text-sky-700"
+                                    className="rounded-full border border-white/80 bg-white/84 px-3 py-1.5 text-sm font-medium text-sky-700 shadow-[0_10px_24px_-22px_rgba(17,49,85,0.22)]"
                                 >
                                     {tag}
                                 </span>
@@ -120,7 +120,7 @@ export default function MatchCard({
                         </div>
                     ) : null}
 
-                    <InfoPanel title="추천 이유" className="border border-sky-100 bg-white">
+                    <InfoPanel title="추천 이유" className="border border-white/80 bg-white/90">
                         <ul className="space-y-2 text-sm leading-6 text-foreground">
                             {matchReasons.map((reason) => (
                                 <li key={reason} className="flex items-start gap-2">
@@ -131,7 +131,7 @@ export default function MatchCard({
                         </ul>
                     </InfoPanel>
 
-                    <InfoPanel title="신뢰 정보와 다음 단계" className="border border-sky-200 bg-sky-50">
+                    <InfoPanel title="신뢰 정보와 다음 단계" className="border border-sky-200/50 bg-[linear-gradient(180deg,rgba(238,247,255,0.92)_0%,rgba(229,242,255,0.88)_100%)]">
                         <div className="space-y-3">
                             <div className="flex items-center justify-between">
                                 <span className="text-sm text-foreground-muted">신뢰 점수</span>
@@ -149,7 +149,7 @@ export default function MatchCard({
                                     </span>
                                 ))}
                             </div>
-                            <div className="rounded-2xl bg-white/90 p-3 text-sm leading-6 text-foreground">
+                            <div className="rounded-[1.4rem] border border-white/80 bg-white/88 p-3.5 text-sm leading-6 text-foreground shadow-[0_12px_26px_-22px_rgba(17,49,85,0.24)]">
                                 <div className="mb-1 flex items-center gap-2 font-semibold text-sky-700">
                                     <CalendarClock className="h-4 w-4" />
                                     일정 제안 힌트
@@ -159,7 +159,7 @@ export default function MatchCard({
                         </div>
                     </InfoPanel>
 
-                    <InfoPanel title="보호자 한마디" className="border border-sky-100 bg-white">
+                    <InfoPanel title="보호자 한마디" className="border border-white/80 bg-white/90">
                         <p className="text-base leading-7 text-foreground">
                             {profile.bio || "아직 소개글이 없어요. 먼저 관심을 보내고 채팅에서 대화를 이어가 보세요."}
                         </p>
@@ -167,7 +167,7 @@ export default function MatchCard({
 
                     <div className="space-y-3">
                         {readOnlyLabel ? (
-                            <div className="rounded-2xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm font-medium text-amber-800">
+                            <div className="rounded-[1.4rem] border border-amber-200 bg-amber-50/90 px-3 py-2.5 text-sm font-medium text-amber-800">
                                 {readOnlyLabel}
                             </div>
                         ) : null}
@@ -202,7 +202,7 @@ export default function MatchCard({
 
 function TrustBadge({ trustLevel, trustLabel }: { trustLevel: number; trustLabel: string }) {
     return (
-        <span className="inline-flex items-center gap-1 rounded-full bg-sky-600 px-2.5 py-1 text-xs font-semibold text-white">
+        <span className="inline-flex items-center gap-1 rounded-full bg-sky-600 px-2.5 py-1 text-xs font-semibold text-white shadow-[0_12px_24px_-18px_rgba(22,119,216,0.72)]">
             <ShieldCheck className="h-3.5 w-3.5" />
             Lv.{trustLevel} {trustLabel}
         </span>
@@ -211,7 +211,7 @@ function TrustBadge({ trustLevel, trustLabel }: { trustLevel: number; trustLabel
 
 function MatchScoreCard({ score }: { score: number }) {
     return (
-        <div className="shrink-0 rounded-3xl bg-sky-100 px-4 py-3 text-right text-sky-700">
+        <div className="shrink-0 rounded-[1.6rem] border border-white/80 bg-[linear-gradient(180deg,rgba(240,248,255,1)_0%,rgba(221,238,252,0.94)_100%)] px-4 py-3 text-right text-sky-700 shadow-[0_16px_34px_-22px_rgba(17,49,85,0.24)]">
             <p className="text-[11px] font-semibold uppercase tracking-[0.2em]">매칭</p>
             <div className="mt-1 flex items-center justify-end gap-1">
                 <Zap className="h-4 w-4 fill-current" />
@@ -260,8 +260,8 @@ function InfoPanel({
     children: React.ReactNode;
 }) {
     return (
-        <div className={cn("rounded-[1.5rem] p-4", className)}>
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-foreground-muted">
+        <div className={cn("rounded-[1.55rem] p-4", className)}>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-foreground-muted">
                 {title}
             </p>
             <div className="mt-3">{children}</div>

@@ -27,7 +27,7 @@ export const TRUST_LEVEL_CONFIG = [
     { level: 1, label: "새싹", minScore: 0, color: "text-foreground-muted" },
     { level: 2, label: "성장 중", minScore: 20, color: "text-green-500" },
     { level: 3, label: "신뢰 가능", minScore: 40, color: "text-blue-500" },
-    { level: 4, label: "우수", minScore: 60, color: "text-purple-500" },
+    { level: 4, label: "우수", minScore: 60, color: "text-cyan-600" },
     { level: 5, label: "최우수", minScore: 80, color: "text-amber-500" },
 ] as const;
 

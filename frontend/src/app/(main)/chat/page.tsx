@@ -47,16 +47,30 @@ export default function ChatListPage() {
 
     return (
         <AppShell>
-            <div className="mx-auto w-full max-w-md space-y-5 px-4 pb-24 pt-6">
+            <div className="mx-auto w-full max-w-md space-y-5 px-4 pb-24 pt-3">
                 <FamilyPageIntro
                     eyebrow="대화함"
                     title="채팅"
                     description="읽지 않은 대화와 일정 제안을 한 눈에 정리해서 보여줍니다."
-                    action={<div className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1.5 text-sm font-medium text-sky-700 shadow-sm"><MessageSquareText className="h-4 w-4" /> {unreadCount}</div>}
+                    action={<div className="inline-flex items-center gap-2 rounded-full border border-white/80 bg-white/84 px-3 py-2 text-sm font-medium text-sky-700 shadow-[0_14px_28px_-22px_rgba(17,49,85,0.32)]"><MessageSquareText className="h-4 w-4" /> {unreadCount}</div>}
                 />
 
-                <FamilySurface tone="soft">
+                <FamilySurface tone="soft" className="overflow-hidden">
                     <FamilySectionTitle title="대화 정리" meta="최근 액션, 읽지 않음, 일정 제안 여부를 우선해서 보여줍니다." />
+                    <div className="mt-4 grid grid-cols-3 gap-2">
+                        <div className="rounded-[1.2rem] border border-white/80 bg-white/78 px-3 py-2.5">
+                            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-sky-700/80">읽지 않음</p>
+                            <p className="mt-1 text-sm font-semibold text-foreground">{unreadCount}건</p>
+                        </div>
+                        <div className="rounded-[1.2rem] border border-white/80 bg-white/78 px-3 py-2.5">
+                            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-sky-700/80">대화 수</p>
+                            <p className="mt-1 text-sm font-semibold text-foreground">{rooms.length}개</p>
+                        </div>
+                        <div className="rounded-[1.2rem] border border-white/80 bg-white/78 px-3 py-2.5">
+                            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-sky-700/80">상태</p>
+                            <p className="mt-1 text-sm font-semibold text-foreground">즉시 확인</p>
+                        </div>
+                    </div>
                 </FamilySurface>
 
                 {isLoading ? (
@@ -82,20 +96,20 @@ export default function ChatListPage() {
                                 <ScrollReveal key={room.id} style={{ transitionDelay: `${idx * 70}ms` }}>
                                     <Link href={`/chat/${room.id}`}>
                                         <TapScale className="block">
-                                            <FamilySurface className="p-3 transition-colors hover:border-sky-200 hover:bg-sky-50/40">
-                                                <div className="flex items-center gap-4">
+                                            <FamilySurface className="p-3.5 transition-colors hover:border-sky-200 hover:bg-sky-50/40">
+                                                <div className="flex items-center gap-3.5">
                                                     <div className="relative h-14 w-14 shrink-0">
-                                                        <Image src={partnerImg} alt={room.partner.nickname} fill className="rounded-full object-cover" />
+                                                        <Image src={partnerImg} alt={room.partner.nickname} fill className="rounded-[1.3rem] object-cover" />
                                                         {room.unreadCount > 0 ? (
-                                                            <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-sky-600 px-1 text-[10px] font-bold text-white border-2 border-white">
+                                                            <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full border-2 border-white bg-sky-600 px-1 text-[10px] font-bold text-white">
                                                                 {room.unreadCount > 9 ? "9+" : room.unreadCount}
                                                             </span>
                                                         ) : null}
                                                     </div>
                                                     <div className="min-w-0 flex-1">
-                                                        <div className="mb-1 flex items-start justify-between gap-3">
+                                                        <div className="mb-2 flex items-start justify-between gap-3">
                                                             <div className="min-w-0">
-                                                                <h3 className="truncate font-semibold text-foreground">{room.partner.nickname}</h3>
+                                                                <h3 className="truncate text-[15px] font-semibold tracking-[-0.02em] text-foreground">{room.partner.nickname}</h3>
                                                                 <div className="mt-1 flex flex-wrap gap-2">
                                                                     {room.unreadCount > 0 ? <FamilyStatusChip label="읽지 않음" /> : null}
                                                                     {hasScheduleSignal ? <FamilyStatusChip label="일정 제안" tone="success" /> : null}
@@ -103,7 +117,7 @@ export default function ChatListPage() {
                                                             </div>
                                                             <span className="shrink-0 text-xs text-foreground-muted">{formatLastTime(room.last_message_at)}</span>
                                                         </div>
-                                                        <p className={cn("truncate text-sm", room.unreadCount > 0 ? "font-medium text-foreground" : "text-foreground-muted")}>
+                                                        <p className={cn("truncate text-[13px]", room.unreadCount > 0 ? "font-medium text-foreground" : "text-foreground-muted")}>
                                                             {getLastMessagePreview(room.lastMessage, room.lastMessageType)}
                                                         </p>
                                                     </div>

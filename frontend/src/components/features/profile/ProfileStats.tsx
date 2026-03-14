@@ -1,5 +1,3 @@
-// ProfileStats.tsx — 통계 카드 (후기 수, 평균 별점, 완료 약속 수)
-
 "use client";
 
 import { ScrollReveal } from "@/components/ui/MotionWrappers";
@@ -16,9 +14,9 @@ export default function ProfileStats({
     completedSchedules,
 }: ProfileStatsProps) {
     const stats = [
-        { label: "후기", value: reviewCount.toString() },
-        { label: "평균", value: avgRating > 0 ? avgRating.toFixed(1) : "-" },
-        { label: "약속", value: completedSchedules.toString() },
+        { label: "후기 수", value: reviewCount.toString(), hint: "남긴 평가" },
+        { label: "평균 평점", value: avgRating > 0 ? avgRating.toFixed(1) : "-", hint: "최근 신뢰도" },
+        { label: "완료 일정", value: completedSchedules.toString(), hint: "함께한 산책" },
     ];
 
     return (
@@ -27,13 +25,16 @@ export default function ProfileStats({
                 {stats.map((stat) => (
                     <div
                         key={stat.label}
-                        className="bg-card rounded-3xl border border-border p-4 text-center"
+                        className="rounded-[1.35rem] border border-white/80 bg-white/78 p-4 text-center"
                     >
-                        <p className="text-2xl font-display font-bold text-foreground">
+                        <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-sky-700/80">
+                            {stat.label}
+                        </p>
+                        <p className="mt-2 text-2xl font-display font-bold text-foreground">
                             {stat.value}
                         </p>
-                        <p className="text-xs text-foreground-muted mt-1">
-                            {stat.label}
+                        <p className="mt-1 text-xs text-foreground-muted">
+                            {stat.hint}
                         </p>
                     </div>
                 ))}

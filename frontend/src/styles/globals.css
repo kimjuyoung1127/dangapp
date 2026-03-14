@@ -4,19 +4,40 @@
 
 @layer base {
     :root {
-        --background: #F5F7FA;
-        --foreground: #111827;
+        --background: #eef4fb;
+        --background-strong: #e2edf9;
+        --surface: #ffffff;
+        --surface-soft: rgba(255, 255, 255, 0.78);
+        --foreground: #102033;
+        --foreground-muted: #5e7288;
+        --line: rgba(126, 164, 206, 0.24);
+        --line-strong: rgba(104, 154, 214, 0.42);
+        --primary: #1677d8;
+        --primary-strong: #0d5eb3;
+        --accent: #d7e7f8;
+        --shadow-soft: 0 24px 70px -34px rgba(27, 85, 145, 0.28);
+        --shadow-card: 0 18px 38px -28px rgba(17, 49, 85, 0.22);
     }
 
     html {
         scroll-behavior: smooth;
+        background:
+            radial-gradient(circle at top left, rgba(163, 204, 243, 0.42), transparent 28rem),
+            linear-gradient(180deg, #f7fbff 0%, var(--background) 34%, #edf3fa 100%);
     }
 
     body {
         color: var(--foreground);
-        background: var(--background);
+        background:
+            radial-gradient(circle at top left, rgba(160, 207, 244, 0.34), transparent 30rem),
+            radial-gradient(circle at top right, rgba(205, 224, 245, 0.65), transparent 22rem),
+            linear-gradient(180deg, #f8fbff 0%, var(--background) 30%, #edf3f9 100%);
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
+    }
+
+    ::selection {
+        background: rgba(22, 119, 216, 0.18);
     }
 
     /* Global Focus Styles */
@@ -45,6 +66,36 @@
         clip: rect(0, 0, 0, 0);
         white-space: nowrap;
         border-width: 0;
+    }
+
+    .page-shell {
+        position: relative;
+        isolation: isolate;
+    }
+
+    .page-shell::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        background:
+            radial-gradient(circle at 10% 10%, rgba(255, 255, 255, 0.74), transparent 18rem),
+            radial-gradient(circle at 90% 0%, rgba(216, 233, 249, 0.55), transparent 22rem);
+        opacity: 0.95;
+        z-index: -1;
+    }
+
+    .glass-panel {
+        background: var(--surface-soft);
+        backdrop-filter: blur(18px);
+        -webkit-backdrop-filter: blur(18px);
+        border: 1px solid rgba(255, 255, 255, 0.65);
+        box-shadow: var(--shadow-soft);
+    }
+
+    .editorial-title {
+        letter-spacing: -0.04em;
+        line-height: 0.96;
     }
 }
 

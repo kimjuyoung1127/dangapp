@@ -41,16 +41,19 @@ export default function MutualMatchModal({
                         exit={{ opacity: 0, scale: 0.9 }}
                         transition={{ type: "spring", damping: 25, stiffness: 300 }}
                     >
-                        <div className="bg-card rounded-3xl p-8 w-full max-w-sm text-center shadow-xl">
-                            <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                                <Heart className="w-8 h-8 text-primary fill-primary" />
+                        <div className="w-full max-w-sm rounded-[2rem] border border-white/80 bg-[linear-gradient(160deg,rgba(255,255,255,0.97)_0%,rgba(238,246,255,0.94)_56%,rgba(219,234,248,0.88)_100%)] p-8 text-center shadow-[0_32px_80px_-36px_rgba(17,49,85,0.4)]">
+                            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-sky-100">
+                                <Heart className="h-8 w-8 fill-sky-600 text-sky-600" />
                             </div>
 
-                            <h2 className="text-2xl font-display font-bold text-foreground mb-2">
-                                매칭 성공!
+                            <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-sky-700/90">
+                                연결 완료
+                            </p>
+                            <h2 className="mb-2 mt-2 text-2xl font-display font-bold text-foreground">
+                                서로 관심이 이어졌어요
                             </h2>
-                            <p className="text-foreground-muted text-sm mb-6">
-                                {partnerName}님과 {dogName}도 당신을 좋아해요!
+                            <p className="mb-6 text-sm leading-6 text-foreground-muted">
+                                {partnerName}님과 {dogName}도 같은 마음을 보냈어요. 지금 바로 대화를 열어 산책 일정을 이어가 보세요.
                             </p>
 
                             <div className="flex flex-col gap-3">

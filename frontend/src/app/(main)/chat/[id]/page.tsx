@@ -198,16 +198,16 @@ export default function ChatRoomPage({ params }: { params: { id: string } }) {
     );
 
     return (
-        <div className="flex h-[100dvh] flex-col bg-sky-50/60">
-            <header className="sticky top-0 z-40 border-b border-sky-100 bg-white/95 backdrop-blur">
-                <div className="mx-auto flex w-full max-w-md items-start justify-between gap-3 px-4 pb-4 pt-4">
+        <div className="page-shell flex h-[100dvh] flex-col bg-transparent">
+            <header className="sticky top-0 z-40 px-3 pt-3">
+                <div className="glass-panel mx-auto flex w-full max-w-md items-start justify-between gap-3 rounded-[1.9rem] px-4 pb-4 pt-4">
                     <div className="min-w-0">
                         <div className="flex items-center gap-2">
                             <TapScale>
                                 <button
                                     type="button"
                                     onClick={() => router.back()}
-                                    className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-sky-50 text-sky-700"
+                                    className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/80 bg-white/85 text-sky-700 shadow-[0_12px_26px_-20px_rgba(17,49,85,0.42)]"
                                 >
                                     <ChevronLeft className="h-5 w-5" />
                                 </button>
@@ -231,7 +231,7 @@ export default function ChatRoomPage({ params }: { params: { id: string } }) {
                             type="button"
                             onClick={() => setIsScheduleOpen(true)}
                             disabled={!myGuardianId || !partner?.guardianId || isCreatingSchedule}
-                            className="inline-flex items-center gap-2 rounded-full bg-sky-600 px-3 py-2 text-sm font-semibold text-white shadow-sm disabled:opacity-50"
+                            className="inline-flex items-center gap-2 rounded-full bg-sky-600 px-3 py-2 text-sm font-semibold text-white shadow-[0_18px_32px_-24px_rgba(14,79,149,0.66)] disabled:opacity-50"
                         >
                             <CalendarClock className="h-4 w-4" />
                             {isCreatingSchedule ? "생성 중" : "일정 제안"}
@@ -240,10 +240,10 @@ export default function ChatRoomPage({ params }: { params: { id: string } }) {
                 </div>
             </header>
 
-            <main className="flex-1 overflow-y-auto pb-28">
-                <div className="mx-auto flex w-full max-w-md flex-col gap-4 px-4 py-5">
+            <main className="flex-1 overflow-y-auto pb-32 pt-3">
+                <div className="mx-auto flex w-full max-w-md flex-col gap-4 px-4 py-3">
                     {messagesError ? (
-                        <div className="rounded-[1.5rem] border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                        <div className="rounded-[1.5rem] border border-red-200 bg-red-50/95 px-4 py-3 text-sm text-red-700 shadow-[0_18px_34px_-28px_rgba(185,28,28,0.45)]">
                             채팅 메시지를 불러오지 못했습니다.
                             <div className="mt-1 text-xs">
                                 {messagesError instanceof Error ? messagesError.message : "알 수 없는 오류"}
@@ -260,7 +260,7 @@ export default function ChatRoomPage({ params }: { params: { id: string } }) {
                     ) : null}
 
                     {!isLoading && !messages?.length ? (
-                        <div className="rounded-[1.75rem] border border-sky-100 bg-white p-5 text-center shadow-sm">
+                        <div className="rounded-[1.75rem] border border-white/80 bg-white/88 p-5 text-center shadow-[0_18px_38px_-28px_rgba(17,49,85,0.22)] backdrop-blur-xl">
                             <p className="text-sm text-foreground-muted">
                                 아직 대화가 없어요. 첫 인사를 보내고 함께 걸을 시간을 잡아보세요.
                             </p>
@@ -294,10 +294,10 @@ export default function ChatRoomPage({ params }: { params: { id: string } }) {
                             <div key={message.id} className={cn("flex flex-col gap-1", isMe ? "items-end" : "items-start")}>
                                 <div
                                     className={cn(
-                                        "max-w-[86%] rounded-[1.5rem] border px-4 py-3 shadow-sm",
+                                        "max-w-[86%] rounded-[1.6rem] border px-4 py-3 shadow-[0_18px_36px_-28px_rgba(17,49,85,0.25)]",
                                         isMe
-                                            ? "border-sky-200 bg-sky-600 text-white"
-                                            : "border-sky-100 bg-white text-foreground"
+                                            ? "border-sky-400/40 bg-[linear-gradient(180deg,rgba(14,116,206,0.96)_0%,rgba(3,105,161,0.94)_100%)] text-white"
+                                            : "border-white/80 bg-white/92 text-foreground backdrop-blur-xl"
                                     )}
                                 >
                                     {message.type === "schedule" ? (
@@ -338,10 +338,10 @@ export default function ChatRoomPage({ params }: { params: { id: string } }) {
                 </div>
             </main>
 
-            <footer className="fixed bottom-0 left-0 right-0 z-40 border-t border-sky-100 bg-white/95 backdrop-blur">
-                <div className="mx-auto w-full max-w-md px-4 pb-[calc(env(safe-area-inset-bottom)+12px)] pt-3">
+            <footer className="fixed bottom-0 left-0 right-0 z-40 px-3 pb-[calc(env(safe-area-inset-bottom)+0.75rem)]">
+                <div className="glass-panel mx-auto w-full max-w-md rounded-[1.9rem] px-4 pb-3 pt-3">
                     <form onSubmit={handleSend} className="flex items-end gap-3">
-                        <div className="flex-1 rounded-[1.5rem] border border-sky-100 bg-sky-50/70 px-4 py-3 shadow-sm">
+                        <div className="flex-1 rounded-[1.5rem] border border-white/80 bg-white/86 px-4 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.6)]">
                             <textarea
                                 value={inputText}
                                 onChange={(event) => setInputText(event.target.value)}
@@ -355,7 +355,7 @@ export default function ChatRoomPage({ params }: { params: { id: string } }) {
                             <button
                                 type="submit"
                                 disabled={!inputText.trim() || isSending}
-                                className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-sky-600 text-white shadow-sm disabled:bg-sky-200"
+                                className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-sky-600 text-white shadow-[0_18px_32px_-24px_rgba(14,79,149,0.66)] disabled:bg-sky-200"
                             >
                                 <Send className="h-5 w-5" />
                             </button>
@@ -411,12 +411,19 @@ function ScheduleMessageCard({
                 ) : null}
             </div>
 
-            <div className={cn("rounded-[1.25rem] px-3 py-3", isMe ? "bg-white/10 text-white" : "bg-sky-50 text-foreground")}>
+            <div className={cn("rounded-[1.25rem] border px-3 py-3", isMe ? "border-white/15 bg-white/10 text-white" : "border-sky-100/80 bg-sky-50/80 text-foreground")}>
                 <p className="text-sm font-medium">
                     {scheduleDate} {scheduleTime}
                 </p>
                 <p className={cn("mt-1 text-sm", isMe ? "text-white/90" : "text-foreground-muted")}>
                     {scheduleLocation}
+                </p>
+                <p className={cn("mt-3 text-xs leading-5", isMe ? "text-white/75" : "text-foreground-muted")}>
+                    {responseState === "accepted"
+                        ? "일정 확인이 끝났어요. 채팅에서 세부 동선을 맞춰보세요."
+                        : responseState === "rejected"
+                          ? "이번 제안은 보류되었어요. 다른 시간대로 다시 제안할 수 있어요."
+                          : "시간과 장소가 괜찮다면 바로 수락하고 다음 안내를 이어갈 수 있어요."}
                 </p>
             </div>
 
@@ -427,8 +434,8 @@ function ScheduleMessageCard({
                         onClick={onReject}
                         disabled={isRespondingSchedule || isActionPending}
                         className={cn(
-                            "rounded-[1rem] px-3 py-2 text-sm font-semibold",
-                            isMe ? "bg-white/15 text-white" : "border border-sky-200 bg-white text-foreground"
+                            "rounded-[1rem] px-3 py-2 text-sm font-semibold transition-colors",
+                            isMe ? "bg-white/15 text-white hover:bg-white/20" : "border border-sky-200 bg-white text-foreground hover:bg-sky-50"
                         )}
                     >
                         거절
@@ -438,8 +445,8 @@ function ScheduleMessageCard({
                         onClick={onAccept}
                         disabled={isRespondingSchedule || isActionPending}
                         className={cn(
-                            "rounded-[1rem] px-3 py-2 text-sm font-semibold",
-                            isMe ? "bg-white text-sky-700" : "bg-sky-600 text-white"
+                            "rounded-[1rem] px-3 py-2 text-sm font-semibold transition-colors",
+                            isMe ? "bg-white text-sky-700 hover:bg-sky-50" : "bg-sky-600 text-white hover:bg-sky-700"
                         )}
                     >
                         수락
@@ -457,7 +464,7 @@ function ScheduleMessageCard({
 function ChatMessageSkeleton({ isMe }: { isMe: boolean }) {
     return (
         <div className={cn("flex flex-col gap-1", isMe ? "items-end" : "items-start")}>
-            <Skeleton className={cn("h-16 w-[72%] rounded-[1.5rem]", isMe ? "bg-sky-200/80" : "bg-white")} />
+            <Skeleton className={cn("h-16 w-[72%] rounded-[1.5rem]", isMe ? "bg-sky-200/80" : "bg-white/90")} />
             <Skeleton className="h-3 w-12 rounded-xl" />
         </div>
     );

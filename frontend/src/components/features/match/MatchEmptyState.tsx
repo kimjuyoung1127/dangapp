@@ -14,14 +14,14 @@ export default function MatchEmptyState({ reason = "no-results" }: MatchEmptySta
     if (reason === "no-location") {
         return (
             <ScrollReveal>
-                <div className="flex flex-col items-center justify-center py-20 text-center">
-                    <div className="w-16 h-16 bg-primary-light/20 rounded-full flex items-center justify-center mb-4">
+                <div className="rounded-[1.9rem] border border-white/80 bg-white/88 px-6 py-12 text-center shadow-[0_18px_38px_-28px_rgba(17,49,85,0.22)] backdrop-blur-xl">
+                    <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-sky-50">
                         <MapPin className="w-8 h-8 text-primary" />
                     </div>
-                    <h3 className="text-lg font-semibold text-foreground mb-1">
+                    <h3 className="mb-1 text-lg font-semibold text-foreground">
                         위치 설정이 필요해요
                     </h3>
-                    <p className="text-sm text-foreground-muted mb-6">
+                    <p className="mb-6 text-sm text-foreground-muted">
                         내 동네를 설정하면 주변 보호자를 추천받을 수 있어요.
                     </p>
                     <Link href="/profile">
@@ -36,14 +36,14 @@ export default function MatchEmptyState({ reason = "no-results" }: MatchEmptySta
 
     return (
         <ScrollReveal>
-            <div className="flex flex-col items-center justify-center py-20 text-center">
-                <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mb-4">
+            <div className="rounded-[1.9rem] border border-white/80 bg-white/88 px-6 py-12 text-center shadow-[0_18px_38px_-28px_rgba(17,49,85,0.22)] backdrop-blur-xl">
+                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-sky-50">
                     <Layers className="w-8 h-8 text-foreground-muted" />
                 </div>
-                <h3 className="text-lg font-semibold text-foreground mb-1">
+                <h3 className="mb-1 text-lg font-semibold text-foreground">
                     추천 항목이 없어요
                 </h3>
-                <p className="text-sm text-foreground-muted mb-6">
+                <p className="mb-6 text-sm text-foreground-muted">
                     다른 모드를 선택하거나 잠시 후 다시 시도해보세요.
                 </p>
                 <Link href="/modes">

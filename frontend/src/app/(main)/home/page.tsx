@@ -153,20 +153,20 @@ export default function HomePage() {
 
     return (
         <AppShell>
-            <div className="mx-auto w-full max-w-md px-4 pb-10">
-                <div className="mb-5 flex items-center justify-between">
+            <div className="mx-auto w-full max-w-md px-4 pb-10 pt-3">
+                <div className="mb-5 flex items-end justify-between gap-3">
                     <div>
-                        <p className="text-xs font-semibold uppercase tracking-[0.24em] text-sky-700">
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-sky-700">
                             오늘의 추천
                         </p>
-                        <h2 className="mt-1 text-2xl font-display font-semibold text-foreground">
+                        <h2 className="editorial-title mt-2 text-[2.2rem] font-display font-semibold text-foreground">
                             {modeLabel}
                         </h2>
                     </div>
                     <TapScale>
                         <Link
                             href="/modes"
-                            className="inline-flex items-center gap-1.5 rounded-full bg-sky-100 px-3 py-1.5 text-sm font-medium text-sky-700"
+                            className="inline-flex items-center gap-1.5 rounded-full border border-white/80 bg-white/80 px-3 py-2 text-sm font-medium text-sky-700 shadow-[0_14px_28px_-22px_rgba(17,49,85,0.32)]"
                         >
                             <Layers className="h-4 w-4" />
                             모드 보기
@@ -220,21 +220,40 @@ function HomeFamilyIntroCard({
     demoFallbackActive: boolean;
 }) {
     return (
-        <div className="mb-4 rounded-[1.75rem] border border-sky-100 bg-sky-50/80 p-4 shadow-sm">
-            <div className="flex items-start gap-3">
-                <div className="mt-0.5 rounded-2xl bg-white p-2 text-sky-700 shadow-sm">
+        <div className="mb-5 overflow-hidden rounded-[2rem] border border-white/80 bg-[linear-gradient(160deg,rgba(255,255,255,0.96)_0%,rgba(238,246,255,0.93)_56%,rgba(218,234,248,0.88)_100%)] p-5 shadow-[0_24px_60px_-34px_rgba(17,49,85,0.24)]">
+            <div className="flex items-start gap-4">
+                <div className="mt-0.5 rounded-[1.2rem] border border-white/80 bg-white/90 p-2.5 text-sky-700 shadow-[0_14px_28px_-22px_rgba(17,49,85,0.28)]">
                     <CalendarDays className="h-5 w-5" />
                 </div>
                 <div className="min-w-0 flex-1">
-                    <div className="flex items-center justify-between gap-2">
-                        <p className="text-sm font-semibold text-foreground">
-                            바로 살펴보기 좋은 {modeLabel}
-                        </p>
+                    <div className="flex items-start justify-between gap-3">
+                        <div>
+                            <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-sky-700/85">
+                                빠른 추천
+                            </p>
+                            <p className="mt-2 text-lg font-semibold leading-7 tracking-[-0.02em] text-foreground">
+                                바로 살펴보기 좋은 {modeLabel}
+                            </p>
+                        </div>
                         {demoFallbackActive ? <FamilyDebugBadge /> : null}
                     </div>
-                    <p className="mt-1 text-xs leading-5 text-foreground-muted">
+                    <p className="mt-3 text-[13px] leading-6 text-foreground-muted">
                         거리, 신뢰도, 일정 힌트를 함께 보여드려서 빠르게 잘 맞는 상대를 고를 수 있어요.
                     </p>
+                    <div className="mt-4 grid grid-cols-3 gap-2">
+                        <div className="rounded-[1.2rem] border border-white/80 bg-white/78 px-3 py-2.5">
+                            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-sky-700/80">거리</p>
+                            <p className="mt-1 text-sm font-semibold text-foreground">동네 중심</p>
+                        </div>
+                        <div className="rounded-[1.2rem] border border-white/80 bg-white/78 px-3 py-2.5">
+                            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-sky-700/80">신뢰</p>
+                            <p className="mt-1 text-sm font-semibold text-foreground">인증 상태 우선</p>
+                        </div>
+                        <div className="rounded-[1.2rem] border border-white/80 bg-white/78 px-3 py-2.5">
+                            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-sky-700/80">일정</p>
+                            <p className="mt-1 text-sm font-semibold text-foreground">바로 제안 가능</p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -243,7 +262,7 @@ function HomeFamilyIntroCard({
 
 function MatchCardSkeleton() {
     return (
-        <div className="space-y-4 rounded-[2rem] border border-sky-100 bg-white p-4 shadow-sm">
+        <div className="space-y-4 rounded-[2rem] border border-white/80 bg-white/88 p-4 shadow-[0_18px_40px_-28px_rgba(17,49,85,0.24)]">
             <div className="flex items-start justify-between gap-3">
                 <div className="flex-1 space-y-2">
                     <Skeleton className="h-3 w-28 rounded-full" />

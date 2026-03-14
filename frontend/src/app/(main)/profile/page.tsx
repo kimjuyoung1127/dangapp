@@ -46,13 +46,13 @@ export default function ProfilePage() {
 
     return (
         <AppShell>
-            <div className="space-y-5 px-4 py-6">
+            <div className="mx-auto w-full max-w-md space-y-5 px-4 pb-24 pt-3">
                 <FamilyPageIntro
                     eyebrow="신뢰 프로필"
                     title="프로필"
-                    description="신뢰도, 후기, 반려 정보와 알림 설정을 한 곳에서 관리합니다."
+                    description="신뢰도와 활동 기록, 반려 정보와 알림 설정을 한 화면에서 관리해요."
                     action={
-                        <Button variant="ghost" size="icon" className="bg-white text-sky-700 hover:bg-sky-50" onClick={() => setIsEditOpen(true)}>
+                        <Button variant="ghost" size="icon" className="bg-white/90 text-sky-700 hover:bg-sky-50" onClick={() => setIsEditOpen(true)}>
                             <Settings className="h-5 w-5" />
                         </Button>
                     }

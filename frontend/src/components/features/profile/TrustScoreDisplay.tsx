@@ -1,5 +1,3 @@
-// TrustScoreDisplay.tsx — 신뢰 점수 원형 게이지 + 레벨 표시 (SKILL-08)
-
 "use client";
 
 import { cn } from "@/lib/utils";
@@ -18,35 +16,39 @@ export default function TrustScoreDisplay({
     const nextLevel = TRUST_LEVEL_CONFIG.find((c) => c.level === level + 1);
     const pointsToNext = nextLevel ? nextLevel.minScore - score : 0;
 
-    // SVG 원형 게이지 계산
     const radius = 50;
     const circumference = 2 * Math.PI * radius;
     const progress = Math.min(score / 100, 1);
     const strokeDashoffset = circumference * (1 - progress);
 
     return (
-        <div className="bg-card rounded-3xl border border-border p-6">
-            <h3 className="text-sm font-medium text-foreground-muted mb-4">
-                신뢰 점수
-            </h3>
+        <div className="rounded-[1.9rem] border border-white/80 bg-white/88 p-5 shadow-[0_18px_38px_-28px_rgba(17,49,85,0.22)] backdrop-blur-xl">
+            <div className="flex items-start justify-between gap-4">
+                <div>
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-sky-700/90">
+                        신뢰 점수
+                    </p>
+                    <h3 className="mt-2 text-lg font-semibold tracking-[-0.02em] text-foreground">
+                        지금 쌓인 안심 지표
+                    </h3>
+                </div>
+                <div className="rounded-[1.1rem] border border-white/80 bg-sky-50/80 px-3 py-2 text-right">
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-sky-700/80">현재 레벨</p>
+                    <p className="mt-1 text-sm font-semibold text-foreground">Lv.{level}</p>
+                </div>
+            </div>
 
-            <div className="flex items-center gap-6">
-                {/* 원형 게이지 */}
-                <div className="relative w-28 h-28 flex-shrink-0">
-                    <svg
-                        className="w-full h-full -rotate-90"
-                        viewBox="0 0 120 120"
-                    >
-                        {/* 배경 원 */}
+            <div className="mt-5 flex items-center gap-5">
+                <div className="relative h-28 w-28 flex-shrink-0">
+                    <svg className="h-full w-full -rotate-90" viewBox="0 0 120 120">
                         <circle
                             cx="60"
                             cy="60"
                             r={radius}
                             fill="none"
-                            stroke="#E5E7EB"
+                            stroke="#D9E9F7"
                             strokeWidth="8"
                         />
-                        {/* 진행 원 */}
                         <circle
                             cx="60"
                             cy="60"
@@ -60,7 +62,6 @@ export default function TrustScoreDisplay({
                             className="transition-all duration-700 ease-out"
                         />
                     </svg>
-                    {/* 중앙 점수 */}
                     <div className="absolute inset-0 flex flex-col items-center justify-center">
                         <span className="text-2xl font-display font-bold text-foreground">
                             {score}
@@ -71,33 +72,29 @@ export default function TrustScoreDisplay({
                     </div>
                 </div>
 
-                {/* 레벨 정보 */}
                 <div className="space-y-2">
                     <div className="flex items-center gap-2">
                         <span className="text-lg font-display font-bold text-foreground">
                             Lv.{level}
                         </span>
-                        <span
-                            className={cn(
-                                "text-sm font-medium",
-                                levelInfo.color
-                            )}
-                        >
+                        <span className={cn("text-sm font-medium", levelInfo.color)}>
                             {levelInfo.label}
                         </span>
                     </div>
 
-                    {nextLevel && pointsToNext > 0 && (
-                        <p className="text-xs text-foreground-muted">
-                            다음 레벨까지 {pointsToNext}점
+                    {nextLevel && pointsToNext > 0 ? (
+                        <p className="text-sm leading-6 text-foreground-muted">
+                            다음 레벨까지 <span className="font-semibold text-foreground">{pointsToNext}점</span> 남았어요.
                         </p>
-                    )}
-
-                    {!nextLevel && (
-                        <p className="text-xs text-amber-500 font-medium">
+                    ) : (
+                        <p className="text-sm font-medium text-amber-600">
                             최고 레벨 달성!
                         </p>
                     )}
+
+                    <p className="text-xs leading-5 text-foreground-muted">
+                        후기, 일정 완료, 프로필 완성도가 차곡차곡 반영돼요.
+                    </p>
                 </div>
             </div>
         </div>
