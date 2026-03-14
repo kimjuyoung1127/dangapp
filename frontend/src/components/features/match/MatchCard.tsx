@@ -13,9 +13,15 @@ interface MatchCardProps {
     profile: MatchGuardianProfile;
     onLike: (section: string) => void;
     onPass: () => void;
+    readOnlyLabel?: string | null;
 }
 
-export default function MatchCard({ profile, onLike, onPass }: MatchCardProps) {
+export default function MatchCard({
+    profile,
+    onLike,
+    onPass,
+    readOnlyLabel = null,
+}: MatchCardProps) {
     const dog = profile.dogs[0];
     const trustLevel = profile.users?.trust_level ?? 1;
     const trustInfo = getTrustLevelInfo(trustLevel);
@@ -24,23 +30,29 @@ export default function MatchCard({ profile, onLike, onPass }: MatchCardProps) {
     const photoSrc = dog?.photo_urls?.[0] || "/placeholder-dog.svg";
     const score = profile.compatibility_score != null ? Math.round(profile.compatibility_score) : null;
     const hasTimeOverlap = profile.time_overlap_score != null && profile.time_overlap_score > 0;
+    const breedLabel = dog?.breed ? mapBreedLabel(dog.breed) : null;
+    const temperamentLabels = Array.isArray(dog?.temperament)
+        ? dog.temperament.map((tag) => mapTemperamentLabel(String(tag)))
+        : [];
 
     const matchReasons = [
-        score != null ? `매칭 점수 ${score}%로 기준을 넘겼어요.` : null,
-        distance ? `${distance} 안에서 연결할 수 있어요.` : null,
-        hasTimeOverlap ? "주요 산책 시간대가 겹쳐 일정 제안이 쉬워요." : "프로필을 먼저 살펴보고 천천히 인사하기 좋아요.",
+        score != null ? `생활 리듬과 선호가 잘 맞아 매칭 점수 ${score}%로 추천드려요.` : null,
+        distance ? `${distance} 거리라 첫 만남 일정을 비교적 편하게 잡을 수 있어요.` : null,
+        hasTimeOverlap
+            ? "활동 시간이 겹쳐서 관심을 보낸 뒤 바로 일정 제안으로 이어가기 좋아요."
+            : "먼저 관심을 보내고, 답장이 오면 서로 가능한 시간을 맞춰 보세요.",
     ].filter(Boolean) as string[];
 
     const safetySignals = [
-        profile.verified_region ? "지역 인증" : null,
-        `프로필 ${profile.onboarding_progress}%`,
+        profile.verified_region ? "활동 지역 인증" : null,
+        `프로필 완성도 ${profile.onboarding_progress}%`,
         trustInfo.label,
-        dog ? `${dog.name} 정보 등록` : null,
+        dog ? `${dog.name} 프로필 작성 완료` : null,
     ].filter(Boolean) as string[];
 
     const scheduleHint = hasTimeOverlap
-        ? "관심을 보내면 일정 제안까지 자연스럽게 이어질 가능성이 높아요."
-        : "먼저 관심을 보내고, 대화가 열리면 다음 산책 시간을 조율해 보세요.";
+        ? "지금 관심을 보내면 다음 단계로 자연스럽게 산책 일정을 제안할 수 있어요."
+        : "먼저 관심을 보내고, 채팅에서 서로 가능한 시간을 조율해 보세요.";
 
     return (
         <div className="relative mx-auto w-full max-w-md pb-10">
@@ -49,7 +61,7 @@ export default function MatchCard({ profile, onLike, onPass }: MatchCardProps) {
                     <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0">
                             <p className="text-xs font-semibold uppercase tracking-[0.22em] text-sky-700">
-                                family organizer match
+                                추천 산책 상대
                             </p>
                             <div className="mt-2 flex flex-wrap items-center gap-2">
                                 <h2 className="text-[28px] font-display font-bold text-foreground">
@@ -66,7 +78,7 @@ export default function MatchCard({ profile, onLike, onPass }: MatchCardProps) {
                                 ) : null}
                                 {hasTimeOverlap ? (
                                     <span className="rounded-full bg-sky-100 px-2.5 py-1 text-xs font-medium text-sky-700">
-                                        일정 겹침 높음
+                                        일정 맞추기 쉬움
                                     </span>
                                 ) : null}
                             </div>
@@ -78,7 +90,7 @@ export default function MatchCard({ profile, onLike, onPass }: MatchCardProps) {
                     <div className="relative aspect-[4/5] overflow-hidden rounded-[1.75rem] border border-sky-100 bg-sky-50">
                         <Image
                             src={photoSrc}
-                            alt={dog?.name ?? "강아지 프로필"}
+                            alt={dog?.name ?? "반려견 프로필"}
                             fill
                             className="object-cover"
                             sizes="(max-width: 768px) 100vw, 420px"
@@ -88,16 +100,16 @@ export default function MatchCard({ profile, onLike, onPass }: MatchCardProps) {
                         <div className="absolute inset-x-0 bottom-0 p-5 text-white">
                             <p className="text-3xl font-display font-bold">{dog?.name ?? "이름 미등록"}</p>
                             <p className="mt-1 text-sm opacity-95">
-                                {dog?.breed ?? "견종 미기재"}
+                                {breedLabel ?? "품종 정보 준비 중"}
                                 {dog?.age != null ? ` · ${dog.age}살` : ""}
                                 {dog?.weight_kg != null ? ` · ${dog.weight_kg}kg` : ""}
                             </p>
                         </div>
                     </div>
 
-                    {dog?.temperament?.length ? (
+                    {temperamentLabels.length ? (
                         <div className="flex flex-wrap gap-2">
-                            {dog.temperament.map((tag) => (
+                            {temperamentLabels.map((tag) => (
                                 <span
                                     key={tag}
                                     className="rounded-full bg-sky-100 px-3 py-1.5 text-sm font-medium text-sky-700"
@@ -108,7 +120,7 @@ export default function MatchCard({ profile, onLike, onPass }: MatchCardProps) {
                         </div>
                     ) : null}
 
-                    <InfoPanel title="잘 맞는 이유" className="border border-sky-100 bg-white">
+                    <InfoPanel title="추천 이유" className="border border-sky-100 bg-white">
                         <ul className="space-y-2 text-sm leading-6 text-foreground">
                             {matchReasons.map((reason) => (
                                 <li key={reason} className="flex items-start gap-2">
@@ -119,10 +131,10 @@ export default function MatchCard({ profile, onLike, onPass }: MatchCardProps) {
                         </ul>
                     </InfoPanel>
 
-                    <InfoPanel title="안심 체크와 다음 액션" className="border border-sky-200 bg-sky-50">
+                    <InfoPanel title="신뢰 정보와 다음 단계" className="border border-sky-200 bg-sky-50">
                         <div className="space-y-3">
                             <div className="flex items-center justify-between">
-                                <span className="text-sm text-foreground-muted">Trust score</span>
+                                <span className="text-sm text-foreground-muted">신뢰 점수</span>
                                 <span className="text-lg font-bold text-foreground">
                                     {trustScore != null ? trustScore : "-"}
                                 </span>
@@ -140,38 +152,47 @@ export default function MatchCard({ profile, onLike, onPass }: MatchCardProps) {
                             <div className="rounded-2xl bg-white/90 p-3 text-sm leading-6 text-foreground">
                                 <div className="mb-1 flex items-center gap-2 font-semibold text-sky-700">
                                     <CalendarClock className="h-4 w-4" />
-                                    일정 힌트
+                                    일정 제안 힌트
                                 </div>
                                 <p>{scheduleHint}</p>
                             </div>
                         </div>
                     </InfoPanel>
 
-                    <InfoPanel title="보호자 소개" className="border border-sky-100 bg-white">
+                    <InfoPanel title="보호자 한마디" className="border border-sky-100 bg-white">
                         <p className="text-base leading-7 text-foreground">
-                            {profile.bio || "아직 소개가 없어요. 관심을 보내고 대화를 열어 보세요."}
+                            {profile.bio || "아직 소개글이 없어요. 먼저 관심을 보내고 채팅에서 대화를 이어가 보세요."}
                         </p>
                     </InfoPanel>
 
-                    <div className="grid grid-cols-2 gap-3">
-                        <Button
-                            type="button"
-                            variant="secondary"
-                            className="border border-sky-200 bg-white text-sky-700 hover:bg-sky-50"
-                            onClick={onPass}
-                        >
-                            <X className="mr-1.5 h-4 w-4" />
-                            패스
-                        </Button>
-                        <Button
-                            type="button"
-                            variant="primary"
-                            className="bg-sky-600 text-white hover:bg-sky-700"
-                            onClick={() => onLike(hasTimeOverlap ? "schedule" : "family-primary")}
-                        >
-                            <Heart className="mr-1.5 h-4 w-4" />
-                            관심 보내기
-                        </Button>
+                    <div className="space-y-3">
+                        {readOnlyLabel ? (
+                            <div className="rounded-2xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm font-medium text-amber-800">
+                                {readOnlyLabel}
+                            </div>
+                        ) : null}
+                        <div className="grid grid-cols-2 gap-3">
+                            <Button
+                                type="button"
+                                variant="secondary"
+                                className="border border-sky-200 bg-white text-sky-700 hover:bg-sky-50"
+                                onClick={onPass}
+                                disabled={!!readOnlyLabel}
+                            >
+                                <X className="mr-1.5 h-4 w-4" />
+                                넘기기
+                            </Button>
+                            <Button
+                                type="button"
+                                variant="primary"
+                                className="bg-sky-600 text-white hover:bg-sky-700"
+                                onClick={() => onLike(hasTimeOverlap ? "schedule" : "family-primary")}
+                                disabled={!!readOnlyLabel}
+                            >
+                                <Heart className="mr-1.5 h-4 w-4" />
+                                관심 보내기
+                            </Button>
+                        </div>
                     </div>
                 </div>
             </ScrollReveal>
@@ -191,13 +212,42 @@ function TrustBadge({ trustLevel, trustLabel }: { trustLevel: number; trustLabel
 function MatchScoreCard({ score }: { score: number }) {
     return (
         <div className="shrink-0 rounded-3xl bg-sky-100 px-4 py-3 text-right text-sky-700">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.2em]">match</p>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.2em]">매칭</p>
             <div className="mt-1 flex items-center justify-end gap-1">
                 <Zap className="h-4 w-4 fill-current" />
                 <p className="text-2xl font-bold">{score}%</p>
             </div>
         </div>
     );
+}
+
+function mapBreedLabel(breed: string) {
+    const normalized = breed.trim().toLowerCase();
+    const breedLabels: Record<string, string> = {
+        poodle: "푸들",
+        corgi: "웰시코기",
+        maltese: "말티즈",
+        "bichon frise": "비숑 프리제",
+        shiba: "시바견",
+    };
+    return breedLabels[normalized] ?? breed;
+}
+
+function mapTemperamentLabel(tag: string) {
+    const normalized = tag.trim().toLowerCase();
+    const temperamentLabels: Record<string, string> = {
+        gentle: "온순함",
+        playful: "장난기 많음",
+        steady: "차분함",
+        friendly: "친화적",
+        bright: "활발함",
+        social: "사교적",
+        clean: "깔끔함",
+        affectionate: "애교 많음",
+        alert: "경계심 있음",
+        independent: "독립적",
+    };
+    return temperamentLabels[normalized] ?? tag;
 }
 
 function InfoPanel({

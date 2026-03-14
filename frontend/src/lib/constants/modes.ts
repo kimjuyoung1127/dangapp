@@ -41,8 +41,8 @@ export const MODE_CONFIG: ModeConfig[] = [
     },
     {
         mode: "family",
-        label: "패밀리 모드",
-        description: "그룹 생성, 공동 일정 관리",
+        label: "함께 돌봄 모드",
+        description: "그룹과 일정으로 공동 돌봄 관리",
         icon: Users,
         requiredLevel: 3,
         features: ["패밀리 그룹", "공동 일정", "멤버 초대", "반려견 공유"],

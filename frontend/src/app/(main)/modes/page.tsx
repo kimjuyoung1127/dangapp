@@ -7,14 +7,17 @@ import ModeCard from "@/components/features/modes/ModeCard";
 import ModeUnlockDialog from "@/components/features/modes/ModeUnlockDialog";
 import { AppShell } from "@/components/shared/AppShell";
 import {
+    FamilyDebugBadge,
     FamilyPageIntro,
     FamilySectionTitle,
     FamilyStatusChip,
     FamilySurface,
 } from "@/components/shared/FamilyUi";
 import { Skeleton } from "@/components/ui/Skeleton";
+import { hasDebugDemoData, isDebugDemoFallbackEnabled } from "@/lib/debugDemoFallback";
 import { MODE_CONFIG, type ModeConfig } from "@/lib/constants/modes";
 import { useCurrentGuardian } from "@/lib/hooks/useCurrentGuardian";
+import { useModesDebugDemo } from "@/lib/hooks/useDebugDemoFallback";
 import { useDogOwnerships, useMyScheduleParticipants } from "@/lib/hooks/useFamily";
 import { useMyReservations, usePartnerPlaces } from "@/lib/hooks/useCare";
 import { useModeUnlocks } from "@/lib/hooks/useMode";
@@ -59,6 +62,7 @@ export default function ModesPage() {
         isError: isParticipantsError,
         refetch: refetchParticipants,
     } = useMyScheduleParticipants(guardianId);
+    const { data: demoPayload } = useModesDebugDemo();
 
     const unlockedModes = useMemo(() => {
         const set = new Set(unlocks.map((unlock) => unlock.mode));
@@ -66,52 +70,87 @@ export default function ModesPage() {
         return set;
     }, [unlocks]);
 
+    const careFallbackActive =
+        isDebugDemoFallbackEnabled() &&
+        !isPartnerPlacesLoading &&
+        !isReservationsLoading &&
+        hasDebugDemoData(demoPayload?.partnerPlaces) &&
+        (isPartnerPlacesError || isReservationsError || (partnerPlaces.length === 0 && myReservations.length === 0));
+
+    const familyFallbackActive =
+        isDebugDemoFallbackEnabled() &&
+        !isOwnershipsLoading &&
+        !isParticipantsLoading &&
+        hasDebugDemoData(demoPayload?.ownerships) &&
+        (isOwnershipsError || isParticipantsError || (dogOwnerships.length === 0 && scheduleParticipants.length === 0));
+
+    const resolvedPartnerPlaces = useMemo(
+        () => (careFallbackActive ? demoPayload?.partnerPlaces ?? [] : partnerPlaces),
+        [careFallbackActive, demoPayload?.partnerPlaces, partnerPlaces]
+    );
+    const resolvedReservations = useMemo(
+        () => (careFallbackActive ? demoPayload?.reservations ?? [] : myReservations),
+        [careFallbackActive, demoPayload?.reservations, myReservations]
+    );
+    const resolvedOwnerships = useMemo(
+        () => (familyFallbackActive ? demoPayload?.ownerships ?? [] : dogOwnerships),
+        [demoPayload?.ownerships, dogOwnerships, familyFallbackActive]
+    );
+    const resolvedParticipants = useMemo(
+        () => (familyFallbackActive ? demoPayload?.participants ?? [] : scheduleParticipants),
+        [demoPayload?.participants, familyFallbackActive, scheduleParticipants]
+    );
+
     const pendingReservationCount = useMemo(
-        () => myReservations.filter((reservation) => reservation.status === "pending").length,
-        [myReservations]
+        () => resolvedReservations.filter((reservation) => reservation.status === "pending").length,
+        [resolvedReservations]
     );
     const acceptedParticipantCount = useMemo(
-        () => scheduleParticipants.filter((participant) => participant.status === "accepted").length,
-        [scheduleParticipants]
+        () => resolvedParticipants.filter((participant) => participant.status === "accepted").length,
+        [resolvedParticipants]
     );
 
     const careSummary = useMemo(
         () =>
             summarizeCareProgress({
-                hasError: isPartnerPlacesError || isReservationsError,
-                placesCount: partnerPlaces.length,
-                reservationsCount: myReservations.length,
+                hasError: !careFallbackActive && (isPartnerPlacesError || isReservationsError),
+                placesCount: resolvedPartnerPlaces.length,
+                reservationsCount: resolvedReservations.length,
                 pendingReservationsCount: pendingReservationCount,
             }),
         [
+            careFallbackActive,
             isPartnerPlacesError,
             isReservationsError,
-            myReservations.length,
-            partnerPlaces.length,
             pendingReservationCount,
+            resolvedPartnerPlaces.length,
+            resolvedReservations.length,
         ]
     );
     const familySummary = useMemo(
         () =>
             summarizeFamilyProgress({
-                hasError: isOwnershipsError || isParticipantsError,
-                ownershipCount: dogOwnerships.length,
-                participantsCount: scheduleParticipants.length,
+                hasError: !familyFallbackActive && (isOwnershipsError || isParticipantsError),
+                ownershipCount: resolvedOwnerships.length,
+                participantsCount: resolvedParticipants.length,
                 acceptedParticipantsCount: acceptedParticipantCount,
             }),
         [
             acceptedParticipantCount,
-            dogOwnerships.length,
+            familyFallbackActive,
             isOwnershipsError,
             isParticipantsError,
-            scheduleParticipants.length,
+            resolvedOwnerships.length,
+            resolvedParticipants.length,
         ]
     );
 
     const isB2BSummaryLoading =
         isPartnerPlacesLoading || isReservationsLoading || isOwnershipsLoading || isParticipantsLoading;
     const hasB2BSummaryError =
-        isPartnerPlacesError || isReservationsError || isOwnershipsError || isParticipantsError;
+        (isPartnerPlacesError || isReservationsError || isOwnershipsError || isParticipantsError) &&
+        !careFallbackActive &&
+        !familyFallbackActive;
 
     const isModeUnlocked = (config: ModeConfig) => {
         if (config.mode === "basic") return true;
@@ -140,15 +179,15 @@ export default function ModesPage() {
         <AppShell>
             <div className="space-y-5 px-4 py-6">
                 <FamilyPageIntro
-                    eyebrow="mode center"
-                    title="모드 선택"
-                    description="신뢰도와 준비 상태를 확인한 뒤, 상황에 맞는 운영 모드로 이동하세요."
+                    eyebrow="이용 모드"
+                    title="모드 관리"
+                    description="신뢰 레벨과 준비 상태를 확인하고 필요한 모드로 이동해 보세요."
                 />
 
                 <FamilySurface tone="soft" className="space-y-4">
                     <FamilySectionTitle
-                        title="운영 준비 상태"
-                        meta="care와 family 모드의 실행 준비도를 요약했습니다."
+                        title="모드 준비 상태"
+                        meta="돌봄과 함께 돌봄 기능을 바로 사용할 수 있는지 한눈에 확인해 보세요."
                         action={
                             hasB2BSummaryError ? (
                                 <button
@@ -161,7 +200,7 @@ export default function ModesPage() {
                                         void refetchParticipants();
                                     }}
                                 >
-                                    다시 확인
+                                    다시 불러오기
                                 </button>
                             ) : null
                         }
@@ -175,22 +214,24 @@ export default function ModesPage() {
                     ) : (
                         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                             <ModeStatusCard
-                                title="Care"
+                                title="돌봄"
                                 summary={careSummary}
                                 route="/care"
                                 metrics={[
-                                    `파트너 장소 ${partnerPlaces.length}곳`,
-                                    `예약 ${myReservations.length}건`,
+                                    `이용 가능한 장소 ${resolvedPartnerPlaces.length}곳`,
+                                    `예약 내역 ${resolvedReservations.length}건`,
                                 ]}
+                                showDebugBadge={careFallbackActive}
                             />
                             <ModeStatusCard
-                                title="Family"
+                                title="함께 돌봄"
                                 summary={familySummary}
                                 route="/family"
                                 metrics={[
-                                    `소유 연결 ${dogOwnerships.length}건`,
-                                    `공유 일정 참여 ${scheduleParticipants.length}건`,
+                                    `공동 돌봄 연결 ${resolvedOwnerships.length}건`,
+                                    `공유 일정 참여 ${resolvedParticipants.length}건`,
                                 ]}
+                                showDebugBadge={familyFallbackActive}
                             />
                         </div>
                     )}
@@ -228,20 +269,25 @@ function ModeStatusCard({
     summary,
     route,
     metrics,
+    showDebugBadge,
 }: {
     title: string;
     summary: ModeProgressSummary;
     route: string;
     metrics: string[];
+    showDebugBadge: boolean;
 }) {
     return (
         <FamilySurface className="space-y-3">
             <div className="flex items-center justify-between gap-2">
                 <h3 className="text-base font-semibold text-foreground">{title}</h3>
-                <FamilyStatusChip
-                    label={summary.title}
-                    tone={summary.tone === "good" ? "success" : summary.tone === "warning" ? "warning" : "default"}
-                />
+                <div className="flex items-center gap-2">
+                    {showDebugBadge ? <FamilyDebugBadge /> : null}
+                    <FamilyStatusChip
+                        label={summary.title}
+                        tone={summary.tone === "good" ? "success" : summary.tone === "warning" ? "warning" : "default"}
+                    />
+                </div>
             </div>
             <p className="text-sm leading-6 text-foreground-muted">{summary.message}</p>
             <div className="space-y-1">
@@ -252,7 +298,7 @@ function ModeStatusCard({
                 ))}
             </div>
             <Link href={route} className="inline-flex text-sm font-semibold text-sky-700">
-                {title} 열기
+                {title}으로 이동
             </Link>
         </FamilySurface>
     );

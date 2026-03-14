@@ -49,7 +49,7 @@ export default function ChatListPage() {
         <AppShell>
             <div className="mx-auto w-full max-w-md space-y-5 px-4 pb-24 pt-6">
                 <FamilyPageIntro
-                    eyebrow="family organizer inbox"
+                    eyebrow="대화함"
                     title="채팅"
                     description="읽지 않은 대화와 일정 제안을 한 눈에 정리해서 보여줍니다."
                     action={<div className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1.5 text-sm font-medium text-sky-700 shadow-sm"><MessageSquareText className="h-4 w-4" /> {unreadCount}</div>}

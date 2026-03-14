@@ -1,4 +1,3 @@
-// File: Component tests for Google OAuth consent gating on auth entry screen.
 import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createClient } from "@/lib/supabase/client";
@@ -25,7 +24,7 @@ describe("AuthEntryCard", () => {
 
         render(<AuthEntryCard source="login" />);
 
-        const submit = screen.getByRole("button", { name: "Continue with Google" });
+        const submit = screen.getByRole("button", { name: "Google로 계속하기" });
         expect(submit).toBeDisabled();
 
         fireEvent.click(screen.getByLabelText("[필수] 이용약관에 동의합니다."));
@@ -56,8 +55,10 @@ describe("AuthEntryCard", () => {
 
         fireEvent.click(screen.getByLabelText("[필수] 이용약관에 동의합니다."));
         fireEvent.click(screen.getByLabelText("[필수] 개인정보 처리방침에 동의합니다."));
-        fireEvent.click(screen.getByRole("button", { name: "Continue with Google" }));
+        fireEvent.click(screen.getByRole("button", { name: "Google로 계속하기" }));
 
-        expect(await screen.findByText("Google 로그인 시작에 실패했습니다. 잠시 후 다시 시도해 주세요.")).toBeInTheDocument();
+        expect(
+            await screen.findByText("Google 로그인 시작에 실패했습니다. 잠시 후 다시 시도해 주세요.")
+        ).toBeInTheDocument();
     });
 });

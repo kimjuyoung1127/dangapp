@@ -1,37 +1,40 @@
 ---
-# File: Skill instructions for route-board parity validation and correction.
 name: dang-route-doc-parity
-description: Validate and enforce consistency between Next.js App Router page routes and docs/status/PAGE-UPGRADE-BOARD.md rows. Use when adding/removing routes, updating route ownership/status, or preparing QA/Done evidence that requires code-doc alignment.
+description: Validate and enforce consistency between Next.js App Router page routes and `docs/status/PAGE-UPGRADE-BOARD.md` before status sync work.
 ---
 
 # dang-route-doc-parity
 
+## Trigger
+- Adding or removing a page route.
+- Updating route owner, status, or parity evidence.
+- Preparing route work for QA, Done, or status sync.
+
 ## Inputs
-- App routes from `frontend/src/app/**/page.tsx`.
-- Route board: `docs/status/PAGE-UPGRADE-BOARD.md`.
-- Daily log target: `docs/daily/MM-DD/page-<route>.md` or stabilization log.
+- App routes from `frontend/src/app/**/page.tsx`
+- Route board: `docs/status/PAGE-UPGRADE-BOARD.md`
+- Daily log target for parity evidence
+
+## Read First
+1. `docs/status/PAGE-UPGRADE-BOARD.md`
+2. `docs/status/PROJECT-STATUS.md`
+3. `docs/status/11-FEATURE-PARITY-MATRIX.md`
 
 ## Procedure
-1. Run route/doc parity validator:
-   - `npm run validate:route-doc-parity`
-2. If `MISSING_IN_BOARD` exists:
-   - Add route rows to `PAGE-UPGRADE-BOARD.md` with parity IDs and owner.
-3. If `STALE_IN_BOARD` exists:
-   - Remove obsolete rows or restore missing route implementation intentionally.
-4. Re-run validator until `ROUTE_DOC_PARITY=PASS`.
-5. Sync related status docs:
-   - `docs/status/PROJECT-STATUS.md`
-   - `docs/status/11-FEATURE-PARITY-MATRIX.md`
-6. Log evidence in daily docs with command output summary.
+1. Compare the actual App Router routes with board rows.
+2. Add missing rows, remove stale rows, or restore intentionally omitted routes.
+3. Sync related status docs when parity evidence or route state changed.
+4. Record the verification result in daily or stabilization docs.
 
-## Validation Checklist
-- Route counts between app and board are equal.
-- No mismatch entries in validator output.
-- Board updates include route owner, status, and parity IDs.
-- Daily log records command and result.
+## Validation
+- Route counts between app and board are aligned.
+- No referenced route is stale or missing.
+- Board rows include owner, status, and parity IDs.
+- Daily evidence reflects the final parity result.
 
-## Output Template
+## Output
 - Scope:
 - Route parity result:
 - Updated docs:
+- Validation:
 - Risks:

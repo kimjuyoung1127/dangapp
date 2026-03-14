@@ -52,10 +52,10 @@ export default function FamilyGroupForm({
         <BottomSheet isOpen={isOpen} onClose={onClose}>
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-5 p-6">
                 <div className="flex items-center justify-between">
-                    <button type="button" onClick={onClose} aria-label="Close family group form">
+                    <button type="button" onClick={onClose} aria-label="그룹 만들기 닫기">
                         <X className="h-6 w-6 text-foreground-muted" />
                     </button>
-                    <h3 className="text-xl font-display font-semibold">가족 그룹 만들기</h3>
+                    <h3 className="text-xl font-display font-semibold">돌봄 그룹 만들기</h3>
                     <Button type="submit" size="sm" disabled={createMutation.isPending}>
                         {createMutation.isPending ? "생성 중..." : "만들기"}
                     </Button>
@@ -79,7 +79,7 @@ export default function FamilyGroupForm({
                 </div>
 
                 <p className="text-xs text-foreground-muted">
-                    그룹을 만들면 생성자가 기본 owner로 등록됩니다.
+                    그룹을 만들면 생성자가 기본 그룹장으로 등록됩니다.
                 </p>
             </form>
         </BottomSheet>

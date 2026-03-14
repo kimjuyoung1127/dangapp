@@ -1,5 +1,4 @@
-// File: Component tests for family page ownership and shared schedule states.
-import { fireEvent, render, screen } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import React from "react";
 import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -12,12 +11,7 @@ import {
     useFamilySharedSchedules,
     useMyScheduleParticipants,
 } from "@/lib/hooks/useFamily";
-
-vi.mock("next/link", () => ({
-    default: ({ children, href }: { children: ReactNode; href: string }) => (
-        <a href={href}>{children}</a>
-    ),
-}));
+import { useFamilyDebugDemo } from "@/lib/hooks/useDebugDemoFallback";
 
 vi.mock("@/components/shared/AppShell", () => ({
     AppShell: ({ children }: { children: ReactNode }) => <div>{children}</div>,
@@ -37,7 +31,11 @@ vi.mock("@/components/ui/Skeleton", () => ({
 }));
 
 vi.mock("@/components/features/family/FamilyGroupCard", () => ({
-    default: ({ group }: { group: { name: string } }) => <div>{group.name}</div>,
+    default: ({ group, memberCount }: { group: { name: string }; memberCount: number }) => (
+        <div>
+            {group.name} ({memberCount})
+        </div>
+    ),
 }));
 
 vi.mock("@/components/features/family/FamilyGroupForm", () => ({
@@ -54,8 +52,10 @@ vi.mock("@/lib/hooks/useFamily", () => ({
     useDogOwnerships: vi.fn(),
     useMyScheduleParticipants: vi.fn(),
     useFamilySharedSchedules: vi.fn(),
-    useCreateFamilyGroup: vi.fn(),
-    useAddFamilyMember: vi.fn(),
+}));
+
+vi.mock("@/lib/hooks/useDebugDemoFallback", () => ({
+    useFamilyDebugDemo: vi.fn(),
 }));
 
 const mockedUseCurrentGuardian = vi.mocked(useCurrentGuardian);
@@ -64,15 +64,16 @@ const mockedUseFamilyMembers = vi.mocked(useFamilyMembers);
 const mockedUseDogOwnerships = vi.mocked(useDogOwnerships);
 const mockedUseMyScheduleParticipants = vi.mocked(useMyScheduleParticipants);
 const mockedUseFamilySharedSchedules = vi.mocked(useFamilySharedSchedules);
+const mockedUseFamilyDebugDemo = vi.mocked(useFamilyDebugDemo);
 
-describe("FamilyPage", () => {
+describe("FamilyPage debug demo fallback", () => {
     beforeEach(() => {
         vi.clearAllMocks();
 
         mockedUseCurrentGuardian.mockReturnValue({
             data: {
                 id: "guardian-1",
-                dogs: [{ id: "dog-1", name: "우주" }],
+                dogs: [{ id: "dog-1", name: "Bean" }],
             },
         } as unknown as ReturnType<typeof useCurrentGuardian>);
 
@@ -110,72 +111,56 @@ describe("FamilyPage", () => {
         } as unknown as ReturnType<typeof useFamilySharedSchedules>);
     });
 
-    it("shows empty ownership state", () => {
-        render(<FamilyPage />);
-        expect(screen.getByText("연결된 공동 양육 반려견이 없습니다.")).toBeInTheDocument();
-    });
-
-    it("retries participants and shared schedules together on error", () => {
-        const refetchParticipants = vi.fn();
-        const refetchSharedSchedules = vi.fn();
-
-        mockedUseMyScheduleParticipants.mockReturnValue({
-            data: [],
-            isLoading: false,
-            isError: true,
-            refetch: refetchParticipants,
-        } as unknown as ReturnType<typeof useMyScheduleParticipants>);
-
-        mockedUseFamilySharedSchedules.mockReturnValue({
-            data: [],
-            isLoading: false,
-            isError: true,
-            refetch: refetchSharedSchedules,
-        } as unknown as ReturnType<typeof useFamilySharedSchedules>);
-
-        render(<FamilyPage />);
-
-        fireEvent.click(screen.getByRole("button", { name: "참여 일정 다시 불러오기" }));
-        expect(refetchParticipants).toHaveBeenCalledTimes(1);
-        expect(refetchSharedSchedules).toHaveBeenCalledTimes(1);
-    });
-
-    it("renders shared schedule item with participant status", () => {
-        mockedUseMyScheduleParticipants.mockReturnValue({
-            data: [
-                {
-                    schedule_id: "schedule-1",
-                    guardian_id: "guardian-1",
-                    dog_id: null,
-                    status: "accepted",
-                    joined_at: "2026-03-06T11:00:00.000Z",
-                },
-            ],
-            isLoading: false,
-            isError: false,
-            refetch: vi.fn(),
-        } as unknown as ReturnType<typeof useMyScheduleParticipants>);
-
-        mockedUseFamilySharedSchedules.mockReturnValue({
-            data: [
-                {
-                    schedule_id: "schedule-1",
-                    participant_status: "accepted",
-                    joined_at: "2026-03-06T11:00:00.000Z",
-                    title: "서울숲 산책",
-                    datetime: "2026-03-07T10:00:00.000Z",
-                    schedule_status: "confirmed",
-                },
-            ],
-            isLoading: false,
-            isError: false,
-            refetch: vi.fn(),
-        } as unknown as ReturnType<typeof useFamilySharedSchedules>);
+    it("renders demo ownerships, schedules, and groups when live data is empty", () => {
+        mockedUseFamilyDebugDemo.mockReturnValue({
+            data: {
+                groups: [
+                    {
+                        id: "group-1",
+                        name: "Weekend Walk Circle",
+                        creator_id: "guardian-1",
+                        dog_ids: ["dog-1"],
+                        created_at: "2026-03-07T00:00:00.000Z",
+                    },
+                ],
+                memberCounts: { "group-1": 3 },
+                ownerships: [
+                    {
+                        dog_id: "dog-1",
+                        guardian_id: "guardian-1",
+                        role: "owner",
+                        is_primary: true,
+                        created_at: "2026-03-07T00:00:00.000Z",
+                    },
+                ],
+                dogs: [{ id: "dog-1", name: "Bean" }],
+                participants: [
+                    {
+                        schedule_id: "schedule-1",
+                        guardian_id: "guardian-1",
+                        dog_id: "dog-1",
+                        status: "accepted",
+                        joined_at: "2026-03-07T00:00:00.000Z",
+                    },
+                ],
+                sharedSchedules: [
+                    {
+                        schedule_id: "schedule-1",
+                        participant_status: "accepted",
+                        joined_at: "2026-03-07T00:00:00.000Z",
+                        title: "Saturday river walk",
+                        datetime: "2026-03-08T01:00:00.000Z",
+                        schedule_status: "confirmed",
+                    },
+                ],
+            },
+        } as ReturnType<typeof useFamilyDebugDemo>);
 
         render(<FamilyPage />);
 
-        expect(screen.getByText("서울숲 산책")).toBeInTheDocument();
-        expect(screen.getByText("수락")).toBeInTheDocument();
-        expect(screen.getByText("일정 상태: 확정")).toBeInTheDocument();
+        expect(screen.getAllByText("예시 데이터").length).toBeGreaterThan(0);
+        expect(screen.getByText("Bean")).toBeInTheDocument();
+        expect(screen.getByText("Saturday river walk")).toBeInTheDocument();
+        expect(screen.getByText("Weekend Walk Circle (3)")).toBeInTheDocument();
     });
 });

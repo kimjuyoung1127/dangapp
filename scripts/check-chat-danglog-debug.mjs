@@ -45,6 +45,7 @@ async function readManifest() {
 
 async function checkSeedState() {
   await loadEnvFallbacks();
+  const manifest = await readManifest();
 
   const supabaseUrl = getEnvOrThrow("SUPABASE_URL", ["NEXT_PUBLIC_SUPABASE_URL"]);
   const serviceRoleKey = getEnvOrThrow("SUPABASE_SERVICE_ROLE_KEY");
@@ -78,7 +79,7 @@ async function checkSeedState() {
 
   const { data: seedDanglogsByTitle, error: byTitleErr } = await supabase
     .from("danglogs")
-    .select("id,author_id,title,created_at")
+    .select("id,author_id,title,content,shared_with,created_at")
     .ilike("title", `${SEED_TAG_PREFIX}:%`)
     .order("created_at", { ascending: false })
     .limit(8);
@@ -92,9 +93,20 @@ async function checkSeedState() {
     .limit(8);
   if (byContentErr) throw new Error(`seed danglog(content) sample failed: ${byContentErr.message}`);
 
+  let seedDanglogsByManifest = [];
+  if ((manifest?.created?.danglog?.ids?.length ?? 0) > 0) {
+    const { data, error } = await supabase
+      .from("danglogs")
+      .select("id,author_id,title,created_at,content")
+      .in("id", manifest.created.danglog.ids.slice(0, 8));
+    if (error) throw new Error(`seed danglog(manifest) sample failed: ${error.message}`);
+    seedDanglogsByManifest = data ?? [];
+  }
+
   const seedDanglogMap = new Map();
   for (const row of seedDanglogsByTitle ?? []) seedDanglogMap.set(row.id, row);
   for (const row of seedDanglogsByContent ?? []) seedDanglogMap.set(row.id, row);
+  for (const row of seedDanglogsByManifest ?? []) seedDanglogMap.set(row.id, row);
 
   let primaryRoomCount = null;
   if (primaryGuardianId) {
@@ -105,8 +117,6 @@ async function checkSeedState() {
     if (error) throw new Error(`primary guardian room check failed: ${error.message}`);
     primaryRoomCount = count ?? 0;
   }
-
-  const manifest = await readManifest();
 
   console.log("Seed check completed.");
   console.log("Totals:");
@@ -128,6 +138,7 @@ async function checkSeedState() {
     console.log(`- runId: ${manifest.runId}`);
     console.log(`- generatedAt: ${manifest.generatedAt}`);
     console.log(`- chat rooms in manifest: ${manifest?.created?.chat?.roomIds?.length ?? 0}`);
+    console.log(`- schedules in manifest: ${manifest?.created?.chat?.scheduleIds?.length ?? 0}`);
     console.log(`- danglogs in manifest: ${manifest?.created?.danglog?.ids?.length ?? 0}`);
   } else {
     console.log("Manifest: missing");

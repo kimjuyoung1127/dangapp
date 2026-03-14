@@ -22,12 +22,12 @@ Owner Doc: `CLAUDE.md`
 |------|-----------|--------|----------|
 | 0 | workflow | Done | 100% |
 | 1 | DANG-INFRA-001 | Done | 100% |
-| 2 | DANG-ONB-001 | Done | 100% |
+| 2 | DANG-ONB-001 | Verified | 100% |
 | 3 | DANG-MAT-001, DANG-CHT-001 | QA | 75% |
 | 4 | DANG-WLK-001, DANG-DLG-001, DANG-PRF-001 | QA | 75% |
-| 5 | DANG-B2B-001 | InProgress | 65% |
+| 5 | DANG-B2B-001 | QA | 65% |
 
-Overall parity verification: 1 Verified / 10 active IDs = 10% (7 routes at QA ??58% implementation complete, verification pending)
+Overall parity verification: 2 Verified / 10 active IDs = 20% (8 routes at QA + 1 Verified, ~75% implementation complete)
 
 ## Active Parity IDs
 
@@ -36,13 +36,13 @@ Overall parity verification: 1 Verified / 10 active IDs = 10% (7 routes at QA ??
 | DANG-INFRA-001 | Schema/MCP/Storage/RLS | Done | ??|
 | DANG-DES-001 | Toss-like design system | QA | route-level verification pending |
 | DANG-AUTH-001 | auth + consent | InProgress | Google OAuth entry + callback consent logging implemented; Playwright unauth/signed auth-route checks PASS, final production OAuth evidence packaging pending |
-| DANG-ONB-001 | guardian/dog onboarding | QA | end-to-end verification + edge-case testing |
+| DANG-ONB-001 | guardian/dog onboarding | Verified | guardian/dog field model expansion and time-slot split verified (2026-03-03), `/onboarding` route complete |
 | DANG-MAT-001 | matching + filters | InProgress | `/modes` B2B status summary added + Playwright route harness added (`@unauth`/`@signed` both PASS with storageState), integrated checklist expansion pending |
 | DANG-CHT-001 | realtime chat + schedule | QA | chat RLS recursion hotfix + legacy scheduleId backfill + one-shot response guard + local regression tests completed; final signed-in E2E evidence |
 | DANG-WLK-001 | walk records + review | QA | end-to-end verification pending |
 | DANG-DLG-001 | collaborative danglog | QA | end-to-end verification pending |
 | DANG-PRF-001 | profile/notification settings | QA | end-to-end verification pending |
-| DANG-B2B-001 | partner-place model | InProgress | `/care` reservations-first flow completed + `/family` ownership/schedule binding completed; signed-in integration QA evidence pending |
+| DANG-B2B-001 | partner-place model | QA | `/care` reservations-first flow + `/family` ownership/schedule binding completed with 37 local regression tests; signed-in E2E evidence capture pending |
 
 ## 2026-03-07 Family Direction Rollout Update (Codex)
 

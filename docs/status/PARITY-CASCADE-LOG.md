@@ -1,86 +1,101 @@
-# Parity Cascade Sync Log
+# Parity Cascade Log
 
-**Date:** 2026-03-07 (KST)  
-**Operator:** claude-code S5 sync pipeline  
-**Scope:** 11-FEATURE-PARITY-MATRIX.md vs PROJECT-STATUS.md comparison
+**Date:** 2026-03-08 (KST)  
+**Run:** S5 Parity Cascade Sync (Matrix ↔ Project-Status)  
+**Operator:** Claude Code Agent
 
-## Summary
+## Comparison Summary
 
-- **Parity Items Advanced:** 1
-- **Regressions Detected:** 0
-- **Resolved (Done+Verified):** 2
-- **Overall Completion:** 75%
+| Metric | Value |
+|---|---|
+| Total Parity IDs Audited | 10 |
+| Advanced (Matrix > Project-Status) | 2 |
+| Regress Warnings (Project-Status > Matrix) | 0 |
+| Resolved Both Same Status | 1 |
+| Aligned/No Change | 7 |
+| **Overall Parity Alignment** | **100%** |
 
-## Analysis
+## Advanced Items (Cascaded Forward)
 
-### Parity Items Analyzed: 10
+### DANG-ONB-001: Onboarding (QA → Verified)
 
-| Parity ID | Domain | Matrix Status | PROJECT-STATUS Status | Action | Evidence |
-|---|---|---|---|---|---|
-| DANG-INFRA-001 | schema/rls/storage | Done | Done | None - Aligned | 65 RLS policies, 29 tables, 4 storage buckets verified |
-| DANG-DES-001 | design system | QA | QA | None - Aligned | Toss-style tokens applied globally, routes at QA |
-| DANG-AUTH-001 | auth/consent | In Progress | In Progress | None - Aligned | Playwright evidence, consent logging + callback implemented |
-| DANG-ONB-001 | onboarding | Verified | Done | None - Aligned | `/onboarding` completed 2026-03-03, end-to-end verified |
-| DANG-MAT-001 | matching/filter | In Progress | In Progress | None - Aligned | `/modes` B2B status + Playwright `@signed` PASS |
-| DANG-CHT-001 | realtime chat | QA | QA | None - Aligned | RLS fix (42P17), local tests (16), one-shot response guard |
-| DANG-WLK-001 | walk record/review | QA | QA | None - Aligned | `/chat/[id]` + `/schedules` at QA with hardening |
-| DANG-DLG-001 | danglog collaboration | QA | QA | None - Aligned | Feed + detail tracked, seed data verified |
-| DANG-PRF-001 | profile/settings | QA | QA | None - Aligned | `/profile` at QA, guardian/dog edit flow |
-| DANG-B2B-001 | b2b partner | **In Progress → QA** | In Progress (Wave 6: 65%) | **UPDATED** | `/care` + `/family` + `/modes` completed with local test suites (37 tests), `npm run verify:local` PASS 2026-03-06 |
+**Matrix Status:** `Verified`  
+**Project-Status Before:** `QA`  
+**Project-Status After:** `Verified`  
 
-## Key Findings
+**Rationale:**  
+Matrix notes `/onboarding` done (2026-03-03) with guardian/dog field model expansion and time-slot split verified. Wave 2 in project-status already listed as Done (100%), confirming completion. Cascade updates active parity ID table to reflect Verified status.
 
-### 1. DANG-B2B-001 Advancement
+**Changes Applied:**
+- Wave 2 progress: `Done` → `Verified` (100%)
+- Active table: DANG-ONB-001 status → `Verified`
+- Remaining: updated to guardian/dog field model expansion and time-slot split verified (2026-03-03), `/onboarding` route complete
 
-**From:** In Progress  
-**To:** QA  
-**Trigger:** PROJECT-STATUS documented completion of:
-- `/care` reservations-first flow with dedicated hooks + utilities (2026-03-06)
-- `/family` ownership/schedule binding with dedicated hooks + utilities (2026-03-06)
-- `/modes` B2B status dashboard with live summary counts (2026-03-06)
-- All routes moved to QA board status
-- Local regression test suites added (37 total tests across care, family, modes)
-- `npm run verify:local` PASS (encoding + lint + test + build)
+---
 
-**Matrix Update:** Status changed to QA, notes expanded to reflect completion scope, test scope refined to "integration/local-e2e"
+### DANG-B2B-001: Partner-Place Model (InProgress → QA)
 
-### 2. No Regressions
+**Matrix Status:** `QA`  
+**Project-Status Before:** `InProgress` (65%)  
+**Project-Status After:** `QA` (65%)  
 
-- All parity items maintain or advance their status
-- No items show status decay or evidence loss
-- Board alignment consistent throughout
+**Rationale:**  
+Matrix shows QA status with `/care` reservations-first flow + `/family` ownership/schedule binding completed with 37 local regression tests added. Project-status Wave 6 marks implementations as complete; B2B speed-first hardening, care/family slice updates, and modes B2B status dashboard completed (2026-03-06). All three routes (`/modes`, `/care`, `/family`) have local regression evidence. Cascade updates wave and active parity table from InProgress to QA.
 
-### 3. Completion Trajectory
+**Changes Applied:**
+- Wave 5 progress: `InProgress` (65%) → `QA` (65%)
+- Active table: DANG-B2B-001 status → `QA`
+- Remaining: updated to `/care` reservations-first flow + `/family` ownership/schedule binding completed with 37 local regression tests; signed-in E2E evidence capture pending
 
-**Before this sync:**
-- Done/Verified: 2 (INFRA, ONB)
-- QA: 5 (DES, CHT, WLK, DLG, PRF)
-- In Progress: 3 (AUTH, MAT, B2B)
-- Overall: 70%
+---
 
-**After this sync (DANG-B2B-001 advanced to QA):**
-- Done/Verified: 2 (INFRA, ONB)
-- QA: 6 (DES, CHT, WLK, DLG, PRF, **B2B**)
-- In Progress: 2 (AUTH, MAT)
-- Overall: 75%
+## No-Change Items
 
-### 4. Remaining Work
+| Parity ID | Status | Notes |
+|---|---|---|
+| DANG-INFRA-001 | Done | Fully aligned; schema expansion + 65 RLS policies + 4 storage buckets verified. |
+| DANG-DES-001 | QA | Fully aligned; toss-style token-driven UX at QA stage. |
+| DANG-AUTH-001 | InProgress | Fully aligned; Google OAuth + consent cookie + callback logging in progress. |
+| DANG-MAT-001 | InProgress | Fully aligned; match runtime + `/modes` dashboard + Playwright harness in progress. |
+| DANG-CHT-001 | QA | Fully aligned; RLS recursion fixed + regression test suite (16) at QA. |
+| DANG-WLK-001 | QA | Fully aligned; walk record/review + visibility at QA. |
+| DANG-DLG-001 | QA | Fully aligned; danglog collaboration feed + detail tracked at QA. |
+| DANG-PRF-001 | QA | Fully aligned; profile/settings at QA. |
 
-**DANG-AUTH-001 (In Progress):**
-- Google OAuth entry + consent logging implemented
-- Playwright unauth/signed checks PASS
-- Next: Production OAuth evidence packaging
+---
 
-**DANG-MAT-001 (In Progress):**
-- `/modes` B2B status dashboard + Playwright route harness PASS
-- Next: Integrated checklist expansion
+## Regression Warnings
 
-**Signed-in E2E Evidence Chain:**
-- All routes with Playwright signed E2E must capture storage state
-- Current: `/home`, `/chat`, `/chat/[id]` captured and verified
-- Pending: `/care`, `/family`, `/modes` B2B flow integration tests
+**None.** All parity items either advanced or remained stable. No backward drift detected.
 
-## Conclusion
+---
 
-Parity cascade in healthy forward motion. DANG-B2B-001 advancement reflects accurate mapping of local test completion to QA status. No regressions. Overall parity completion at 75% with 2 items pending production evidence and 1 item pending integration checklist expansion.
+## Overall Parity Verification Update
 
+**Before Cascade:**
+- 1 Verified / 10 active IDs = 10%
+- 7 routes at QA (~58% implementation complete)
+
+**After Cascade:**
+- **2 Verified / 10 active IDs = 20%**
+- **8 routes at QA (~75% implementation complete)**
+- 1 InProgress (DANG-AUTH-001, DANG-MAT-001)
+- 1 Done (DANG-INFRA-001)
+
+---
+
+## Next Actions
+
+1. Complete signed-in E2E evidence capture for B2B routes (`/care`, `/family`, `/modes`).
+2. Finalize OAuth production evidence packaging for DANG-AUTH-001.
+3. Continue matching integration checklist expansion for DANG-MAT-001.
+4. Monitor chat empty-state regression (DANG-CHT-001 handoff note from 2026-03-05).
+
+---
+
+## Files Modified
+
+- `/sessions/nice-youthful-planck/mnt/dangapp/docs/status/PROJECT-STATUS.md`
+  - Wave Progress: 2 status updates (ONB Verified, B2B QA)
+  - Active Parity IDs: 2 status + remaining updates
+  - Overall parity verification: 10% → 20%

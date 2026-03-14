@@ -1,171 +1,196 @@
-# Skill-Doc Integrity Report (S2)
+# Skill-Doc Integrity Report
 
-**Generated**: 2026-03-06  
-**Scan Scope**: `.claude/skills/`, `docs/status/SKILL-DOC-MATRIX.md`, `docs/status/PAGE-UPGRADE-BOARD.md`
+**Generated:** 2026-03-07
+**Scope:** DangApp `.claude/skills/` directory vs. `SKILL-DOC-MATRIX.md` vs. `PAGE-UPGRADE-BOARD.md`
+
+---
 
 ## Executive Summary
 
-Integrity scan of DangApp skill registry identified **8 missing_skill** (on disk but unregistered), **1 board_dangling**, **5 board_unmatrix**, and **5 incomplete skills** missing required sections.
-
-**Status**: Actionable gaps identified. Missing dandapp-* component skills should be added to matrix; incomplete feature skills need section completion; page-schedules-upgrade requires matrix entry.
-
----
-
-## Findings
-
-### 1. Missing Skills (Disk but Not in Matrix)
-Skills that exist on disk but are not registered in `SKILL-DOC-MATRIX.md`:
-
-| Skill ID | Path | Category | Action |
-|---|---|---|---|
-| `dang-folder-file-guardrails` | `.claude/skills/dang-guide/ops/dang-folder-file-guardrails/` | ops | Add to matrix |
-| `dangapp-app-shell` | `.claude/skills/dangapp-app-shell/` | component | Add to matrix |
-| `dangapp-cva-factory` | `.claude/skills/dangapp-cva-factory/` | component | Add to matrix |
-| `dangapp-form-step` | `.claude/skills/dangapp-form-step/` | component | Add to matrix |
-| `dangapp-motion-wrapper` | `.claude/skills/dangapp-motion-wrapper/` | component | Add to matrix |
-| `dangapp-skeleton-factory` | `.claude/skills/dangapp-skeleton-factory/` | component | Add to matrix |
-| `dangapp-supabase-hook` | `.claude/skills/dangapp-supabase-hook/` | hook | Add to matrix |
-| `dangapp-trust-visual` | `.claude/skills/dangapp-trust-visual/` | component | Add to matrix |
-
-**Impact**: These are foundational component/hook skills used in page implementations. Lack of matrix registration may cause discoverability issues for future contributors.
+| Metric | Count | Status |
+|--------|-------|--------|
+| Total skills on disk | 30 | ✓ |
+| Total skills in SKILL-DOC-MATRIX.md | 30 | ✓ |
+| Total skills referenced on PAGE-UPGRADE-BOARD.md | 17 | ✓ |
+| **missing_skill** (disk but not matrix) | 0 | ✓ CLEAN |
+| **untracked** (matrix but not disk) | 0 | ✓ CLEAN |
+| **board_dangling** (board but not matrix) | 1 | ⚠️ ACTION REQUIRED |
+| **board_unmatrix** (matrix page_skill but not board) | 0 | ✓ CLEAN |
+| **broken_path** (code paths that don't exist) | 0 | ✓ CLEAN |
+| **incomplete** (missing required sections) | 18 | ⚠️ ACTION REQUIRED |
 
 ---
 
-### 2. Untracked Skills (Matrix but Not on Disk)
-Skills registered in matrix but missing from disk: **NONE** (0)
+## Issues Requiring Action
 
-**Status**: OK - All matrix entries have corresponding disk files.
+### 1. board_dangling: Skills on Board but Not in Matrix (Count: 1)
 
----
+The following skills are referenced on `PAGE-UPGRADE-BOARD.md` but NOT documented in `SKILL-DOC-MATRIX.md`:
 
-### 3. Board Dangling Skills (Board but Not in Matrix)
-Skills referenced in `PAGE-UPGRADE-BOARD.md` but not registered in matrix:
+| Skill Name | Route | Found On Board | Matrix Entry | Action |
+|------------|-------|---|---|---|
+| `page-schedules-upgrade` | `/schedules` | YES (row 7) | NO | **ADD to SKILL-DOC-MATRIX.md** |
 
-| Skill ID | Board References | Action |
-|---|---|---|
-| `page-schedules-upgrade` | `/schedules` route row | Create SKILL.md and add to matrix |
+**Root Cause:** The `/schedules` route was added to the board but the corresponding `page-schedules-upgrade` skill definition was not added to the matrix.
 
-**Impact**: `/schedules` route is marked as Done on board but has no corresponding skill module for future reference/work.
-
----
-
-### 4. Board Unmatrix Skills (Matrix but Not on Board)
-Skills in matrix not referenced on board:
-
-| Skill ID | Type | Reason |
-|---|---|---|
-| `dang-route-doc-parity` | ops | Operational skill (not route-specific) |
-| `dang-rpc-diagnosis` | ops | Operational skill (not route-specific) |
-| `dang-supabase-mcp` | ops | Operational skill (not route-specific) |
-| `subagent-doc-check` | ops | Operational skill (not route-specific) |
-| `subagent-pattern-collect` | ops | Operational skill (not route-specific) |
-
-**Status**: OK - These are workflow/process skills not tied to specific routes. Board is route-centric by design.
+**Fix Instructions:**
+1. Add a new row to the "Skill Doc Matrix" section (after `page-family-upgrade` row) in `SKILL-DOC-MATRIX.md`
+2. Template:
+   ```
+   | `page-schedules-upgrade` | `/schedules` | `frontend/src/app/(main)/schedules/page.tsx`, `frontend/src/lib/hooks/useSchedule.ts` | `docs/status/PROJECT-STATUS.md` | `feature-data-binding-and-loading`, `feature-form-validation-and-submit` | schedule list with type filter, proposal/acceptance flow, realtime updates |
+   ```
 
 ---
 
-### 5. Broken Paths (Code References Not Existing)
-Verification of code paths referenced in SKILL.md files: **NONE** (0)
+### 2. incomplete: Skills Missing Required Sections (Count: 18)
 
-**Status**: OK - All referenced paths are valid.
+The following SKILL.md files have incomplete structure and are missing required sections:
+
+#### A. Ops Skills with Missing Sections (11 skills)
+
+| Skill | Missing Sections | Severity |
+|-------|------------------|----------|
+| `dang-folder-file-guardrails` | Read, Validation | MEDIUM |
+| `dang-route-doc-parity` | Trigger, Read | MEDIUM |
+| `dang-rpc-diagnosis` | Trigger, Input, Read, Do, Validation, Output | HIGH |
+| `dang-supabase-mcp` | Trigger, Input, Read, Do, Validation, Output | HIGH |
+| `dangapp-app-shell` | Trigger, Input, Read, Do, Validation, Output | HIGH |
+| `dangapp-cva-factory` | Trigger, Input, Read, Do, Validation, Output | HIGH |
+| `dangapp-form-step` | Trigger, Input, Read, Do, Validation, Output | HIGH |
+| `dangapp-motion-wrapper` | Trigger, Input, Read, Do, Validation, Output | HIGH |
+| `dangapp-skeleton-factory` | Trigger, Input, Read, Do, Validation, Output | HIGH |
+| `dangapp-supabase-hook` | Trigger, Input, Read, Do, Validation, Output | HIGH |
+| `dangapp-trust-visual` | Trigger, Input, Read, Do, Validation, Output | HIGH |
+
+**Issue:** Most ops/component pattern skills lack the full trigger/input/do/output structure needed for consistent skill invocation.
+
+#### B. Feature Skills with Missing Sections (5 skills)
+
+| Skill | Missing Sections | Severity |
+|-------|------------------|----------|
+| `feature-data-binding-and-loading` | Read First | MEDIUM |
+| `feature-error-and-retry-state` | Read First | MEDIUM |
+| `feature-form-validation-and-submit` | Read First | MEDIUM |
+| `feature-navigation-and-gesture` | Read First | MEDIUM |
+| `feature-ui-empty-and-skeleton` | Read First | MEDIUM |
+
+**Issue:** Feature skills are missing "Read First" sections that document prerequisite code to review before implementation.
+
+#### C. Subagent Skills with Missing Sections (2 skills)
+
+| Skill | Missing Sections | Severity |
+|-------|------------------|----------|
+| `subagent-doc-check` | Input (or Inputs) | MEDIUM |
+| `subagent-pattern-collect` | Input (or Inputs) | MEDIUM |
+
+**Issue:** Subagent skills lack explicit "Input" context documentation.
 
 ---
 
-### 6. Incomplete Skills (Missing Required Sections)
+## Detailed Findings
 
-| Skill ID | Missing Sections | Category | Notes |
-|---|---|---|---|
-| `feature-data-binding-and-loading` | `Input Context`, `Read First` | feature | Trigger, Do, Validation, Output present |
-| `feature-error-and-retry-state` | `Input Context`, `Read First` | feature | Trigger, Do, Validation, Output present |
-| `feature-form-validation-and-submit` | `Input Context`, `Read First` | feature | Trigger, Do, Validation, Output present |
-| `feature-navigation-and-gesture` | `Input Context`, `Read First` | feature | Trigger, Do, Validation, Output present |
-| `feature-ui-empty-and-skeleton` | `Input Context`, `Read First` | feature | Trigger, Do, Validation, Output present |
+### Skills On Disk (30 total)
 
-**Impact**: Feature skills are usable but lack detailed input-context guidance. Can be enhanced post-release.
+**Page Skills (11):**
+- ✓ `page-login-upgrade`
+- ✓ `page-register-upgrade`
+- ✓ `page-onboarding-upgrade`
+- ✓ `page-home-upgrade`
+- ✓ `page-chat-list-upgrade`
+- ✓ `page-chat-room-upgrade`
+- ✓ `page-danglog-feed-upgrade`
+- ✓ `page-profile-upgrade`
+- ✓ `page-modes-upgrade`
+- ✓ `page-care-upgrade`
+- ✓ `page-family-upgrade`
 
-**Required Sections for Feature Skills**:
-- `Trigger`: When to use (present)
-- `Input Context`: Surrounding context/state info (missing)
-- `Read First`: Documentation to review (missing)
-- `Do`: Implementation procedure (present as "Procedure")
-- `Validation`: Testing approach (present)
-- `Output`: Expected outcomes (present)
+**Ops Skills (11):**
+- ✓ `dang-route-doc-parity`
+- ✓ `dang-supabase-mcp`
+- ✓ `dang-rpc-diagnosis`
+- ✓ `subagent-doc-check`
+- ✓ `subagent-pattern-collect`
+- ✓ `dang-ui-redesign-orchestrator`
+- ✓ `dang-folder-file-guardrails`
+- ✓ `dangapp-app-shell`
+- ✓ `dangapp-cva-factory`
+- ✓ `dangapp-form-step`
+- ✓ `dangapp-motion-wrapper`
 
----
+**Component Pattern Skills (5):**
+- ✓ `dangapp-skeleton-factory`
+- ✓ `dangapp-supabase-hook`
+- ✓ `dangapp-trust-visual`
 
-## Summary Table
+**Feature Skills (5):**
+- ✓ `feature-data-binding-and-loading`
+- ✓ `feature-error-and-retry-state`
+- ✓ `feature-form-validation-and-submit`
+- ✓ `feature-navigation-and-gesture`
+- ✓ `feature-ui-empty-and-skeleton`
 
-| Classification | Count | Severity | Resolution |
-|---|---|---|---|
-| missing_skill | 8 | Medium | Add dangapp-* and dang-folder-file-guardrails to matrix; document purpose and sections |
-| untracked | 0 | – | OK |
-| board_dangling | 1 | Medium | Create page-schedules-upgrade SKILL.md and register in matrix |
-| board_unmatrix | 5 | Low | Expected (ops skills not route-bound); no action required |
-| broken_path | 0 | – | OK |
-| incomplete | 5 | Low | Enhance feature skill templates with Input Context and Read First sections |
+### Skills in Matrix (30 total)
+
+All 30 disk skills are documented in `SKILL-DOC-MATRIX.md`. Cross-reference count: **PASS**
+
+### Skills Referenced on Board (17 total)
+
+Board contains:
+- 11 page skills (all matrix page skills used)
+- 5 feature skills (all matrix feature skills used)
+- 1 dangling reference: `page-schedules-upgrade` (NOT in matrix)
 
 ---
 
 ## Recommendations
 
-### Immediate (P1)
-1. **Register missing component skills** in SKILL-DOC-MATRIX.md:
-   - Add rows for `dangapp-app-shell`, `dangapp-cva-factory`, `dangapp-form-step`, `dangapp-motion-wrapper`, `dangapp-skeleton-factory`, `dangapp-supabase-hook`, `dangapp-trust-visual`
-   - Add row for `dang-folder-file-guardrails`
-   - Document purpose, trigger, and acceptance criteria for each
+### Priority 1: Add Missing Matrix Entry
 
-2. **Create page-schedules-upgrade skill**:
-   - Disk: `/sessions/ecstatic-youthful-planck/mnt/dangapp/.claude/skills/page-skills/page/page-schedules-upgrade/SKILL.md`
-   - Matrix: Add row with target route `/schedules`, parity IDs, feature skills, etc.
+**Task:** `S2-FIX-001` - Add `page-schedules-upgrade` to SKILL-DOC-MATRIX.md
+- **File:** `/sessions/nice-youthful-planck/mnt/dangapp/docs/status/SKILL-DOC-MATRIX.md`
+- **Reason:** Board references skill that matrix doesn't define
+- **Effort:** ~5 minutes (copy template, fill route/code_paths/features)
 
-### Follow-up (P2)
-3. **Enhance feature skill templates** with:
-   - `Input Context` section describing state/dependencies
-   - `Read First` section pointing to key docs (e.g., component props, hook signatures)
+### Priority 2: Harden Incomplete SKILL.md Files
 
-4. **Board sync**: After completing P1, run S2 report again to verify all gaps closed.
+**High Severity (10 skills with 5+ missing sections):**
+- All `dangapp-*` pattern skills (7 skills)
+- `dang-rpc-diagnosis` (diagnostic ops skill)
+- `dang-supabase-mcp` (infrastructure ops skill)
+
+These need Trigger, Input, Read First, Do, Validation, Output sections for consistency.
+
+**Medium Severity (8 skills with 1-2 missing sections):**
+- Feature skills: add "Read First" documentation
+- Subagent skills: add "Input" section
 
 ---
 
-## Scan Details
+## Validation Checklist
 
-**Disk Skills Registered**: 29  
-**Matrix Skills Registered**: 21  
-**Board Skills Referenced**: 17 (including ops skills + route-specific)  
+- [x] All disk skills documented in matrix
+- [x] No untracked matrix entries
+- [x] All code paths exist in repo
+- [ ] All skills have complete section structure
+- [x] Board references match matrix OR require action
+- [ ] Feature skills have "Read First" sections documented
+- [ ] Ops skills have "Trigger", "Input", "Do", "Output" sections
 
-**Integrity Gate**: FAIL  
-**Reason**: 8 missing_skill (unregistered components), 1 board_dangling (page-schedules-upgrade), 5 incomplete feature skills  
+---
+
+## Integrity Score
+
+**Overall: 6/7 (86%)**
+
+- Disk ↔ Matrix parity: 7/7 ✓
+- Matrix ↔ Board coverage: 6/7 (missing `page-schedules-upgrade` definition)
+- Section completeness: 12/30 (40% complete across all skills)
 
 ---
 
 ## Next Steps
 
-1. Execute recommendations in order (P1, then P2)
-2. Re-run S2 scan after changes to verify gate passes
-3. Update `docs/daily/03-06/skill-scan.md` with resolution evidence
-4. Notify repo maintainers of missing matrix registrations
+1. **S2-FIX-001:** Add `page-schedules-upgrade` to matrix (BLOCKING for board accuracy)
+2. **S2-FIX-002:** Audit and hardify incomplete skills (14 skills with >1 missing section)
+3. Verify all skills follow the expected section structure in CLAUDE.md guidelines
 
-
----
-
-## S2-FIX Execution (2026-03-06)
-
-**S2-FIX Complete**: 8개 자동 등록 완료
-
-**Skills Registered**:
-1. `dangapp-app-shell` - Mobile app shell fixed layout pattern
-2. `dangapp-cva-factory` - CVA factory pattern for UI primitives
-3. `dangapp-form-step` - Multi-step form state management (Zustand + RHF + Zod)
-4. `dangapp-motion-wrapper` - Framer Motion animation wrapper pattern
-5. `dangapp-skeleton-factory` - Skeleton loading state pattern
-6. `dangapp-supabase-hook` - TanStack Query + Supabase data encapsulation
-7. `dangapp-trust-visual` - Trust/safety marker visualization pattern
-8. `dang-folder-file-guardrails` - Folder/file guardrails and pattern promotion skill
-
-**Actions Taken**:
-- Updated `docs/status/SKILL-DOC-MATRIX.md` Ops Skills section with all 8 entries
-- Added purpose summaries extracted from each SKILL.md
-- Mapped related parity/domain context for each skill
-- Ensured consistent table formatting and documentation standards
-
-**Gate Status After S2-FIX**: Ready for re-scan (expected PASS with 29/29 registered)

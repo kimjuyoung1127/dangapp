@@ -48,7 +48,7 @@ export default function ProfilePage() {
         <AppShell>
             <div className="space-y-5 px-4 py-6">
                 <FamilyPageIntro
-                    eyebrow="family trust dashboard"
+                    eyebrow="신뢰 프로필"
                     title="프로필"
                     description="신뢰도, 후기, 반려 정보와 알림 설정을 한 곳에서 관리합니다."
                     action={

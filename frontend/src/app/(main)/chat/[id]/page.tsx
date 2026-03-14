@@ -214,7 +214,7 @@ export default function ChatRoomPage({ params }: { params: { id: string } }) {
                             </TapScale>
                             <div>
                                 <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-sky-700">
-                                    family organizer chat
+                                    일정 대화
                                 </p>
                                 <h1 className="truncate text-lg font-semibold text-foreground">
                                     {partner?.nickname ?? "채팅"}

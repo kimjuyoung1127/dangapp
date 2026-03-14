@@ -1,49 +1,40 @@
 ---
-# File: Skill instructions for folder/file guardrails and pattern-to-skill promotion.
 name: dang-folder-file-guardrails
-description: Enforce local CLAUDE.md in new folders, require top-of-file description comments, and promote repeatable good patterns into reusable skills.
+description: Enforce local guidance files for new folders, require top-of-file description comments, and promote repeatable patterns into reusable skills.
 ---
 
 # dang-folder-file-guardrails
 
 ## Trigger
-Use this skill when work includes one or more of the following:
 - Creating a new folder.
 - Creating one or more new files.
-- Discovering a repeatable pattern worth skill-izing.
+- Discovering a repeatable pattern worth promoting into a skill.
 
 ## Inputs
-- Target folder(s) and file(s) to create.
-- Parent domain (`frontend`, `docs`, `.claude/skills`, etc.).
-- Existing conventions from root `CLAUDE.md`.
+- Target folders and files to create.
+- Parent domain such as `frontend`, `docs`, or `.claude/skills`.
+- Existing conventions from root and local guidance files.
+
+## Read First
+1. `CLAUDE.md`
+2. The nearest local `CLAUDE.md` in the target area
+3. `docs/status/SKILL-DOC-MATRIX.md` when promoting a new skill
 
 ## Procedure
-1. **New folder guardrail**
-   - For every new folder, create a local `CLAUDE.md` in that folder.
-   - Document purpose, structure, and responsibilities.
+1. Add a local `CLAUDE.md` for each brand-new folder when the surrounding area does not already provide equivalent guidance.
+2. Add a short top-of-file description comment to every new source or doc file.
+3. When a pattern becomes reusable, create a skill folder, write `SKILL.md`, and register it in the matrix.
+4. Check that the new artifact is discoverable and consistent with existing repo structure.
 
-2. **New file guardrail**
-   - Add a short top-of-file description comment in every newly created file.
-   - Choose the matching comment syntax by file type:
-     - TypeScript/JavaScript: `// File: ...`
-     - SQL/Shell/Python/YAML: `# File: ...`
-     - Markdown/HTML: `<!-- File: ... -->`
+## Validation
+- New folders have the required local guidance coverage.
+- New files start with a short description comment where appropriate.
+- Promoted skills are registered in discoverability docs.
+- No new artifact lands without enough instructions for the next agent.
 
-3. **Pattern capture and promotion**
-   - If a pattern is reused at least twice or prevents recurring mistakes, promote it to a skill.
-   - Create skill folder under `.claude/skills/<group>/...`.
-   - Add `SKILL.md` with trigger, inputs, procedure, and validation checklist.
-   - Add local `CLAUDE.md` to the new skill folder.
-   - Register the skill in `docs/status/SKILL-DOC-MATRIX.md` (Ops Skills section if cross-cutting).
-
-4. **Verification checklist**
-   - Confirm each new folder has `CLAUDE.md`.
-   - Confirm each new file starts with a description comment.
-   - Confirm promoted skill is discoverable from matrix/docs.
-
-## Output Template
+## Output
 - Scope:
 - Created folders/files:
 - Guardrails applied:
 - Skill promotions:
-- Verification:
+- Validation:

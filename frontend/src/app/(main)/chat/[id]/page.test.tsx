@@ -1,4 +1,3 @@
-// File: Component tests for chat-room schedule response UI behaviors.
 import { fireEvent, render, screen } from "@testing-library/react";
 import React from "react";
 import type { ReactNode } from "react";
@@ -99,7 +98,7 @@ describe("ChatRoomPage schedule response rendering", () => {
         } as unknown as ReturnType<typeof useCreateSchedule>);
     });
 
-    it("shows processed text and hides buttons for already accepted schedules", () => {
+    it("shows accepted chip and hides response buttons after acceptance", () => {
         mockedUseChatRoom.mockReturnValue({
             messages: [
                 chatMessage({
@@ -134,8 +133,8 @@ describe("ChatRoomPage schedule response rendering", () => {
 
         render(<ChatRoomPage params={{ id: "room-1" }} />);
 
-        expect(screen.getByText("이미 수락 처리된 약속입니다.")).toBeInTheDocument();
-        expect(screen.queryByRole("button", { name: "수락하기" })).not.toBeInTheDocument();
+        expect(screen.getByText("수락됨")).toBeInTheDocument();
+        expect(screen.queryByRole("button", { name: "수락" })).not.toBeInTheDocument();
         expect(screen.queryByRole("button", { name: "거절" })).not.toBeInTheDocument();
     });
 
@@ -166,12 +165,11 @@ describe("ChatRoomPage schedule response rendering", () => {
 
         render(<ChatRoomPage params={{ id: "room-1" }} />);
 
-        const acceptButton = screen.getByRole("button", { name: "수락하기" });
+        const acceptButton = screen.getByRole("button", { name: "수락" });
         fireEvent.click(acceptButton);
 
         expect(mutateSpy).toHaveBeenCalledTimes(1);
-        expect(screen.getByText("응답 처리 중...")).toBeInTheDocument();
-        expect(screen.queryByRole("button", { name: "수락하기" })).not.toBeInTheDocument();
+        expect(screen.queryByRole("button", { name: "수락" })).not.toBeInTheDocument();
         expect(screen.queryByRole("button", { name: "거절" })).not.toBeInTheDocument();
     });
 });

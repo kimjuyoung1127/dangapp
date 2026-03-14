@@ -116,6 +116,14 @@ export function FamilyStatusChip({
   );
 }
 
+export function FamilyDebugBadge({
+  label = "예시 데이터",
+}: {
+  label?: string;
+}) {
+  return <FamilyStatusChip label={label} tone="warning" />;
+}
+
 export function FamilyEmptyPanel({
   message,
   action,

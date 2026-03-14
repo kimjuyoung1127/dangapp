@@ -1,3 +1,168 @@
+## 2026-03-08 — Auto-Documented: blocks
+
+Dawn Sweep S1 자동 등록. 상세 변경 이력은 추후 보완 필요.
+
+### 테이블 구조
+- 테이블: `blocks`
+- 주요 컬럼: `id`, `blocker_id`, `blocked_id`, `reason`, `created_at`
+- 상태: types에 정의됨, unused
+
+---
+
+## 2026-03-08 — Auto-Documented: care_requests
+
+Dawn Sweep S1 자동 등록. 상세 변경 이력은 추후 보완 필요.
+
+### 테이블 구조
+- 테이블: `care_requests`
+- 주요 컬럼: `id`, `requester_id`, `caregiver_id`, `dog_id`, `title`, `description`, `care_type`, `datetime`, `duration_hours`, `status`, `created_at`, `updated_at`
+- 상태: types에 정의됨, used
+
+---
+
+## 2026-03-08 — Auto-Documented: chat_messages
+
+Dawn Sweep S1 자동 등록. 상세 변경 이력은 추후 보완 필요.
+
+### 테이블 구조
+- 테이블: `chat_messages`
+- 주요 컬럼: `id`, `room_id`, `sender_id`, `type`, `content`, `metadata`, `read_by`, `created_at`
+- 상태: types에 정의됨, used
+
+---
+
+## 2026-03-08 — Auto-Documented: chat_participants
+
+Dawn Sweep S1 자동 등록. 상세 변경 이력은 추후 보완 필요.
+
+### 테이블 구조
+- 테이블: `chat_participants`
+- 주요 컬럼: `room_id`, `guardian_id`, `joined_at`
+- 상태: types에 정의됨, used
+
+---
+
+## 2026-03-08 — Auto-Documented: chat_rooms
+
+Dawn Sweep S1 자동 등록. 상세 변경 이력은 추후 보완 필요.
+
+### 테이블 구조
+- 테이블: `chat_rooms`
+- 주요 컬럼: `id`, `type`, `last_message_at`, `created_at`
+- 상태: types에 정의됨, used
+
+---
+
+## 2026-03-08 — Auto-Documented: danglog_comments
+
+Dawn Sweep S1 자동 등록. 상세 변경 이력은 추후 보완 필요.
+
+### 테이블 구조
+- 테이블: `danglog_comments`
+- 주요 컬럼: `id`, `danglog_id`, `author_id`, `content`, `created_at`, `updated_at`
+- 상태: types에 정의됨, used
+
+---
+
+## 2026-03-08 — Auto-Documented: danglog_invites
+
+Dawn Sweep S1 자동 등록. 상세 변경 이력은 추후 보완 필요.
+
+### 테이블 구조
+- 테이블: `danglog_invites`
+- 주요 컬럼: `id`, `danglog_id`, `invited_by`, `invite_token`, `status`, `expires_at`, `created_at`
+- 상태: types에 정의됨, used
+
+---
+
+## 2026-03-08 — Auto-Documented: danglog_likes
+
+Dawn Sweep S1 자동 등록. 상세 변경 이력은 추후 보완 필요.
+
+### 테이블 구조
+- 테이블: `danglog_likes`
+- 주요 컬럼: `danglog_id`, `guardian_id`, `created_at`
+- 상태: types에 정의됨, used
+
+---
+
+## 2026-03-08 — Auto-Documented: family_groups
+
+Dawn Sweep S1 자동 등록. 상세 변경 이력은 추후 보완 필요.
+
+### 테이블 구조
+- 테이블: `family_groups`
+- 주요 컬럼: `id`, `name`, `creator_id`, `dog_ids`, `created_at`
+- 상태: types에 정의됨, used
+
+---
+
+## 2026-03-08 — Auto-Documented: family_members
+
+Dawn Sweep S1 자동 등록. 상세 변경 이력은 추후 보완 필요.
+
+### 테이블 구조
+- 테이블: `family_members`
+- 주요 컬럼: `group_id`, `member_id`, `role`, `joined_at`
+- 상태: types에 정의됨, used
+
+---
+
+## 2026-03-08 — Auto-Documented: mode_unlocks
+
+Dawn Sweep S1 자동 등록. 상세 변경 이력은 추후 보완 필요.
+
+### 테이블 구조
+- 테이블: `mode_unlocks`
+- 주요 컬럼: `id`, `guardian_id`, `mode`, `unlocked_at`, `criteria_met_json`
+- 상태: types에 정의됨, used
+
+---
+
+## 2026-03-08 — Auto-Documented: notifications
+
+Dawn Sweep S1 자동 등록. 상세 변경 이력은 추후 보완 필요.
+
+### 테이블 구조
+- 테이블: `notifications`
+- 주요 컬럼: `id`, `user_id`, `type`, `title`, `body`, `data_json`, `read_at`, `created_at`
+- 상태: types에 정의됨, unused
+
+---
+
+## 2026-03-08 — Auto-Documented: schedules
+
+Dawn Sweep S1 자동 등록. 상세 변경 이력은 추후 보완 필요.
+
+### 테이블 구조
+- 테이블: `schedules`
+- 주요 컬럼: `id`, `room_id`, `organizer_id`, `title`, `location_name`, `location_geog`, `place_detail`, `datetime`, `status`, `proposal_status`, `confirmed_at`, `participant_ids`, `created_at`, `updated_at`
+- 상태: types에 정의됨, used
+
+---
+
+## 2026-03-08 — Auto-Documented: trust_badges
+
+Dawn Sweep S1 자동 등록. 상세 변경 이력은 추후 보완 필요.
+
+### 테이블 구조
+- 테이블: `trust_badges`
+- 주요 컬럼: `id`, `guardian_id`, `badge_type`, `earned_at`
+- 상태: types에 정의됨, used
+
+---
+
+## 2026-03-08 — Auto-Documented: walk_reviews
+
+Dawn Sweep S1 자동 등록. 상세 변경 이력은 추후 보완 필요.
+
+### 테이블 구조
+- 테이블: `walk_reviews`
+- 주요 컬럼: `id`, `walk_record_id`, `schedule_id`, `author_id`, `target_id`, `rating`, `comment`, `visibility`, `created_at`
+- 상태: types에 정의됨, used
+
+---
+
 ## 2026-03-07 — Auto-Documented: consent_logs
 
 Dawn Sweep S1 자동 등록. 상세 변경 이력은 추후 보완 필요.
@@ -376,3 +541,41 @@ This update closes drift-report documentation gaps and clarifies table usage sta
 - `chat_messages` room query that previously failed now returns `200`.
 - Missing `scheduleId` count reduced from `12` to `0`.
 - No schema shape change for client types; this is policy/runtime behavior stabilization.
+## 2026-03-08 Auto-Documented: walk_records
+
+Dawn Sweep S1 auto-documentation sync. Added because the table is defined in `database.types.ts` and used in `useWalkRecord.ts`.
+
+### Table Shape
+- Table: `walk_records`
+- Key columns: `id`, `schedule_id`, `author_id`, `partner_guardian_id`, `walk_date`, `walk_time`, `place_name`, `memo`, `photo_urls`, `visibility`, `created_at`, `updated_at`
+- Source migrations: `20260302090000_wave1_schema_foundation.sql`
+- Runtime usage: `frontend/src/lib/hooks/useWalkRecord.ts`
+- Status: types defined and used
+
+---
+
+## 2026-03-08 Auto-Documented: reviews
+
+Dawn Sweep S1 auto-documentation sync. Added because the table is defined in `database.types.ts` and used in `useReview.ts`.
+
+### Table Shape
+- Table: `reviews`
+- Key columns: `id`, `author_id`, `target_id`, `schedule_id`, `rating`, `content`, `tags`, `created_at`
+- Source migrations: `20260228000000_initial_schema.sql`
+- Runtime usage: `frontend/src/lib/hooks/useReview.ts`
+- Status: types defined and used
+
+---
+
+## 2026-03-08 Auto-Documented: matches
+
+Dawn Sweep S1 auto-documentation sync. Added because the table is defined in `database.types.ts` and used in `useMatch.ts`.
+
+### Table Shape
+- Table: `matches`
+- Key columns: `id`, `from_guardian_id`, `to_guardian_id`, `status`, `relation_purpose`, `liked_section`, `comment`, `intro_message`, `quick_message_code`, `compatibility_score`, `created_at`, `updated_at`
+- Source migrations: `20260228000000_initial_schema.sql`, `20260304090001_matching_logic_v2.sql`
+- Runtime usage: `frontend/src/lib/hooks/useMatch.ts`
+- Status: types defined and used
+
+---

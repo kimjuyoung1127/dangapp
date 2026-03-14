@@ -1,19 +1,24 @@
 ---
 name: feature-ui-empty-and-skeleton
-description: Add intentional empty states and skeleton loading patterns for DangApp routes and feature modules. Use when live data can be absent, delayed, or partially loaded and the UI needs a polished placeholder state.
+description: Add intentional empty states and skeleton loading patterns for DangApp routes and feature modules.
 ---
 
 # feature-ui-empty-and-skeleton
 
 ## Trigger
-- Route needs skeleton loading state
-- Data may legitimately be empty
-- Mock placeholder UI needs production-ready empty/loading behavior
+- A route needs a skeleton loading state.
+- Data may legitimately be empty.
+- Mock placeholder UI needs production-ready empty/loading behavior.
 
 ## Inputs
 - Target route or feature module
 - Current hook state shape
 - Existing skeleton or empty-state components nearby
+
+## Read First
+1. The target route success-state layout
+2. Shared skeleton or empty-state primitives
+3. The hook or data source that drives the zero-state condition
 
 ## Procedure
 1. Separate loading, empty, partial, and populated states.

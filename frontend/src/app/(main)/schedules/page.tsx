@@ -53,7 +53,7 @@ export default function SchedulesPage() {
         <AppShell>
             <div className="space-y-5 px-4 py-6">
                 <FamilyPageIntro
-                    eyebrow="family organizer calendar"
+                    eyebrow="산책 캘린더"
                     title="산책 일정"
                     description="날짜, 상태, 다음 액션을 먼저 보여주도록 정리했습니다."
                 />
@@ -149,7 +149,7 @@ function ScheduleCard({
         <FamilySurface>
             <div className="flex items-start justify-between gap-3">
                 <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-sky-700">shared walk plan</p>
+                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-sky-700">함께 걷는 일정</p>
                     <h3 className="mt-1 font-semibold text-foreground">{schedule.partnerName}</h3>
                     <p className="mt-1 text-sm text-foreground-muted">{schedule.title}</p>
                 </div>

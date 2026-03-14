@@ -15,6 +15,21 @@ export interface PartnerPlaceViewModel {
     isVerified: boolean;
 }
 
+const PLACE_CATEGORY_LABELS: Record<string, string> = {
+    park: "공원",
+    cafe: "카페",
+    hospital: "병원",
+    salon: "미용실",
+};
+
+const AMENITY_LABELS: Record<string, string> = {
+    water: "물그릇",
+    shade: "그늘 쉼터",
+    parking: "주차 가능",
+    indoor: "실내 대기",
+    "rest area": "휴식 공간",
+};
+
 export interface ReservationViewModel extends Reservation {
     placeName: string;
 }
@@ -25,10 +40,10 @@ export function toPartnerPlaceViewModels(
     return places.map((place) => ({
         id: place.id,
         name: place.name,
-        category: place.category,
+        category: PLACE_CATEGORY_LABELS[place.category] ?? place.category,
         addressName: place.address_name,
         description: place.description,
-        amenities: place.amenities,
+        amenities: place.amenities.map((amenity) => AMENITY_LABELS[amenity] ?? amenity),
         isVerified: place.is_verified,
     }));
 }

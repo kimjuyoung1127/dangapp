@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Plus } from "lucide-react";
 import { AppShell } from "@/components/shared/AppShell";
 import {
+    FamilyDebugBadge,
     FamilyEmptyPanel,
     FamilyPageIntro,
     FamilySectionTitle,
@@ -22,6 +23,7 @@ import {
     validateCreateReservationInput,
     type ReservationViewModel,
 } from "@/lib/careReservations";
+import { shouldUseDebugCollectionFallback } from "@/lib/debugDemoFallback";
 import { useCurrentGuardian } from "@/lib/hooks/useCurrentGuardian";
 import {
     useCareRequests,
@@ -30,6 +32,7 @@ import {
     useMyReservations,
     usePartnerPlaces,
 } from "@/lib/hooks/useCare";
+import { useCareDebugDemo } from "@/lib/hooks/useDebugDemoFallback";
 import { cn } from "@/lib/utils";
 import type { Database } from "@/types/database.types";
 
@@ -101,18 +104,43 @@ export default function CarePage() {
     } = useCareRequests(guardianId, legacyTab);
     const { data: caregiverOptions = [] } = useCaregiverOptions(guardianId);
 
-    const placeViewModels = useMemo(() => toPartnerPlaceViewModels(places), [places]);
+    const { data: demoPayload } = useCareDebugDemo();
+
+    const placesFallbackActive = shouldUseDebugCollectionFallback({
+        liveItems: places,
+        isError: isPlacesError,
+        isLoading: isPlacesLoading,
+        demoItems: demoPayload?.places,
+    });
+    const reservationsFallbackActive = shouldUseDebugCollectionFallback({
+        liveItems: reservations,
+        isError: isReservationsError,
+        isLoading: isReservationsLoading,
+        demoItems: demoPayload?.reservations,
+    });
+
+    const resolvedPlaces = useMemo(
+        () => (placesFallbackActive ? demoPayload?.places ?? [] : places),
+        [demoPayload?.places, places, placesFallbackActive]
+    );
+    const resolvedReservations = useMemo(
+        () => (reservationsFallbackActive ? demoPayload?.reservations ?? [] : reservations),
+        [demoPayload?.reservations, reservations, reservationsFallbackActive]
+    );
+
+    const placeViewModels = useMemo(() => toPartnerPlaceViewModels(resolvedPlaces), [resolvedPlaces]);
 
     const mergedReservations = useMemo(() => {
+        if (reservationsFallbackActive) return resolvedReservations;
         const uniqueMap = new Map<string, Reservation>();
         for (const reservation of localCreatedReservations) uniqueMap.set(reservation.id, reservation);
-        for (const reservation of reservations) uniqueMap.set(reservation.id, reservation);
+        for (const reservation of resolvedReservations) uniqueMap.set(reservation.id, reservation);
         return Array.from(uniqueMap.values());
-    }, [localCreatedReservations, reservations]);
+    }, [localCreatedReservations, reservationsFallbackActive, resolvedReservations]);
 
     const reservationViewModels = useMemo<ReservationViewModel[]>(
-        () => mapReservationsWithPlaceName(mergedReservations, places),
-        [mergedReservations, places]
+        () => mapReservationsWithPlaceName(mergedReservations, resolvedPlaces),
+        [mergedReservations, resolvedPlaces]
     );
 
     useEffect(() => {
@@ -176,7 +204,7 @@ export default function CarePage() {
         <AppShell>
             <div className="space-y-5 px-4 py-6">
                 <FamilyPageIntro
-                    eyebrow="care mode"
+                    eyebrow="돌봄 모드"
                     title="돌봄 예약"
                     description="장소 신뢰도, 예약 상태, 다음 행동을 한 화면에서 정리해 보세요."
                     action={
@@ -184,7 +212,7 @@ export default function CarePage() {
                             type="button"
                             size="sm"
                             onClick={() => setIsReservationFormOpen(true)}
-                            disabled={!guardianId || placeViewModels.length === 0}
+                            disabled={!guardianId || placeViewModels.length === 0 || placesFallbackActive}
                         >
                             <Plus className="mr-1 h-4 w-4" />
                             예약 추가
@@ -215,6 +243,7 @@ export default function CarePage() {
                             <FamilySectionTitle
                                 title="파트너 장소"
                                 meta="검증된 장소와 편의 시설을 먼저 확인한 뒤 예약을 생성하세요."
+                                action={placesFallbackActive ? <FamilyDebugBadge /> : undefined}
                             />
 
                             {isPlacesLoading ? (
@@ -224,7 +253,7 @@ export default function CarePage() {
                                 </div>
                             ) : null}
 
-                            {isPlacesError && !isPlacesLoading ? (
+                            {isPlacesError && !isPlacesLoading && !placesFallbackActive ? (
                                 <FamilyEmptyPanel
                                     message="파트너 장소를 불러오지 못했습니다."
                                     action={
@@ -241,7 +270,10 @@ export default function CarePage() {
                                 />
                             ) : null}
 
-                            {!isPlacesLoading && !isPlacesError && placeViewModels.length === 0 ? (
+                            {!isPlacesLoading &&
+                            !isPlacesError &&
+                            !placesFallbackActive &&
+                            placeViewModels.length === 0 ? (
                                 <FamilyEmptyPanel message="등록된 파트너 장소가 아직 없습니다." />
                             ) : null}
 
@@ -292,6 +324,7 @@ export default function CarePage() {
                             <FamilySectionTitle
                                 title="나의 예약"
                                 meta="날짜, 상태, 메모 순서로 확인할 수 있게 정리했습니다."
+                                action={reservationsFallbackActive ? <FamilyDebugBadge /> : undefined}
                             />
 
                             {isReservationsLoading && reservationViewModels.length === 0 ? (
@@ -301,7 +334,9 @@ export default function CarePage() {
                                 </div>
                             ) : null}
 
-                            {isReservationsError && reservationViewModels.length === 0 ? (
+                            {isReservationsError &&
+                            reservationViewModels.length === 0 &&
+                            !reservationsFallbackActive ? (
                                 <FamilyEmptyPanel
                                     message="예약 목록을 불러오지 못했습니다."
                                     action={
@@ -320,6 +355,7 @@ export default function CarePage() {
 
                             {!isReservationsLoading &&
                             !isReservationsError &&
+                            !reservationsFallbackActive &&
                             reservationViewModels.length === 0 ? (
                                 <FamilyEmptyPanel message="아직 생성한 예약이 없습니다." />
                             ) : null}
@@ -429,7 +465,7 @@ export default function CarePage() {
                                 type="button"
                                 size="sm"
                                 onClick={handleCreateReservation}
-                                disabled={createReservation.isPending}
+                                disabled={createReservation.isPending || placesFallbackActive}
                             >
                                 {createReservation.isPending ? "생성 중" : "저장"}
                             </Button>

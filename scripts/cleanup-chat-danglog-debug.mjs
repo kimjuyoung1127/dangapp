@@ -61,6 +61,7 @@ async function cleanupSeedData() {
   });
 
   const roomIds = manifest?.created?.chat?.roomIds ?? [];
+  const scheduleIds = manifest?.created?.chat?.scheduleIds ?? [];
   const danglogIds = manifest?.created?.danglog?.ids ?? [];
 
   if (danglogIds.length > 0) {
@@ -70,6 +71,9 @@ async function cleanupSeedData() {
   }
 
   if (roomIds.length > 0) {
+    if (scheduleIds.length > 0) {
+      await supabase.from("schedules").delete().in("id", scheduleIds);
+    }
     await supabase.from("chat_messages").delete().in("room_id", roomIds);
     await supabase.from("chat_participants").delete().in("room_id", roomIds);
     await supabase.from("chat_rooms").delete().in("id", roomIds);
@@ -84,6 +88,7 @@ async function cleanupSeedData() {
         runId: manifest.runId,
         removed: {
           roomCount: roomIds.length,
+          scheduleCount: scheduleIds.length,
           danglogCount: danglogIds.length,
           messageCount: manifest?.created?.chat?.messageIds?.length ?? 0,
           commentCount: manifest?.created?.danglog?.commentIds?.length ?? 0,

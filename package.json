@@ -20,7 +20,9 @@
     "check:encoding": "node scripts/check-encoding.mjs",
     "seed:debug": "node scripts/seed-chat-danglog-debug.mjs",
     "seed:cleanup": "node scripts/cleanup-chat-danglog-debug.mjs",
-    "seed:check": "node scripts/check-chat-danglog-debug.mjs"
+    "seed:check": "node scripts/check-chat-danglog-debug.mjs",
+    "seed:demo:fallback": "node scripts/seed-debug-demo-fallback.mjs",
+    "seed:demo:fallback:cleanup": "node scripts/cleanup-debug-demo-fallback.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.98.0"

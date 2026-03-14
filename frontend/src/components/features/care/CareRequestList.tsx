@@ -32,14 +32,14 @@ export default function CareRequestList({
     if (isError && requests.length === 0) {
         return (
             <div className="text-center py-8 space-y-3">
-                <p className="text-sm text-red-600">Failed to load requests.</p>
+                <p className="text-sm text-red-600">요청 목록을 불러오지 못했어요.</p>
                 {onRetry && (
                     <button
                         type="button"
                         className="text-sm font-medium text-primary"
                         onClick={onRetry}
                     >
-                        Retry
+                        다시 시도
                     </button>
                 )}
             </div>
@@ -49,7 +49,7 @@ export default function CareRequestList({
     if (requests.length === 0) {
         return (
             <p className="text-sm text-foreground-muted text-center py-8">
-                No requests yet.
+                아직 요청 내역이 없어요.
             </p>
         );
     }

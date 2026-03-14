@@ -13,9 +13,9 @@ import CareTypeSelect from "./CareTypeSelect";
 import { X } from "lucide-react";
 
 const careRequestSchema = z.object({
-    title: z.string().min(1, "Title is required"),
+    title: z.string().min(1, "요청 제목을 입력해 주세요."),
     description: z.string().optional(),
-    datetime: z.string().min(1, "Date/time is required"),
+    datetime: z.string().min(1, "날짜와 시간을 입력해 주세요."),
     duration_hours: z.number().min(1).max(24),
 });
 
@@ -60,7 +60,7 @@ export default function CareRequestForm({
         setSubmitError(null);
 
         if (!careType || !caregiverId) {
-            const message = "Select care type and partner before submitting.";
+            const message = "돌봄 유형과 상대 보호자를 먼저 선택해 주세요.";
             setSubmitError(message);
             onSubmitError?.(message);
             return;
@@ -82,7 +82,7 @@ export default function CareRequestForm({
             setCareType(null);
             onClose();
         } catch {
-            const message = "Failed to create request. Please retry.";
+            const message = "요청 생성에 실패했어요. 잠시 후 다시 시도해 주세요.";
             setSubmitError(message);
             onSubmitError?.(message);
         }
@@ -95,13 +95,13 @@ export default function CareRequestForm({
                     <button type="button" onClick={onClose}>
                         <X className="w-6 h-6 text-foreground-muted" />
                     </button>
-                    <h3 className="text-xl font-display font-semibold">Care request</h3>
+                    <h3 className="text-xl font-display font-semibold">돌봄 요청</h3>
                     <Button
                         type="submit"
                         size="sm"
                         disabled={!careType || !caregiverId || createMutation.isPending}
                     >
-                        {createMutation.isPending ? "Submitting..." : "Submit"}
+                        {createMutation.isPending ? "보내는 중..." : "보내기"}
                     </Button>
                 </div>
 
@@ -117,7 +117,7 @@ export default function CareRequestForm({
 
                 <div>
                     <label className="text-sm font-medium text-foreground-muted mb-2 block">
-                        Care partner
+                        함께할 보호자
                     </label>
                     <select
                         value={caregiverId}
@@ -129,7 +129,7 @@ export default function CareRequestForm({
                             caregiverId ? "border-border" : "border-amber-300"
                         )}
                     >
-                        <option value="">Select partner</option>
+                        <option value="">상대 보호자를 선택해 주세요.</option>
                         {caregiverOptions.map((option) => (
                             <option key={option.id} value={option.id}>
                                 {option.nickname} (Lv.{option.trustLevel})
@@ -138,14 +138,14 @@ export default function CareRequestForm({
                     </select>
                     {caregiverOptions.length === 0 && (
                         <p className="text-xs text-foreground-muted mt-1">
-                            No available partners yet. Create a connection first.
+                            아직 선택할 수 있는 보호자가 없어요. 먼저 연결을 만들어 보세요.
                         </p>
                     )}
                 </div>
 
                 <div>
                     <label className="text-sm font-medium text-foreground-muted mb-2 block">
-                        Care type
+                        돌봄 유형
                     </label>
                     <CareTypeSelect value={careType} onChange={setCareType} />
                 </div>
@@ -153,7 +153,7 @@ export default function CareRequestForm({
                 <div>
                     <input
                         {...register("title")}
-                        placeholder="Request title"
+                        placeholder="예: 저녁 산책 돌봄 요청"
                         className={cn(
                             "w-full px-4 py-3 rounded-xl border bg-card",
                             "text-foreground placeholder:text-foreground-muted/50",
@@ -168,7 +168,7 @@ export default function CareRequestForm({
 
                 <div>
                     <label className="text-sm font-medium text-foreground-muted mb-2 block">
-                        Date and time
+                        날짜와 시간
                     </label>
                     <input
                         {...register("datetime")}
@@ -184,7 +184,7 @@ export default function CareRequestForm({
 
                 <div>
                     <label className="text-sm font-medium text-foreground-muted mb-2 block">
-                        Duration (hours)
+                        예상 소요 시간
                     </label>
                     <input
                         {...register("duration_hours", { valueAsNumber: true })}
@@ -201,7 +201,7 @@ export default function CareRequestForm({
 
                 <textarea
                     {...register("description")}
-                    placeholder="Description (optional)"
+                    placeholder="전달할 메모가 있다면 적어 주세요. (선택)"
                     rows={3}
                     className={cn(
                         "w-full px-4 py-3 rounded-xl border border-border bg-card resize-none",

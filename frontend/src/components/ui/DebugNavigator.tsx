@@ -17,7 +17,7 @@ const ROUTES = [
   { path: "/profile", label: "👤 프로필" },
   { path: "/modes", label: "🔄 모드 전환" },
   { path: "/care", label: "🏥 돌봄 서비스" },
-  { path: "/family", label: "👨‍👩‍👧‍👦 가족 관리" },
+  { path: "/family", label: "👨‍👩‍👧‍👦 함께 돌봄" },
 ];
 
 export function DebugNavigator() {
@@ -50,8 +50,8 @@ export function DebugNavigator() {
       {isOpen && (
         <div className="bg-card border border-border rounded-2xl shadow-2xl p-4 w-56 animate-in fade-in slide-in-from-bottom-4 duration-200">
           <div className="flex items-center justify-between mb-3 pb-2 border-b border-border">
-            <span className="text-xs font-bold text-primary">DEBUG NAVIGATOR</span>
-            <span className="text-[10px] text-foreground-muted">Current: {pathname}</span>
+            <span className="text-xs font-bold text-primary">디버그 이동</span>
+            <span className="text-[10px] text-foreground-muted">현재: {pathname}</span>
           </div>
           <div className="flex flex-col gap-1 max-h-[60vh] overflow-y-auto scrollbar-hide mb-3">
             {ROUTES.map((route) => (
