@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import { Sora, Noto_Sans_KR } from 'next/font/google';
+import { Analytics } from '@vercel/analytics/next';
 import '@/styles/globals.css';
 import { cn } from '@/lib/utils';
 
@@ -62,6 +63,7 @@ export default function RootLayout({
                         {children}
                     </AppShell>
                 </Providers>
+                <Analytics />
             </body>
         </html>
     );

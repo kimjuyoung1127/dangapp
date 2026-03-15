@@ -16,6 +16,7 @@ import ProfileStats from "@/components/features/profile/ProfileStats";
 import ReviewList from "@/components/features/review/ReviewList";
 import EditProfileSheet from "@/components/features/profile/EditProfileSheet";
 import NotificationSettings from "@/components/features/profile/NotificationSettings";
+import { SignOutButton } from "@/components/auth/SignOutButton";
 
 export default function ProfilePage() {
     const [isEditOpen, setIsEditOpen] = useState(false);
@@ -87,6 +88,19 @@ export default function ProfilePage() {
                         </div>
                     </FamilySurface>
                 ) : null}
+
+                <FamilySurface tone="soft">
+                    <FamilySectionTitle title="계정 설정" meta="현재 계정에서 나가고 다시 로그인할 수 있어요." />
+                    <div className="mt-4 flex items-center justify-between gap-3 rounded-[1.35rem] border border-white/80 bg-white/82 px-4 py-4">
+                        <div>
+                            <p className="text-sm font-semibold text-foreground">로그아웃</p>
+                            <p className="mt-1 text-xs leading-5 text-foreground-muted">
+                                설문이나 다른 계정 확인이 필요할 때 현재 세션을 종료합니다.
+                            </p>
+                        </div>
+                        <SignOutButton />
+                    </div>
+                </FamilySurface>
 
                 <FamilySurface>
                     <FamilySectionTitle title="받은 후기" meta="최근 연결에서 쌓인 신뢰를 확인하세요." />
